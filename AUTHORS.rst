@@ -13,3 +13,4 @@ Contributors
 * Mason Boeman <maboesanman@gmail.com>
 * Adam Block <adambblock@gmail.com>
 * Daniel Etrata <danetrata@gmail.com>
+* Jānis Lazovskis <jlazovskis@gmail.com>
