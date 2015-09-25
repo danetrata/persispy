@@ -9,7 +9,7 @@ persispy
         :target: https://pypi.python.org/pypi/persispy
 
 
-A python package for persistent homology.
+A python package for persistent homology including visualization.
 
 * Free software: GNU GPL v3
 * Documentation: https://persispy.readthedocs.org.
