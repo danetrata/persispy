@@ -127,7 +127,8 @@ class PointCloud:
             return True
         else:
             return None
-
+    
+    # Makes movie of 2-dimensional plots
     def film_neighborhood_graph(self,step,num_steps,fps=24,method='subdivision',file_name='movie.mp4'):
         '''
         WARNING: do not run this in a Dropbox folder.
@@ -144,6 +145,8 @@ class PointCloud:
             h=self.neighborhood_graph(step*num_steps,method)
             os.system("rm _tmp*.png")
             fig,(ax)=plt.subplots(1,1)
+            # Resolution of video
+            # Example: (10,10) gives a 1000x1000 pixel resolution video
             fig.set_size_inches(10.0,10.0)
             for i in range(num_steps):
                 epsilon=epsilon+step
@@ -162,13 +165,18 @@ class PointCloud:
                 ax.grid(True)
                 ax.set_aspect('equal')
                 plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
-
+                # Graph bounds
+                # Depends on point cloud used, values (-3,3) and (-3,3) work for torus
+                ax.set_ylim(-3,3)
+                ax.set_xlim(-3,3)
                 fname = '_tmp%05d.png'%i
                 plt.savefig(fname)
                 plt.cla()
             plt.close(fig)
             os.system("rm "+file_name)
-            os.system("ffmpeg -r "+str(fps)+" -i _tmp%05d.png "+file_name)
+            # Movie maker command
+            # Changed to "avconv" from "ffmpeg", change back if older system (options are the same)
+            os.system("avconv -r "+str(fps)+" -i _tmp%05d.png "+file_name)
             os.system("rm _tmp*.png")
             return None
         else:
