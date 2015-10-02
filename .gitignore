@@ -1,4 +1,5 @@
 *.py[cod]
+*.sw[nop]
 *.ipynb
 
 # C extensions
