@@ -19,20 +19,25 @@ class PointCloud:
         try:
             self._points=list(points)
         except TypeError:
-            raise TypeError('Input points should be an iterable of hashable points.')
+            raise TypeError('Error: Input points should be an iterable of hashable points.')
 
         try:
             hash(self._points[0])
         except TypeError:
-            raise TypeError('Input points should be an iterable of hashable points.')
+            raise TypeError('Error2: Input points should be an iterable of hashable points.')
 
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
+
 
         self._points=points
         self._space=space
 
     def __repr__(self):
+        try:
+            repr(self.dimension())
+        except AttributeError:
+            raise TypeError('The numpy array must be a single set of points.')
         return 'Point cloud with '+repr(self.num_points())+' points in real '+self._space+' space of dimension '+repr(self.dimension())
 
     def num_points(self):
@@ -43,6 +48,7 @@ class PointCloud:
             return len(self._points[0]._coords)
         elif self._space=='projective':
             return len(self._points[0]._coords)-1
+
 
     def plot2d(self,axes=(0,1)):
         if self._space=='affine':
