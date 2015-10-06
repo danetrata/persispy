@@ -18,3 +18,10 @@ Features
 --------
 
 * TODO
+
+
+
+Contributing
+------------
+Run 'sudo pip install -e persispy/' to make persispy available system wide. This
+is especially important for development work when testing in iPython.
