@@ -28,6 +28,22 @@ See 'phc_interface.py' for persispy
 
 import phcpy
 
+# returns nothing
+def phc_print(phcOut):
+  for sol in phcOut: print sol
+  print "\n\n"
+
+# prototype for interface 
+# returns a set of points given the raw string from phc
+def solution_parser(raw_sol):
+  from phcpy.solutions import coordinates # points
+  points = []
+  for i in raw_sol:
+    point = coordinates(i)
+    coords = point[1][0],point[1][1]
+    points.append(coords)
+  return points
+
 def example1(): 
 # returns nothing, prints coordinates with a fixed seed
   from phcpy.solver import random_trinomials # gen polynomials
@@ -128,11 +144,6 @@ def example3():
   from point_cloud import PointCloud
   PointCloud.plot3d(points_3d_torus(1000))
 
-# returns nothing
-def phc_print(phcOut):
-  for sol in phcOut: print sol
-  print "\n\n"
-
 def example2():
   from phcpy.solver import total_degree
   from phcpy.solver import total_degree_start_system
@@ -144,11 +155,11 @@ def example2():
   print "length of solutions:",len(qsols)
   print "homotopy:",q
   print "\n\nq solutions:"
-  print_phc(qsols)
+  phc_print(qsols)
   s = track(p,q,qsols)
   print "length of paths:",len(s)
   print "\n\ns solutions:"
-  print_phc(s)
+  phc_print(s)
 
 def example4():
   import numpy as np
@@ -161,16 +172,6 @@ def example4():
   PointCloud.plot3d(cloudPoints)
   """
 
-# prototype for interface 
-# returns a set of points given the raw string from phc
-def solution_parser(raw_sol):
-  from phcpy.solutions import coordinates # points
-  points = []
-  for i in raw_sol:
-    point = coordinates(i)
-    coords = point[1][0],point[1][1]
-    points.append(coords)
-  return points
 
 
 # just randomize x and y
@@ -181,7 +182,6 @@ def example5():
   from scipy.constants import pi 
   from numpy.random import uniform
   from phcpy.solver import solve
-
 
   POINTS = 1000
   linearIntersects = [] 
@@ -214,17 +214,4 @@ def example5():
   
         
 
-#print_phc(s)
-
-def main():
-#  example1()
-#  example2()
-#  example3()
-#  example4()
-  example5()
-
-
-
-
-if __name__ == "__main__": main()
 

@@ -1,5 +1,8 @@
 *.py[cod]
+
+# Various swap files to ignore
 *.sw[nop]
+*.py.sw*[nop]
 
 # C extensions
 *.so

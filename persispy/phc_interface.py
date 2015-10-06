@@ -3,7 +3,7 @@
 #create n random lines, solve intersections with polynomial
 #spit out a list of points
 
-import phcpy
+import phcpy as phcpy
 
 
 # returns a set of points given the raw string from phc
@@ -23,53 +23,67 @@ def phc_print(phcOut):
     print "\n\n"
 
 """
-plot2d(equation, points)
+2d_cloud(equation, points)
     returns PointCloud
 =====
 Given a string equation and a number of lines for intersecting the 
 equation, returns a PointCloud.
 """
-def plot2d(eqn = "x^2 + y^2 - 1", intersects = 10):
+def dd_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nTimes = 10):
     from phcpy.solver import total_degree
     from phcpy.solver import total_degree_start_system
     from phcpy.trackers import track
     from phcpy.solver import solve
 
-    from scipy.constants import pi 
     import numpy as np
     from numpy.random import uniform
 
-    import persispy
-    import point_cloud
-    import hash_point
+    import persispy as persispy
+    import point_cloud as point_cloud
+    import hash_point as hash_point
     from point_cloud import PointCloud
     from hash_point import HashPoint
 
-    linearIntersects = [] 
-# creating a list of random lines to intersect
-    for item in range(0,intersects):
-        a,b = uniform(-1,1,size=2)
-        line = str(a)+"*x + "+str(b)+"*y;"
-        linearIntersects.append(line)
-    
     phcEqn = eqn+";"
 
+    intersects = [] 
+    
+    # creating a list of random lines to intersect
+    def random_lines(n):
+        lines = []
+        for item in range(0,n):
+            a,b = uniform(-1,1,size=2)
+            line = str(a)+"*x + "+str(b)+"*y;"
+            lines.append(line)
+        return lines
+
+    def random_circles(n):
+        circles = []
+        for item in range(0,n):
+            a,b,h,k = uniform(-1,1,size=4)
+            circle = str(a)+"*(x+"+str(h)+")^2 + "+str(b)+"*(y+"+str(k)+")^2;"
+            circles.append(circle)
+        return circles
+
+
+    if intersectWith == "line":
+        intersects = random_lines(nTimes)
+    if intersectWith == "circle":
+        intersects = random_circles(nTimes)
+
     persispyPoints = []
-    for line in linearIntersects:
-        p = [phcEqn, line]
+    for intersect in intersects:
+        p = [phcEqn, intersect]
         (q, qsols) = total_degree_start_system(p)
         sol = track(p, q, qsols) 
         for coord in phc_sol_parser(sol):
             persispyPoints.append(coord)
     npPoints=np.array(persispyPoints, dtype=complex)
-    print "npPoints",npPoints
+    
     cloudPoints = []
     for point in npPoints:
-        print "point", point
         cloudPoints.append(HashPoint(point))
-    print "cloudPoints",cloudPoints
     return point_cloud.PointCloud(cloudPoints) 
-#PointCloud.plot2d(point_cloud.PointCloud(cloudPoints))
 
 
 

@@ -17,12 +17,9 @@ class HashPoint:
             out=self._hash
             return out
         except:
-            try:
-                self._hash=int(hashlib.sha1(self._coords.view()).hexdigest(),16)
-                out=self._hash
-                return out
-            except AttributeError as x:
-                print "Please pass numpy array of a single point, not", x
+            self._hash=int(hashlib.sha1(self._coords.view()).hexdigest(),16)
+            out=self._hash
+            return out
 
     def __repr__(self):
         return self._coords.__repr__()
