@@ -23,13 +23,13 @@ def phc_print(phcOut):
     print "\n\n"
 
 """
-2d_cloud(equation, points)
+phc_cloud(equation, points)
     returns PointCloud
 =====
 Given a string equation and a number of lines for intersecting the 
 equation, returns a PointCloud.
 """
-def dd_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nTimes = 10):
+def phc_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nTimes = 10):
     from phcpy.solver import total_degree
     from phcpy.solver import total_degree_start_system
     from phcpy.trackers import track
@@ -71,19 +71,28 @@ def dd_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nTimes = 10):
     if intersectWith == "circle":
         intersects = random_circles(nTimes)
 
-    persispyPoints = []
+    cloudPoints = []
     for intersect in intersects:
         p = [phcEqn, intersect]
         (q, qsols) = total_degree_start_system(p)
+
         sol = track(p, q, qsols) 
         for coord in phc_sol_parser(sol):
-            persispyPoints.append(coord)
-    npPoints=np.array(persispyPoints, dtype=complex)
+            cloudPoints.append(
+                HashPoint(
+                    np.array(
+                        coord, 
+                        dtype=complex
+                    )
+                )
+            )
     
-    cloudPoints = []
-    for point in npPoints:
-        cloudPoints.append(HashPoint(point))
+    
     return point_cloud.PointCloud(cloudPoints) 
+
+
+
+
 
 
 

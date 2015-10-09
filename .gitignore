@@ -1,10 +1,10 @@
+# prefixes to ignore
+private*
+
+# Various swap files to ignore
 *.py[cod]
 *.sw[nop]
 *.ipynb
-
-# Various swap files to ignore
-*.sw[nop]
-*.py.sw*[nop]
 
 # C extensions
 *.so
