@@ -148,16 +148,6 @@ class PointCloud:
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
             edges=[]
-
-            # For the two plotting directions
-            # DELETE THIS once completely defined, put x,y,z lims in main func
-            minx=min(p._coords[axes[0]] for p in self._points)
-            maxx=max(p._coords[axes[0]] for p in self._points)
-            miny=min(p._coords[axes[1]] for p in self._points)
-            maxy=max(p._coords[axes[1]] for p in self._points)
-            minz=min(p._coords[axes[2]] for p in self._points)
-            maxz=max(p._coords[axes[2]] for p in self._points)
-
             for p in self._points:
                 pc=p._coords
                 for e in g._adj[p]:
