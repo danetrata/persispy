@@ -21,21 +21,26 @@ class PointCloud:
         try:
             self._points=list(points)
         except TypeError:
-            raise TypeError('Input points should be an iterable of hashable points.')
-
+            raise TypeError('Input points should be of iterable points.')
         try:
             hash(self._points[0])
         except TypeError:
-            raise TypeError('Input points should be an iterable of hashable points.')
-
+            raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
 
         self._points=points
         self._space=space
 
+
     def __repr__(self):
-        return 'Point cloud with '+repr(self.num_points())+' points in real '+self._space+' space of dimension '+repr(self.dimension())
+        try:
+            repr(self.dimension())
+        except AttributeError:
+            raise AttributeError('The numpy array must be a single set of points.')
+        return 'Point cloud with ' + repr(self.num_points()) + \
+            ' points in real' + self._space + \
+            ' space of dimension ' + repr(self.dimension())
 
     def num_points(self):
         return len(self._points)
@@ -46,13 +51,17 @@ class PointCloud:
         elif self._space=='projective':
             return len(self._points[0]._coords)-1
 
+
+
     def plot2d(self,axes=(0,1)):
         if self._space=='affine':
             fig,(ax)=plt.subplots(1,1)
             fig.set_size_inches(10.0,10.0)
             xcoords=[p._coords[axes[0]] for p in self._points]
             ycoords=[p._coords[axes[1]] for p in self._points]
-            ax.plot(xcoords,ycoords,',')
+
+            ax.plot(xcoords,ycoords,'g*')
+
             ax.grid(True)
             ax.axis([1.1*min(xcoords),1.1*max(xcoords),1.1*min(ycoords),1.1*max(ycoords)])
             ax.set_aspect('equal')
@@ -61,6 +70,8 @@ class PointCloud:
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
             plt.show()
             plt.close()
+
+            
             return True
         else:
             return None
