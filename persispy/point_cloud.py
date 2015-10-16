@@ -2,8 +2,10 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
+import mpl_toolkits.mplot3d as a3
 import weighted_simplicial_complex as wsc
 from utils import tuples
+from numpy import array
 import math
 import os as os
 
@@ -75,13 +77,26 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
+            ax.set_zlim(-3,3)
+            # Set camera viewpoint
+            # Elevation of camera (default is 30)
+            ax.elev=30
+            # Azimuthal angle of camera (default is 30)
+            ax.azim=30
+            # Camera distance (default is 10)
+            ax.dist=10
             fig.add_axes(ax)
             plt.show()
+            # Activate to save to file, deactivate above line
+#            plt.savefig('plot.png')
             plt.close()
             return True
         else:
             return None
 
+    # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
     def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision'):
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -127,6 +142,46 @@ class PointCloud:
             return True
         else:
             return None
+
+    # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon   
+    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision'):
+        if self._space=='affine':
+            g=self.neighborhood_graph(epsilon,method)
+            edges=[]
+
+            # For the two plotting directions
+            # DELETE THIS once completely defined, put x,y,z lims in main func
+            minx=min(p._coords[axes[0]] for p in self._points)
+            maxx=max(p._coords[axes[0]] for p in self._points)
+            miny=min(p._coords[axes[1]] for p in self._points)
+            maxy=max(p._coords[axes[1]] for p in self._points)
+            minz=min(p._coords[axes[2]] for p in self._points)
+            maxz=max(p._coords[axes[2]] for p in self._points)
+
+            for p in self._points:
+                pc=p._coords
+                for e in g._adj[p]:
+                    qc=e[0]._coords
+                    edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
+            lines=a3.art3d.Poly3DCollection(edges)
+            lines.set_color([1,.5,.5,.5])
+            fig=plt.figure()
+            ax = plt3.Axes3D(fig)
+            fig.set_size_inches(10.0,10.0)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
+            ax.set_zlim(-3,3)
+            ax.grid(True)
+            ax.set_aspect('equal')
+            ax.add_collection(lines)
+            plt.show()
+            plt.close()
+            return True
+        else:
+            return None
     
     # Makes movie of 2-dimensional plots
     def film_neighborhood_graph(self,step,num_steps,fps=24,method='subdivision',file_name='movie.mp4'):
@@ -167,8 +222,8 @@ class PointCloud:
                 plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
                 # Graph bounds
                 # Depends on point cloud used, values (-3,3) and (-3,3) work for torus
-                ax.set_ylim(-3,3)
                 ax.set_xlim(-3,3)
+                ax.set_ylim(-3,3)
                 fname = '_tmp%05d.png'%i
                 plt.savefig(fname)
                 plt.cla()
