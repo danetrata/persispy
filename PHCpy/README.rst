@@ -1,11 +1,11 @@
-For persispy:
-Run:
-python setup.py install --user
-
-
 =================================
 Welcome to phcpy's documentation!
 =================================
+
+Installation: 
+~~
+$ python setup.py install [--home=dir]
+
 
 This documentation describes a collection of Python modules
 to compute solutions of polynomial systems using PHCpack.
@@ -108,6 +108,10 @@ References
    (EuroSciPy 2013), edited by Pierre de Buyl and Nelle Varoquaux,
    pages 71-76, 2014, available at
    <http://arxiv.org/abs/1310.0056>.
+
+8. J. Verschelde and X. Yu:
+   **Polynomial Homotopy Continuation on GPUs.**
+   *ACM Communications in Computer Algebra*, to appear.
 
 Acknowledgments
 ===============
