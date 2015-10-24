@@ -5,7 +5,7 @@
 
 import phcpy as phcpy
 
-LOUD = False 
+DEBUG = False 
 
 
 
@@ -68,7 +68,7 @@ def phc_2d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nPoints = 10):
         (q, qsols) = total_degree_start_system(p)
 
         sol = track(p, q, qsols) 
-        if LOUD:
+        if DEBUG:
             for x in sol:
                 print x
         for coord in phc_2d_out(sol):
@@ -87,7 +87,7 @@ def phc_2d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nPoints = 10):
 
 
 
-def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, LOUD=False, treshold = 1.0):
+def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, DEBUG=False, treshold = 1.0):
 
 
 
@@ -99,9 +99,10 @@ def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, L
     from phcpy.solutions import strsol2dict # points
     from phcpy.sets import embed
     
-    def is_float_eq(a, b, epsilon = 1.0):
-        print a,", ",b,",", abs(a-b)
-        print abs(a - b) <= epsilon
+    def is_float_eq(a, b, epsilon = 0.1):
+        if DEBUG:
+            print a,", ",b,",", abs(a-b)
+            print abs(a - b) <= epsilon
         return abs(a - b) <= epsilon
 
 
@@ -116,19 +117,27 @@ def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, L
             p = [phcEqn, q]
             p = embed(3,1,[phcEqn, q])
             (q, qsols) = total_degree_start_system(p)
+            if DEBUG:
+                print "system of equations"
+                for x in p: print x
+                print "total degree start system"
+                for x in q: print x
             phcSol = track(p, q, qsols) 
 
             for i in phcSol:
                 d = strsol2dict(i)
                 x, y, z = (d['x'], d['y'], d['z'])
-                if not is_float_eq(x.real, 0.0) or not is_float_eq(y.real, 0.0) or not is_float_eq(z.real, 0.0):
-                    print "too far"
-                    print i
-                    print (x,y,z)
+                if not is_float_eq(x.imag, 0.0) or not is_float_eq(y.imag, 0.0) or not is_float_eq(z.imag, 0.0):
+                    if DEBUG:
+                        print "too far"
+                        print i
+                        print (x,y,z)
 
                 else:
                     points.append((x,y,z))
                     n += 1
+                    if DEBUG:
+                        print n
 
 
 
