@@ -88,9 +88,6 @@ def phc_2d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "line", nPoints = 10):
 
 
 def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, DEBUG=False, treshold = 1.0):
-
-
-
     from phcpy.solver import total_degree
     from phcpy.solver import total_degree_start_system
     from phcpy.trackers import track
@@ -104,7 +101,6 @@ def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, D
             print a,", ",b,",", abs(a-b)
             print abs(a - b) <= epsilon
         return abs(a - b) <= epsilon
-
 
     n = 0
     phcEqn = eqn+";"
@@ -139,8 +135,6 @@ def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, D
                     if DEBUG:
                         print n
 
-
-
     import numpy as np
     import persispy as persispy
     import point_cloud as point_cloud
@@ -158,7 +152,6 @@ def phc_3d_cloud(eqn = "x^2 + y^2 - 1", intersectWith = "plane", nPoints = 10, D
                 )
             )
         )
-    
     
     return point_cloud.PointCloud(cloudPoints) 
 
