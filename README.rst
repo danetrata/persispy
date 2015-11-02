@@ -25,3 +25,5 @@ Contributing
 ------------
 Run 'sudo pip install -e persispy/' to make persispy available system wide. This
 is especially important for development work when testing in iPython.
+Alternate: Run "sudo python setup.py develop" to tell python this module has 
+code that will change frequently.
