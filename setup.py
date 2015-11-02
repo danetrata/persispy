@@ -6,30 +6,6 @@ import setuptools
 from setuptools import setup
 print "setup using setuptools"
 
-
-def is_package(path): # find packages helper function
-    return (
-        os.path.isdir(path) and
-        os.path.isfile(os.path.join(path, '__init__.py'))
-    )
-    
-def find_packages(path, base=""): 
-                                  #| given a path,
-                                  #| recursively walks the directory to find
-                                  #| submodules
-    packages = {}
-    for item in os.listdir(path):
-        dir = os.path.join(path, item)
-        if is_package(dir):
-            if base:
-                module_name = "%(base)s.%(item)s" % vars()
-            else:
-                module_name = item
-            packages[module_name] = dir
-            packages.update(find_packages(dir, module_name))
-    return packages
-
-
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
