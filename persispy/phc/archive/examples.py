@@ -9,10 +9,9 @@ def main():
     # PointCloud.plot3d(phc_cloud())
     # PointCloud.plot3d(phc_3d_cloud(eqn= "x^2 + y^2 + z^2 - 1",nTimes = 100))
 
-    #PointCloud.plot3d(phc_3d_cloud())
-#     PointCloud.plot3d(phc_3d_cloud(eqn = "x^2 + t^2 - 1", nPoints = 200,DEBUG=True))
-#     PointCloud.plot3d(phc_3d_cloud(eqn = "x^2 + y^2 -1", nPoints = 200,DEBUG=True))
-#     PointCloud.plot3d(phc_3d_cloud(eqn = "x^2 + y^2 + z^2 -1", nPoints = 1000))
+    PointCloud.plot3d(phc_3d_cloud())
+    PointCloud.plot3d(phc_3d_cloud(eqn = "x^2 + y^2 -1", nPoints = 200,DEBUG=True))
+    PointCloud.plot3d(phc_3d_cloud(eqn = "x^2 + y^2 + z^2 -1", nPoints = 1000))
 
     PointCloud.plot2d(phc_cloud(eqn = "x^2 + y^2 - 1", nPoints = 100, DEBUG=True))
     
