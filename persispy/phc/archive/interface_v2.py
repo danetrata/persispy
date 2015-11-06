@@ -4,7 +4,7 @@
 
 DEBUG = False 
 
-" must reject equations with with variable t, e, E, i, I"
+" must reject equations with with varible t, e, E, i, I"
 def phc_cloud(eqn, nPoints=1, DEBUG=False):
     from phcpy.solver import total_degree
     from phcpy.solver import total_degree_start_system
@@ -12,7 +12,6 @@ def phc_cloud(eqn, nPoints=1, DEBUG=False):
     from phcpy.solver import solve
     from phcpy.solutions import strsol2dict # points
     from phcpy.sets import embed
-    from phcpy.sets import witness_set_of_hypersurface
     import numpy as np
     from numpy.random import uniform
     from persispy.point_cloud import PointCloud
@@ -23,9 +22,7 @@ def phc_cloud(eqn, nPoints=1, DEBUG=False):
 # intersects
     phcEqn = eqn+";"
     if DEBUG:
-        print "====="
         print "input eqn: ",phcEqn
-        print "====="
     terms = eqn
 
 # Extracting terms from the target
@@ -44,7 +41,7 @@ def phc_cloud(eqn, nPoints=1, DEBUG=False):
 # Adjust epilson to your liking.
 # Note: phcpack almost always gives an imaginary parts, as small as 10^-48,
 # so epsilon != 0
-    def is_close(a, b, epsilon = 0.1):
+    def is_float_eq(a, b, epsilon = 0.1):
         if DEBUG:
             print a,", ",b,",", abs(a-b)
             print abs(a - b) <= epsilon
@@ -52,57 +49,47 @@ def phc_cloud(eqn, nPoints=1, DEBUG=False):
 
     n = 0
     points = []
-    def intersect():
-        rand_list = uniform(-1,1, size=len(varList))
+    while(n < nPoints):
+
+# Forming intersects from extracted terms 
+        rand_list = uniform(-1,1, size=len(varList)-1)
         i = 0
         intersect = [] 
         for x in rand_list:
             intersect.append(str(x)+" * "+varList[i])
-            if i < len(rand_list)-1: 
+            if i < len(rand_list)-1: # "- 1" because index and we only need "n-1"
+                                   # variables
                 intersect.append(" + ")
             i = i + 1
         intersect.append(";")
         intersect = "".join(intersect)
-        return intersect
-    if DEBUG:
-        attempt = 0
-    while(n < nPoints):
 
-# Forming intersects from extracted terms 
-
-# phcpy solver
-        p = [phcEqn]
-        for x in range(len(varList)-1):
-            p.append(intersect())
-        if DEBUG:
-            print "system of equations"
-            print "--"
-            for x in p: print x
-            print "--"
+#phcpy solver
+        p = [phcEqn, intersect]
         phcSol = solve(p)
         if DEBUG:
+            print "system of equations"
+            for x in p: print x
             print "number of solutions: ", len(phcSol)
-            attempt = attempt + 1
-            print "attempt #"+str(attempt)
 
 # Parsing the output of phcSol
         for i in phcSol:
             if DEBUG:
                 print "phc solution: \n", i 
             d = strsol2dict(i)
+            if DEBUG:
+                print "strsol2dict: ",d
+                print "keys: ",d.viewkeys()
+                print "values: ", d.viewvalues()
             point = [d[x] for x in varList]
-            closeness = True 
-            for x in point: # choses the points we want
-                if is_close(x.imag, 0.0):
-                    if x == point[-1] and closeness == True and n < nPoints: 
-                        # sometimes phcpy gives more points than we ask,
-                        # thus the  additional check
-                        points.append([x.real for x in point])
+            for x in point:
+                if is_float_eq(x.imag, 0.0):
+                    if point[-1] == x and n < nPoints: # sometimes phcpy gives
+                                                       # more points than we 
+                                                       # ask, thus the 
+                                                       # additional check
+                        points.append(point)
                         n = n + 1
-                else:
-                    closeness = False
-
-
     
     if DEBUG:
         print "points: ",points
