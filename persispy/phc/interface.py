@@ -6,14 +6,9 @@ DEBUG = False
 
 " must reject equations with with variable t, e, E, i, I"
 def phc_cloud(eqn, nPoints=1, DEBUG=False):
-    from phcpy.solver import total_degree
-    from phcpy.solver import total_degree_start_system
-    from phcpy.trackers import track
     from phcpy.solver import solve
     from phcpy.solutions import strsol2dict # points
-    from phcpy.sets import embed
-    from phcpy.sets import witness_set_of_hypersurface
-    import numpy as np
+    import numpy as 
     from numpy.random import uniform
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
