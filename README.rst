@@ -23,8 +23,10 @@ Features
 
 Contributing
 ------------
+
 Persispy
 ==
+
 Recommended:
 Run 
 
@@ -44,6 +46,7 @@ to tell python this module has code that will change frequently.
 
 PHCpy
 ==
+
 First, ensure the system has the tools to compile the shared libraries. The 
 system will need the following packages:
 python2.7
