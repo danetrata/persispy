@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """
 Takes a variety of type string and, after solving intersections with phcpy,
 returns a persispy point cloud. We must reject equations with with variables t, 
@@ -7,6 +8,20 @@ def phc_cloud(eqn, num_points=1, allow_complex=False, DEBUG=False):
     import numpy as np
     from phcpy.solver import solve
     from phcpy.solutions import strsol2dict # points
+=======
+#TODO:
+# Create a generalized solver
+# Uses the black box solver
+
+DEBUG = False 
+
+" must reject equations with with variable t, e, E, i, I"
+def phc_cloud(eqn, nPoints=1, DEBUG=False):
+    from phcpy.solver import solve
+    from phcpy.solutions import strsol2dict # points
+    import numpy as 
+    from numpy.random import uniform
+>>>>>>> f90353a504d2dec06a7dbef858141273a2391ec8
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
 
