@@ -24,10 +24,20 @@ Features
 
 
 Contributing
+<<<<<<< HEAD
 ============
 
 Persispy
 --------
+=======
+------------
+
+Persispy
+==
+
+Recommended:
+Run 
+>>>>>>> 98c658bc8a2ec5bd752dd8d9908302304b8bb25a
 
 
 We recommended installing with pip. The -e flag tells python that module will be edited frequently.
@@ -43,10 +53,16 @@ An alternative to pip is to call the setup file directly. Note the --home flag t
   sudo python setup.py develop [--home=~]
 
 PHCpy
+<<<<<<< HEAD
 -----
 
 
 First, we ensure the system has the tools to compile the shared libraries. The 
+=======
+==
+
+First, ensure the system has the tools to compile the shared libraries. The 
+>>>>>>> 98c658bc8a2ec5bd752dd8d9908302304b8bb25a
 system will need the following packages:
 
 * python2.7
