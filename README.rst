@@ -24,46 +24,30 @@ Features
 
 
 Contributing
-<<<<<<< HEAD
 ============
+
 
 Persispy
 --------
-=======
-------------
-
-Persispy
-==
-
-Recommended:
-Run 
->>>>>>> 98c658bc8a2ec5bd752dd8d9908302304b8bb25a
 
 
-We recommended installing with pip. The -e flag tells python that module will be edited frequently.
+We recommend installing with pip. The -e flag tells python that module will be edited frequently.
 
 ::
 
   pip install -e persispy 
 
-An alternative to pip is to call the setup file directly. Note the --home flag tells to install to a particular library. Be sure to append non-standard paths to your sys.path.
+An alternative to pip is to call the setup file directly. For a local installation, the --home flag tells to install to a particular directory. Be sure to append non-standard paths to your sys.path.
 
 ::
 
   sudo python setup.py develop [--home=~]
 
 PHCpy
-<<<<<<< HEAD
 -----
 
 
-First, we ensure the system has the tools to compile the shared libraries. The 
-=======
-==
-
-First, ensure the system has the tools to compile the shared libraries. The 
->>>>>>> 98c658bc8a2ec5bd752dd8d9908302304b8bb25a
-system will need the following packages:
+First, we ensure the system has the tools to compile the shared libraries. The system will need the following packages:
 
 * python2.7
 * python-dev
