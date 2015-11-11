@@ -5,10 +5,12 @@ e, E, i, I because their meanings are reserved.
 """
 def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
     import numpy as np
-    from phcpy.solver import solve
+    from phcpy.solver import total_degree_start_system
+    from phcpy.trackers import track
     from phcpy.solutions import strsol2dict # points
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
+
 
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
@@ -60,6 +62,26 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
     points = []
     if DEBUG: attempt = 0
 
+    p = [phcEqn]
+
+    # The for loop ensures the system is "square", where number of 
+    # variables = number of equations. The resulting points are regular, 
+    # bounded by the variety.
+    for x in range(len(varList)-1): p.append(intersect())
+    if DEBUG:
+        print "system of equations"
+        print "--"
+        for x in p: print x
+        print "--"
+        startSystem, startSol = total_degree_start_system(p)
+        print "start solutions: ", len(startSol)
+        for x in startSystem: print x
+        for x in startSol: print x
+        attempt = attempt + 1
+        print "attempt #"+str(attempt)
+    else:
+        startSystem, startSol = total_degree_start_system(p)
+
     # phcpy solver
     while(n < num_points):
         p = [phcEqn]
@@ -73,19 +95,20 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
             print "--"
             for x in p: print x
             print "--"
-            phcSol = solve(p)
+            phcSol = track(p, startSystem, startSol)
             print "number of solutions: ", len(phcSol)
             attempt = attempt + 1
             print "attempt #"+str(attempt)
         else:
-            phcSol = solve(p,silent=True)
+            startSystem, startSol = total_degree_start_system(p)
+            phcSol = track(p, startSystem, startSol)
 
         # Parsing the output of phcSol
         for i in phcSol:
             if DEBUG: print "phc solution: \n", i 
             d = strsol2dict(i)
             point = [d[x] for x in varList]
-            if allow_complex:
+            if return_complex:
                 points.append(point)
                 n = n + 1
             else:

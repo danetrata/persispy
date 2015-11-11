@@ -1,4 +1,5 @@
-from persispy.phc import interface
+import phcpy
+from persispy.phc import interface, interface_solve
 from persispy.samples import points
 import timeit
 
@@ -15,6 +16,11 @@ def main():
         wrapped = wrapper(points.sphere, num_points=testPoints)
         print testPoints, timeit.timeit(wrapped, number=10)
 
+        print "phc "+str(testPoints)+" point interface_solve complex sphere"
+        wrapped = wrapper(interface_solve.phc_cloud, eqn = "x^2+y^2+z^2-1", \
+            num_points=testPoints, allow_complex=True)
+        print testPoints, timeit.timeit(wrapped, number=10)
+
         print "phc "+str(testPoints)+" point sphere"
         wrapped = wrapper(interface.phc_cloud, eqn = "x^2+y^2+z^2-1", \
             num_points=testPoints)
@@ -22,7 +28,7 @@ def main():
 
         print "phc "+str(testPoints)+" point complex sphere"
         wrapped = wrapper(interface.phc_cloud, eqn = "x^2+y^2+z^2-1", \
-            num_points=testPoints, allow_complex=True)
+            num_points=testPoints, return_complex=True)
         print testPoints, timeit.timeit(wrapped, number=10)
 
 if __name__== "__main__": main()
