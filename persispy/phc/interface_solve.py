@@ -3,7 +3,7 @@ Takes a variety of type string and, after solving intersections with phcpy,
 returns a persispy point cloud. We must reject equations with with variables t, 
 e, E, i, I because their meanings are reserved.
 """
-def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
+def phc_cloud(eqn, num_points=1, allow_complex=False, DEBUG=False):
     import numpy as np
     from phcpy.solver import solve
     from phcpy.solutions import strsol2dict # points
