@@ -9,13 +9,7 @@ def wrapper(func, *args, **kwargs):
     return wrapped
 
 def main():
-    runs = []
-    i = 0
-    x = 10
-    while(i < 4):
-        runs.append(x)
-        x = x**2
-        i = i + 1
+    runs = [1, 100, 1000, 1000000]
     print runs
     for testPoints in runs:
         print "phc "+str(testPoints)+" point complex sphere"
