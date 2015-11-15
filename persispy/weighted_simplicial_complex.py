@@ -3,6 +3,7 @@ import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from utils import tuples
+import itertools
 
 class wSimplex:
     '''
@@ -295,3 +296,48 @@ class wSimplicialComplex:
                 if s.weight() < epsilon:
                     simplices[d].append(s)
         return wSimplicialComplex(wg,simplices)
+
+class sorted_clique_list:
+    def __init__(self,wg):
+        '''wg is a weighted graph'''
+        self._cliques=[]
+        sorted_clique_list._BronKerboschPivot(set(),set(wg._adj.keys()),set(),wg._adj,self._cliques)
+        self._cliques.sort()
+        
+    def get_simplex_iterator(self,n):
+        i = set()
+        for x in self._cliques:
+            if len(x)>=n:
+                i.update(itertools.combinations(x,n))
+        return iter(i)
+    
+    def get_ordered_simplex_iterator(self,n):
+        i = set()
+        for x in self._cliques:
+            if len(x)>=n:
+                i.update(itertools.combinations(x,n))
+        return iter(sorted(list(i)))
+        
+    @staticmethod
+    def _BronKerbosch(r,p,x,adj,c):
+        if len(p)==0 and len(x)==0:
+            c.append(sorted(list(r)))
+        else:
+            for v in set(p):
+                nbh = {x[0] for x in adj[v]}
+                sorted_clique_list._BronKerbosch(r | {v}, p & nbh, x & nbh,adj,c)
+                p.remove(v)
+                x.add(v)
+    
+    @staticmethod
+    def _BronKerboschPivot(r,p,x,adj,c):
+        if len(p)==0 and len(x)==0:
+            c.append(sorted(list(r)))
+        else:
+            u = iter(p | x).next()
+            for v in p - adj[u]:
+                nbh = {x[0] for x in adj[v]}
+                sorted_clique_list._BronKerboschPivot(r | {v}, p & nbh, x & nbh,adj,c)
+                p.remove(v)
+                x.add(v)
+            
