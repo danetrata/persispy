@@ -54,10 +54,10 @@ class wGraph:
                 if e[0]==e[1]:
                     raise TypeError('Edges are lists of pairs of distinct vertices followed by a weight.')
         
-        adj={v:[] for v in vertices}
+        adj={v:set() for v in vertices}
         for e in edges:
-            adj[e[0]].append([e[1],e[2]])
-            adj[e[1]].append([e[0],e[2]])
+            adj[e[0]].add((e[1],e[2]))
+            adj[e[1]].add((e[0],e[2]))
         return cls(adj)
 
     def __repr__(self):
@@ -128,7 +128,7 @@ class wGraph:
         for k in keys:
             for v in self._adj[k]:
                 if v[1]<epsilon:
-                    adj[k].append(v)
+                    adj[k].add(v)
         return wGraph(adj)
 
     def VRComplex(self,epsilon,dimension,method='incremental'):
