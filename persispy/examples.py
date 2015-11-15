@@ -30,9 +30,9 @@ class HashPoint:
     >>> HashPoint([1,2,3])
     array([1, 2, 3])
     '''
-    def __init__(self,coords):
+    def __init__(self,coords,index):
         self._coords=np.array(coords)
-
+        self._index=index
     def __hash__(self):
         try:
             out=self._hash
@@ -42,7 +42,9 @@ class HashPoint:
             return self._hash
 
     def __repr__(self):
-        return self._coords.__repr__()
+        return "point "+str(self._index)+": "+str(self._coords.__repr__())[6:-1]
+    def __cmp__(self,other):
+        return self._index.__cmp__(other._index)
 
 def points_2sphere(num_points,radius=1,method='normalized'):
     '''
@@ -59,7 +61,7 @@ def points_2sphere(num_points,radius=1,method='normalized'):
     def normalize(x):
         return (1/np.sqrt(sum(x*x)))*x
     if method=='normalized':
-        return point_cloud.PointCloud([HashPoint(normalize(2*npr.random(3)-1)) for n in range(num_points)],space='affine')
+        return point_cloud.PointCloud([HashPoint(normalize(2*npr.random(3)-1),n) for n in range(num_points)],space='affine')
     elif method=='rectangular':
         angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
         return point_cloud.PointCloud([HashPoint(radius*np.array([np.sin(t[0])*np.cos(t[1]),np.sin(t[0])*np.sin(t[1]),np.cos(t[0])])) for t in angles],space='affine')
