@@ -305,18 +305,33 @@ class sorted_clique_list:
         self._cliques.sort()
         
     def get_simplex_iterator(self,n):
+        '''
+        gives an iterable which includes all n simplices
+        '''
         i = set()
         for x in self._cliques:
-            if len(x)>=n:
-                i.update(itertools.combinations(x,n))
-        return iter(i)
+            if len(x)>=n+1:
+                i.update(itertools.combinations(x,n+1))
+        return _clique_iterator(iter(i))
     
     def get_ordered_simplex_iterator(self,n):
         i = set()
         for x in self._cliques:
-            if len(x)>=n:
-                i.update(itertools.combinations(x,n))
-        return iter(sorted(list(i)))
+            if len(x)>=n+1:
+                i.update(itertools.combinations(x,n+1))
+        return _clique_iterator(iter(sorted(list(i))))
+    
+    def get_full_simplex_iterator(self,n):
+        '''
+        gives an iterable which includes all k simplices for k <= n
+        '''
+        i = self.get_simplex_iterator(n)
+        j = []
+        for c in self._cliques:
+            if len(c)<n+1:
+                j.append(c)
+        return _clique_iterator(itertools.chain(iter(j),i))
+        
         
     @staticmethod
     def _BronKerbosch(r,p,x,adj,c):
@@ -341,3 +356,13 @@ class sorted_clique_list:
                 p.remove(v)
                 x.add(v)
             
+class _clique_iterator:
+    def __init__(self, i):
+        self.iterator = i
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        return tuple(self.iterator.next())
+    
