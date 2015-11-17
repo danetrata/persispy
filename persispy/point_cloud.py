@@ -1,9 +1,15 @@
+# TODO: We should look to seperate the methods that generate points
+# and the methods that act on those points.
+# Left alone for now because many modules rely on this.
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
+import mpl_toolkits.mplot3d as a3
 import weighted_simplicial_complex as wsc
 from utils import tuples
+from numpy import array
 import math
 import os as os
 
@@ -69,11 +75,11 @@ class PointCloud:
             plt.show()
             plt.close()
 
-            
+
             return True
         else:
             return None
-        
+
     def plot3d(self,axes=(0,1,2)):
         if self._space=='affine':
             fig=plt.figure()
@@ -86,13 +92,26 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
+            ax.set_zlim(-3,3)
+            # Set camera viewpoint
+            # Elevation of camera (default is 30)
+            ax.elev=30
+            # Azimuthal angle of camera (default is 30)
+            ax.azim=30
+            # Camera distance (default is 10)
+            ax.dist=10
             fig.add_axes(ax)
             plt.show()
+            # Activate to save to file, deactivate above line
+#            plt.savefig('plot.png')
             plt.close()
             return True
         else:
             return None
 
+    # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
     def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision'):
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -138,7 +157,37 @@ class PointCloud:
             return True
         else:
             return None
-    
+
+    # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
+    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision'):
+        if self._space=='affine':
+            g=self.neighborhood_graph(epsilon,method)
+            edges=[]
+            for p in self._points:
+                pc=p._coords
+                for e in g._adj[p]:
+                    qc=e[0]._coords
+                    edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
+            lines=a3.art3d.Poly3DCollection(edges)
+            lines.set_color([1,.5,.5,.5])
+            fig=plt.figure()
+            ax = plt3.Axes3D(fig)
+            fig.set_size_inches(10.0,10.0)
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
+            ax.set_zlim(-3,3)
+            ax.grid(True)
+            ax.set_aspect('equal')
+            ax.add_collection(lines)
+            plt.show()
+            plt.close()
+            return True
+        else:
+            return None
+
     # Makes movie of 2-dimensional plots
     def film_neighborhood_graph(self,step,num_steps,fps=24,method='subdivision',file_name='movie.mp4'):
         '''
@@ -178,8 +227,8 @@ class PointCloud:
                 plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
                 # Graph bounds
                 # Depends on point cloud used, values (-3,3) and (-3,3) work for torus
-                ax.set_ylim(-3,3)
                 ax.set_xlim(-3,3)
+                ax.set_ylim(-3,3)
                 fname = '_tmp%05d.png'%i
                 plt.savefig(fname)
                 plt.cla()
@@ -224,7 +273,7 @@ class PointCloud:
 
     def neighborhood_graph(self,epsilon,method):
         return self._neighborhood_graph(epsilon,method,self._points,{v:[] for v in self._points})
-    
+
     def _neighborhood_graph(self,epsilon,method,pointarray,dictionary):
         '''
         The 'method' string is separated by spaces. Acceptable values:
@@ -246,7 +295,7 @@ class PointCloud:
                     for i in range(len(methodarray)-2):
                         m=m+methodarray[i+2]
                         m=m+' '
-                        
+
                     if m=='':
                         self._subdivide_neighbors(epsilon, dictionary, pointarray, depth=d)
                         return wsc.wGraph(dictionary)
@@ -283,7 +332,7 @@ class PointCloud:
         #gives the kth smallest point of "self._points", according to the nth coordinate
         #we use this to give the median, but a general solution for k is needed for the recursive algorithm
         #this algorithm is O(n) for best and worst cases
-        
+
         a = pointarray[:]
         c = []
         while(len(a)>5):
@@ -294,7 +343,7 @@ class PointCloud:
             a = c
             c = []
         pivot = a[int(math.floor(len(a)/2))]
-        
+
         lesser = [point for point in pointarray if point._coords[n] < pivot._coords[n]]
         if len(lesser) > k:
             return self._selectpoint(lesser, k, n)
@@ -323,13 +372,13 @@ class PointCloud:
                     smaller.append(pointarray[i])
                     if pointarray[i]._coords[coordinate] > median._coords[coordinate]-e:
                         gluesmaller.append(pointarray[i])
-                
+
                 if pointarray[i]._coords[coordinate] >= median._coords[coordinate]:
                     bigger.append(pointarray[i])
                     if pointarray[i]._coords[coordinate] < median._coords[coordinate]+e:
                         gluebigger.append(pointarray[i])
             #glue together the two regions
-            
+
             for i in range(len(gluesmaller)):
                 for j in range(len(gluebigger)):
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
@@ -338,7 +387,7 @@ class PointCloud:
                     #    dict[gluesmaller[i]].sort(key = lambda x: len(dict[x]))
                         dict[gluebigger[j]].append([gluesmaller[i],dist])
                     #    dict[gluebigger[j]].sort(key = lambda x: len(dict[x]))
-                        
+
             #recursively compute for the two regions, now using a different reference coordinate, to reduce gluing area
             if depth == -1: #depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate+1)%self.dimension()
@@ -351,4 +400,4 @@ class PointCloud:
                 coordinate = (coordinate+1)%self.dimension()
                 self._subdivide_neighbors(e, depth-1, coordinate, smaller)
                 self._subdivide_neighbors(e, depth-1, coordinate, bigger)
-        
+
