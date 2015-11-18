@@ -11,18 +11,37 @@ from phcpy.solutions import strsol2dict # points
 from persispy.point_cloud import PointCloud
 from persispy.hash_point import HashPoint
 
+class Singleton(type):
+    def __init__(self, *args, **kwargs):
+        super(Singleton, self).__init__(*args, **kwargs)
+        self.__instance = None
+    def __call__(self, *args, **kwargs):
+        if self.__instance is None:
+            self.__instance = super(Singleton, self).__call__(*args, **kwargs)
+        return self.__instance
+
 class phc(object):
 
-    def __new__(cls, eqn, bounds = 1, num_points = 1, return_complex = False, DEBUG = False):
+    points = []
 
-        print "hello world, this is a new phc"
+    def __init__(self, eqn, bounds = 1, num_points = 1, return_complex = False, DEBUG = False):
+        self.eqn = eqn
+        self.bounds = bounds 
+        self.num_points = num_points
+        self.return_complex = return_complex
+        self.DEBUG = DEBUG
+        self.__call__()
 
-#         self.eqn = eqn
-#         self.bounds = bounds 
-#         self.num_points = num_points
-#         self.return_complex = return_complex
-#         self.DEBUG = DEBUG
+# for printing the points
+    def __repr__(self):
+        return self.points.__repr__()
 
+    def __call__(self):
+        eqn = self.eqn
+        bounds = self.bounds 
+        num_points = self.num_points
+        return_complex = self.return_complex
+        DEBUG = self.DEBUG
         # for dealing with the fact that PHC always returns complex solutions
         complex_epsilon = 0.1
 # For other possible implementations of intersecting the varieties
@@ -175,18 +194,6 @@ class phc(object):
 
         pointCloud = PointCloud(cloudPoints) 
         return pointCloud
-
-    def __init__(self):
-        print "hello init"
-        self.points = cls.points
-
-# for printing the points
-    def __repr__(self):
-        return self.points.__repr__()
-
-# for returning the 
-#     def __call__(self):
-
 
 def main():
     pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
