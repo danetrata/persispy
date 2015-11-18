@@ -43,7 +43,7 @@ class PointCloud:
         except AttributeError:
             raise AttributeError('The numpy array must be a single set of points.')
         return 'Point cloud with ' + repr(self.num_points()) + \
-            ' points in real' + self._space + \
+            ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
 
     def num_points(self):

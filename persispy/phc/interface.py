@@ -10,8 +10,11 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False, point_cloud=
     from phcpy.solutions import strsol2dict # points
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
-
-
+    if bounds == 0:
+        bounds = 1
+    complex_epsilon = 0.1
+    relative_epsilon = 0.1
+    
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
     phcEqn = eqn+";"
@@ -38,7 +41,7 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False, point_cloud=
     # Adjust epsilon to your liking.
     # Note: phcpack almost always gives an imaginary parts, as small as 10^-48,
     # so epsilon != 0
-    def is_close(a, b = 0, epsilon = 0.1):
+    def is_close(a, b = 0, epsilon = complex_epsilon):
         if DEBUG and abs(a - b) <= epsilon: print "Selected component is close" 
         return abs(a - b) <= epsilon
 
@@ -59,16 +62,12 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False, point_cloud=
         return intersect
 
     def in_bounds(a):
-           
         if bounds <= 0 or abs(bounds-abs(a)) <= bounds:
             if DEBUG: print "Selected component is in bounds"
 
             return True
         else:
             return False
-
-            
-
 
     n = 0
     points = []
