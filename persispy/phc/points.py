@@ -11,20 +11,13 @@ from phcpy.solutions import strsol2dict # points
 from persispy.point_cloud import PointCloud
 from persispy.hash_point import HashPoint
 
-class Singleton(type):
-    def __init__(self, *args, **kwargs):
-        super(Singleton, self).__init__(*args, **kwargs)
-        self.__instance = None
-    def __call__(self, *args, **kwargs):
-        if self.__instance is None:
-            self.__instance = super(Singleton, self).__call__(*args, **kwargs)
-        return self.__instance
 
-DEBUG = False
 class phc(object):
 
 
     def __init__(self, eqn, bounds = 1, num_points = 1, return_complex = False, DEBUG = False):
+        self.DEBUG = DEBUG
+
         self.bounds = bounds
         self.complex_epsilon = 0.1
 
@@ -38,7 +31,7 @@ class phc(object):
         # intersects
         self.phcEqn = eqn+";"
 
-        if DEBUG:
+        if self.DEBUG:
             print "====="
             print "input eqn: ",self.phcEqn
             print "====="
@@ -55,7 +48,7 @@ class phc(object):
             if not x.isdigit() and x.isalnum() and x not in self.varList:
                 self.varList.append(x)
         self.varList.sort()
-        if DEBUG: print "list of variables: ", self.varList
+        if self.DEBUG: print "list of variables: ", self.varList
 
         self.startSystem, self.startSol = self.start_system()
         self.find_more_points(num_points, return_complex)
@@ -64,7 +57,7 @@ class phc(object):
     def start_system(self):
         # It is possible to use a dictionary instead of a list
         # but is possibly unnecessary to store the intersect
-        if DEBUG: attempt = 0
+        if self.DEBUG: self.attempt = 0
 
         p = [self.phcEqn]
 
@@ -75,7 +68,7 @@ class phc(object):
         #  bounded by the variety.
         for x in range(len(self.varList)-1): p.append(self._intersect())
         startSystem, startSol = total_degree_start_system(p)
-        if DEBUG:
+        if self.DEBUG:
             print "system of equations"
             print "--"
             for x in p: print x
@@ -83,8 +76,8 @@ class phc(object):
             print "start solutions: ", len(startSol)
             for x in startSystem: print x
             for x in startSol: print x
-            attempt = attempt + 1
-            print "attempt #"+str(attempt)
+            self.attempt = self.attempt + 1
+            print "self.attempt #"+str(self.attempt)
         return startSystem, startSol
 
 
@@ -102,22 +95,22 @@ class phc(object):
             #  bounded by the variety.
             for x in range(len(self.varList)-1): p.append(self._intersect())
             phcSol = track(p, self.startSystem, self.startSol)
-            if DEBUG:
+            if self.DEBUG:
                 print "system of equations"
                 print "--"
                 for x in p: print x
                 print "--"
                 print "number of solutions: ", len(phcSol)
-                attempt = attempt + 1
-                print "attempt #"+str(attempt)
+                self.attempt = self.attempt + 1
+                print "attempt #"+str(self.attempt)
 
             #  Parsing the output of phcSol
             for i in phcSol:
-                if DEBUG: print "phc solution: \n", i 
+                if self.DEBUG: print "phc solution: \n", i 
                 d = strsol2dict(i)
                 point = [d[x] for x in self.varList]
                 if return_complex:
-                    points.append(point)
+                    points.append(tuple(point))
                     n = n + 1
                 else:
                     closeness = True 
@@ -127,12 +120,12 @@ class phc(object):
                             # sometimes phcpy gives more points than we ask,
                             # thus the additional check
                             if x == point[-1] and closeness == True and len(points) < num_points: 
-                                points.append([x.real for x in point])
-                                if DEBUG: print "appended point:",[x.real for x in point]
+                                points.append(tuple([x.real for x in point]))
+                                if self.DEBUG: print "appended point:",[x.real for x in point]
                         else:
                             closeness = False
 
-        if DEBUG: print "points: ",points
+        if self.DEBUG: print "points: ",points
 
         self.points = points + self.points
 
@@ -160,13 +153,13 @@ class phc(object):
     # so epsilon != 0
     def is_close(self, a, b = 0):
         epsilon = self.complex_epsilon
-        if DEBUG and abs(a - b) <= epsilon: print "Selected component is close" 
+        if self.DEBUG and abs(a - b) <= epsilon: print "Selected component is close" 
         return abs(a - b) <= epsilon
 
     def in_bounds(self, a):
         bounds = self.bounds
         if bounds <= 0 or abs(bounds-abs(a)) <= bounds:
-            if DEBUG: print "Selected component is in bounds"
+            if self.DEBUG: print "Selected component is in bounds"
             return True
         else:
             return False
@@ -185,15 +178,31 @@ class phc(object):
                 )
             )
 
-        pointCloud = PointCloud(cloudPoints) 
-        return pointCloud
+        self.pointCloud = PointCloud(cloudPoints) 
+        return self.pointCloud
+
 
 # for printing the points
+# eg.
+# $ print phc
+    def __str__(self):
+        return self.pointCloud.__str__()
+
     def __repr__(self):
         return self.points.__repr__()
 
+    def __getitem__(self, key):
+        return self.points[key]
 
-pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
+# allows PointCloud methods to be called on the instance
+    def __getattr__(self, name):
+        return getattr(self.pointCloud, name)
+
+
+
+
+
+
 def main():
     pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
     print pc

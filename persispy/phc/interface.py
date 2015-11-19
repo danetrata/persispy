@@ -1,3 +1,5 @@
+# TODO: Will be obsoleted in favor of a better class implimentation 
+
 """
 Takes a variety of type string and, after solving intersections with phcpy,
 returns a persispy point cloud. We must reject equations with with variables t, 
