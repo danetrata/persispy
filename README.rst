@@ -64,7 +64,8 @@ Next, the shared library "phcpy2c.so" needs to be compiled on each and every sys
 
 ::
 
-  make PHCpack/src/Objects/phcpyy2c.so
+  cd PHCpack/src/Objects/
+  make phcpy2c.so
 
 If all goes well, the very end of the compilation output will read that 
 "phcpy2c.so" was successfully linked and copied. 

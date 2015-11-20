@@ -287,7 +287,7 @@ class PointCloud:
 #             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
 
     def neighborhood_graph(self,epsilon,method):
-        return self._neighborhood_graph(epsilon,method,self._points,{v:[] for v in self._points})
+        return self._neighborhood_graph(epsilon,method,self._points,{v:set() for v in self._points})
 
     def _neighborhood_graph(self,epsilon,method,pointarray,dictionary):
         '''
@@ -329,8 +329,8 @@ class PointCloud:
                     if self._space=='affine':
                         dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords)*(self._points[i]._coords-self._points[j]._coords)))
                         if dist<epsilon:
-                            dictionary[self._points[i]].append([self._points[j],dist])
-                            dictionary[self._points[j]].append([self._points[i],dist])
+                            dictionary[self._points[i]].add((self._points[j],dist))
+                            dictionary[self._points[j]].add((self._points[i],dist))
                     elif self._space=='projective':
                         return None
             return wsc.wGraph(dictionary)
@@ -372,7 +372,7 @@ class PointCloud:
         greater = [point for point in pointarray if point._coords[n] > pivot._coords[n]]
         return self._selectpoint(greater, k, n)
 
-    def _subdivide_neighbors(self, e, dict, pointarray, coordinate=0, method='exact', depth=-1):
+    def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
         #divides the space into two regions about the median point relative to "coordinate"
         #glues the two regions, then recursively calls itself on the two regions.
         if len(pointarray)>1:
@@ -398,19 +398,19 @@ class PointCloud:
                 for j in range(len(gluebigger)):
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
                     if dist<e:
-                        dict[gluesmaller[i]].append([gluebigger[j],dist])
+                        dictionary[gluesmaller[i]].add((gluebigger[j],dist))
                     #    dict[gluesmaller[i]].sort(key = lambda x: len(dict[x]))
-                        dict[gluebigger[j]].append([gluesmaller[i],dist])
+                        dictionary[gluebigger[j]].add((gluesmaller[i],dist))
                     #    dict[gluebigger[j]].sort(key = lambda x: len(dict[x]))
 
             #recursively compute for the two regions, now using a different reference coordinate, to reduce gluing area
             if depth == -1: #depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate+1)%self.dimension()
-                self._subdivide_neighbors(e, dict, smaller, coordinate, method, depth=-1)
-                self._subdivide_neighbors(e, dict, bigger, coordinate, method, depth=-1)
+                self._subdivide_neighbors(e, dictionary, smaller, coordinate, method, depth=-1)
+                self._subdivide_neighbors(e, dictionary, bigger, coordinate, method, depth=-1)
             if depth == 0:
-                self._neighborhood_graph(e,method,smaller,dict)
-                self._neighborhood_graph(e,method,bigger,dict)
+                self._neighborhood_graph(e,method,smaller,dictionary)
+                self._neighborhood_graph(e,method,bigger,dictionary)
             if depth > 0:
                 coordinate = (coordinate+1)%self.dimension()
                 self._subdivide_neighbors(e, depth-1, coordinate, smaller)
