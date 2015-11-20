@@ -125,7 +125,6 @@ class phc(object):
                 point = [d[x] for x in self.varList]
                 if return_complex:
                     points.append(tuple(point))
-                    n = n + 1
                 else:
                     closeness = True 
                     for x in point: 
