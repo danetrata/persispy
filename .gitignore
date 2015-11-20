@@ -1,3 +1,13 @@
+# tex
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+
 # prefixes to ignore
 private*
 

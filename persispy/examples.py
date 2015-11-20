@@ -87,13 +87,10 @@ def points_3d_torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    print angles
-    print "length",len(angles)
-    print "length of element",len(angles[0])
+    hp = [HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),(2+np.cos(t[0]))*np.sin(t[1]),np.sin(t[0])])) for t in angles]
     hp = [HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),
         (2+np.cos(t[0]))*np.sin(t[1]),
         np.sin(t[0])])) for t in angles]
-    print "hp",hp
     return point_cloud.PointCloud(hp,space='affine')
 
 
