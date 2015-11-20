@@ -208,6 +208,9 @@ class phc(object):
     def __repr__(self):
         return self.points.__repr__()
 
+    def __len__(self):
+        return len(self.points)
+
 # returns a point
     def __getitem__(self, key):
         return self.points[key]
@@ -225,11 +228,11 @@ class phc(object):
 def main():
     pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
     print pc
-    print pc[0]
+    pc._DEBUG = False
     pc.find_more_points(10)
     print pc
-    pc()
-    print pc
+    print pc[0]
+    print pc.points[0]
     print pc.degree
 
 
