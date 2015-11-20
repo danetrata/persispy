@@ -1,6 +1,9 @@
 # prefixes to ignore
 private*
 
+# nonessential project files
+.ropeproject
+
 # Various swap files to ignore
 *.py[cod]
 *.sw[nop]
