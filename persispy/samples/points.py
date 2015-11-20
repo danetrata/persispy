@@ -24,9 +24,6 @@ import scipy.constants as scic
 from persispy import point_cloud, hash_point
 import numpy as np
 
-
-
-
 def points_2sphere(num_points, radius=1, method='normalized'):
     sphere(num_points, radius, method)
 def points_torus(num_points):

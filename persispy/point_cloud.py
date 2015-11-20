@@ -33,18 +33,21 @@ class PointCloud:
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
 
-        self._points=points
-        self._space=space
+        self._points = points
+        self._space = space
 
 
-    def __repr__(self):
+    def __str__(self):
         try:
             repr(self.dimension())
         except AttributeError:
             raise AttributeError('The numpy array must be a single set of points.')
         return 'Point cloud with ' + repr(self.num_points()) + \
-            ' points in real' + self._space + \
+            ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
+
+    def __repr__(self):
+        return self._points.__repr__()
 
     def num_points(self):
         return len(self._points)
