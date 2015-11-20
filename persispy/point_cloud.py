@@ -14,6 +14,18 @@ import math
 import os as os
 
 class PointCloud:
+
+
+#     def __dir__(self):
+#         return ["num_points()", 
+#                 "dimension()", 
+#                 "plot2d()", 
+#                 "plot3d()", 
+#                 "plot2d_neighborhood_graph(epsilon)", 
+#                 "plot3d_neighborhood_graph(epsilon)", 
+#                 "film_neighborhood_graph(step, num_steps)", 
+#                 "neighborhood_graph(epsilon, method)"]
+
     def __init__(self,points,space='affine'):
         '''
         Points should be a list of hashable objects.
