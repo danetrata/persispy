@@ -60,7 +60,11 @@ Clone from the remote PHCpack git repo.
   git clone https://github.com/callmetaste/PHCpack
 
 
-Next, the shared library "phcpy2c.so" needs to be compiled on each and every system. This fork is a stable release with of PHCpack a few changes to the setup so out-of-the-box installation on Unix is relatively easy. For other systems, a line in makefile has to be commented correctly. Also, the system makefile has absolute references, and any differences in system paths can cause an error. Check your respective makefile matches system variables if any errors occur.
+Next, the shared library "phcpy2c.so" needs to be compiled on each and every system.
+This fork is a stable release with of PHCpack a few changes to the setup so out-of-the-box installation on Unix is relatively easy.
+For other systems, a line in makefile has to be commented correctly.
+Also, the system makefile has absolute references, and any differences in system paths can cause an error.
+Check your respective makefile matches system variables if any errors occur.
 
 ::
 
