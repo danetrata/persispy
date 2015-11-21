@@ -36,7 +36,6 @@ class PointCloud:
         self._points = points
         self._space = space
 
-
     def __str__(self):
         try:
             repr(self.dimension())
@@ -57,8 +56,6 @@ class PointCloud:
             return len(self._points[0]._coords)
         elif self._space=='projective':
             return len(self._points[0]._coords)-1
-
-
 
     def plot2d(self,axes=(0,1)):
         if self._space=='affine':
