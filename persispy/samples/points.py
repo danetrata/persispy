@@ -24,7 +24,7 @@ import scipy.constants as scic
 from persispy import point_cloud, hash_point
 import numpy as np
 
-def points_2sphere(num_points, radius=1, method='normalized'):
+def points_2sphere(num_points, radius=1, method='rejection'):
     sphere(num_points, radius, method)
 def points_torus(num_points):
     torus(num_points)
@@ -33,7 +33,7 @@ def points_flat_torus(num_points):
 def points_cube(dim, num_points):
     cube(dim, num_points)
 
-def sphere(num_points,radius=1,method='normalized'):
+def sphere(num_points,radius=1,method='rejection'):
     '''
     Returns a PointCloud with num_points random points on the 2-sphere of given radius. With
     method=='normalized', random points are plotted in the unit cube, and then divided by
@@ -71,13 +71,9 @@ def torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    print angles
-    print "length",len(angles)
-    print "length of element",len(angles[0])
     hp = [hash_point.HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),
         (2+np.cos(t[0]))*np.sin(t[1]),
         np.sin(t[0])])) for t in angles]
-    print "hp",hp
     return point_cloud.PointCloud(hp,space='affine')
 
 def flat_torus(num_points):

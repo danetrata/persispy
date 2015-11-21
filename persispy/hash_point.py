@@ -11,9 +11,10 @@ class HashPoint:
     >>> HashPoint([1,2,3])
     array([1, 2, 3])
     '''
-    def __init__(self,coords,index):
+    def __init__(self,coords,index=0):
         self._coords=np.array(coords)
         self._index=index
+
     def __hash__(self):
         try:
             out=self._hash
@@ -24,5 +25,6 @@ class HashPoint:
 
     def __repr__(self):
         return "point "+str(self._index)+": "+str(self._coords.__repr__())[6:-1]
+
     def __cmp__(self,other):
         return self._index.__cmp__(other._index)
