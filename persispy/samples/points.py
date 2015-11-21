@@ -24,15 +24,6 @@ import scipy.constants as scic
 from persispy import point_cloud, hash_point
 import numpy as np
 
-def points_2sphere(num_points, radius=1, method='rejection'):
-    sphere(num_points, radius, method)
-def points_torus(num_points):
-    torus(num_points)
-def points_flat_torus(num_points):
-    flat_torus(num_points)
-def points_cube(dim, num_points):
-    cube(dim, num_points)
-
 def sphere(num_points,radius=1,method='rejection'):
     '''
     Returns a PointCloud with num_points random points on the 2-sphere of given radius. With
@@ -48,17 +39,17 @@ def sphere(num_points,radius=1,method='rejection'):
     def normalize(x):
         return (1/np.sqrt(sum(x*x)))*x
     if method=='normalized':
-        return point_cloud.PointCloud([hash_point.HashPoint(normalize(2*npr.random(3)-1)) for n in range(num_points)],space='affine')
+        return point_cloud.PointCloud([hash_point.HashPoint(normalize(2*npr.random(3)-1),index=n) for n in range(num_points)],space='affine')
     elif method=='rectangular':
         angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-        return point_cloud.PointCloud([hash_point.HashPoint(radius*np.array([np.sin(t[0])*np.cos(t[1]),np.sin(t[0])*np.sin(t[1]),np.cos(t[0])])) for t in angles],space='affine')
+        return point_cloud.PointCloud([hash_point.HashPoint(radius*np.array([np.sin(angles[n][0])*np.cos(angles[n][1]),np.sin(angles[n][0])*np.sin(angles[n][1]),np.cos(angles[n][0])]),index=n) for n in range(num_points)],space='affine')
     elif method=='rejection':
         count = 0
         points=[]
         while count<num_points:
             pt=2*npr.random(3)-1
             if np.sqrt(sum(pt*pt)) <= radius:
-                points.append(hash_point.HashPoint(normalize(pt)))
+                points.append(hash_point.HashPoint(normalize(pt),count))
                 count=count+1
         return point_cloud.PointCloud(points,space='affine')
     else:
@@ -71,9 +62,9 @@ def torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    hp = [hash_point.HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),
-        (2+np.cos(t[0]))*np.sin(t[1]),
-        np.sin(t[0])])) for t in angles]
+    hp = [hash_point.HashPoint(np.array([(2+np.cos(angles[n][0]))*np.cos(angles[n][1]),
+        (2+np.cos(angles[n][0]))*np.sin(angles[n][1]),
+        np.sin(angles[n][0])]),index=n) for n in range(num_points)]
     return point_cloud.PointCloud(hp,space='affine')
 
 def flat_torus(num_points):
@@ -83,7 +74,7 @@ def flat_torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 4
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    return point_cloud.PointCloud([hash_point.HashPoint(np.array([np.cos(t[0]),np.sin(t[0]),np.cos(t[1]),np.sin(t[1])])) for t in angles],space='affine')
+    return point_cloud.PointCloud([hash_point.HashPoint(np.array([np.cos(angles[n][0]),np.sin(angles[n][0]),np.cos(angles[n][1]),np.sin(angles[n][1])]),index=n) for n in range(num_points)],space='affine')
 
 def cube(dim,num_points):
     '''
@@ -91,4 +82,4 @@ def cube(dim,num_points):
     >>> points_cube(4,1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
-    return point_cloud.PointCloud([hash_point.HashPoint(npr.random(dim)) for n in range(num_points)],space='affine')
+    return point_cloud.PointCloud([hash_point.HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
