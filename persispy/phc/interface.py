@@ -1,17 +1,22 @@
+# TODO: Will be obsoleted in favor of a better class implimentation 
+
 """
 Takes a variety of type string and, after solving intersections with phcpy,
 returns a persispy point cloud. We must reject equations with with variables t, 
 e, E, i, I because their meanings are reserved.
 """
-def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
+def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False, point_cloud=True, bounds=0):
     import numpy as np
     from phcpy.solver import total_degree_start_system
     from phcpy.trackers import track
     from phcpy.solutions import strsol2dict # points
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
-
-
+    if bounds == 0:
+        bounds = 1
+    complex_epsilon = 0.1
+    relative_epsilon = 0.1
+    
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
     phcEqn = eqn+";"
@@ -38,8 +43,8 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
     # Adjust epsilon to your liking.
     # Note: phcpack almost always gives an imaginary parts, as small as 10^-48,
     # so epsilon != 0
-    def is_close(a, b = 0, epsilon = 0.1):
-        if DEBUG and abs(a - b) <= epsilon: print "Selected point is close" 
+    def is_close(a, b = 0, epsilon = complex_epsilon):
+        if DEBUG and abs(a - b) <= epsilon: print "Selected component is close" 
         return abs(a - b) <= epsilon
 
     # "intersect()" forms intersects from extracted the terms. Returns a plane 
@@ -47,7 +52,7 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
     # of the same dim as the variety to prevent a overdetermined or 
     # underdetermined systems.
     def intersect():
-        rand_list = np.random.uniform(-1,1, size=len(varList))
+        rand_list = np.random.uniform(-bounds, bounds, size=len(varList))
         i = 0
         intersect = [] 
         for x in rand_list:
@@ -57,6 +62,14 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
         intersect.append(";")
         intersect = "".join(intersect)
         return intersect
+
+    def in_bounds(a):
+        if bounds <= 0 or abs(bounds-abs(a)) <= bounds:
+            if DEBUG: print "Selected component is in bounds"
+
+            return True
+        else:
+            return False
 
     n = 0
     points = []
@@ -115,28 +128,33 @@ def phc_cloud(eqn, num_points=1, return_complex=False, DEBUG=False):
                 closeness = True 
                 for x in point: 
                 # choses the points we want
-                    if is_close(x.imag):
+                    if is_close(x.imag) and in_bounds(x.real):
                         # sometimes phcpy gives more points than we ask,
                         # thus the additional check
                         if x == point[-1] and closeness == True and \
                             n < num_points: 
                             points.append([x.real for x in point])
                             n = n + 1
+                            if DEBUG: print "appended point:",[x.real for x in point]
                     else:
                         closeness = False
 
     if DEBUG: print "points: ",points
+    
+    if point_cloud == False:
+        return points
 
-    cloudPoints = []
-    for coord in points:
-        cloudPoints.append(
-            HashPoint(
-                np.array(
-                    coord, 
-                    dtype=complex
+    if point_cloud == True:
+        cloudPoints = []
+        for coord in points:
+            cloudPoints.append(
+                HashPoint(
+                    np.array(
+                        coord, 
+                        dtype=complex
+                    )
                 )
             )
-        )
 
-    return PointCloud(cloudPoints) 
+        return PointCloud(cloudPoints) 
 

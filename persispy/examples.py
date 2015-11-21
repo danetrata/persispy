@@ -23,29 +23,6 @@ import scipy.constants as scic
 import point_cloud as point_cloud
 import hashlib as hashlib
 
-class HashPoint:
-    '''
-    A wrapped numpy array to allow hashing.
-
-    Vars: _coords (a numpy array).
-
-    EXAMPLES:
-    >>> HashPoint([1,2,3])
-    array([1, 2, 3])
-    '''
-    def __init__(self,coords):
-        self._coords=np.array(coords)
-
-    def __hash__(self):
-        try:
-            out=self._hash
-            return out
-        except:
-            self._hash=int(hashlib.sha1(self._coords.view()).hexdigest(),16)
-            return self._hash
-
-    def __repr__(self):
-        return self._coords.__repr__()
 
 def points_2sphere(num_points,radius=1,method='normalized'):
     '''
@@ -62,7 +39,7 @@ def points_2sphere(num_points,radius=1,method='normalized'):
     def normalize(x):
         return (1/np.sqrt(sum(x*x)))*x
     if method=='normalized':
-        return point_cloud.PointCloud([HashPoint(normalize(2*npr.random(3)-1)) for n in range(num_points)],space='affine')
+        return point_cloud.PointCloud([HashPoint(normalize(2*npr.random(3)-1),n) for n in range(num_points)],space='affine')
     elif method=='rectangular':
         angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
         return point_cloud.PointCloud([HashPoint(radius*np.array([np.sin(t[0])*np.cos(t[1]),np.sin(t[0])*np.sin(t[1]),np.cos(t[0])])) for t in angles],space='affine')
@@ -85,13 +62,10 @@ def points_3d_torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    print angles
-    print "length",len(angles)
-    print "length of element",len(angles[0])
+    hp = [HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),(2+np.cos(t[0]))*np.sin(t[1]),np.sin(t[0])])) for t in angles]
     hp = [HashPoint(np.array([(2+np.cos(t[0]))*np.cos(t[1]),
         (2+np.cos(t[0]))*np.sin(t[1]),
         np.sin(t[0])])) for t in angles]
-    print "hp",hp
     return point_cloud.PointCloud(hp,space='affine')
 
 

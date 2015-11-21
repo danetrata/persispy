@@ -3,6 +3,7 @@ import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from utils import tuples
+import itertools
 
 class wSimplex:
     '''
@@ -54,10 +55,10 @@ class wGraph:
                 if e[0]==e[1]:
                     raise TypeError('Edges are lists of pairs of distinct vertices followed by a weight.')
         
-        adj={v:[] for v in vertices}
+        adj={v:set() for v in vertices}
         for e in edges:
-            adj[e[0]].append([e[1],e[2]])
-            adj[e[1]].append([e[0],e[2]])
+            adj[e[0]].add((e[1],e[2]))
+            adj[e[1]].add((e[0],e[2]))
         return cls(adj)
 
     def __repr__(self):
@@ -128,7 +129,7 @@ class wGraph:
         for k in keys:
             for v in self._adj[k]:
                 if v[1]<epsilon:
-                    adj[k].append(v)
+                    adj[k].add(v)
         return wGraph(adj)
 
     def VRComplex(self,epsilon,dimension,method='incremental'):
@@ -295,3 +296,73 @@ class wSimplicialComplex:
                 if s.weight() < epsilon:
                     simplices[d].append(s)
         return wSimplicialComplex(wg,simplices)
+
+class sorted_clique_list:
+    def __init__(self,wg):
+        '''wg is a weighted graph'''
+        self._cliques=[]
+        sorted_clique_list._BronKerboschPivot(set(),set(wg._adj.keys()),set(),wg._adj,self._cliques)
+        self._cliques.sort()
+        
+    def get_simplex_iterator(self,n):
+        '''
+        gives an iterable which includes all n simplices
+        '''
+        i = set()
+        for x in self._cliques:
+            if len(x)>=n+1:
+                i.update(itertools.combinations(x,n+1))
+        return _clique_iterator(iter(i))
+    
+    def get_ordered_simplex_iterator(self,n):
+        i = set()
+        for x in self._cliques:
+            if len(x)>=n+1:
+                i.update(itertools.combinations(x,n+1))
+        return _clique_iterator(iter(sorted(list(i))))
+    
+    def get_full_simplex_iterator(self,n):
+        '''
+        gives an iterable which includes all k simplices for k <= n
+        '''
+        i = self.get_simplex_iterator(n)
+        j = []
+        for c in self._cliques:
+            if len(c)<n+1:
+                j.append(c)
+        return _clique_iterator(itertools.chain(iter(j),i))
+        
+        
+    @staticmethod
+    def _BronKerbosch(r,p,x,adj,c):
+        if len(p)==0 and len(x)==0:
+            c.append(sorted(list(r)))
+        else:
+            for v in set(p):
+                nbh = {x[0] for x in adj[v]}
+                sorted_clique_list._BronKerbosch(r | {v}, p & nbh, x & nbh,adj,c)
+                p.remove(v)
+                x.add(v)
+    
+    @staticmethod
+    def _BronKerboschPivot(r,p,x,adj,c):
+        if len(p)==0 and len(x)==0:
+            c.append(sorted(list(r)))
+        else:
+            u = iter(p | x).next()
+            for v in p - adj[u]:
+                nbh = {x[0] for x in adj[v]}
+                sorted_clique_list._BronKerboschPivot(r | {v}, p & nbh, x & nbh,adj,c)
+                p.remove(v)
+                x.add(v)
+            
+class _clique_iterator:
+    def __init__(self, i):
+        self.iterator = i
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        return tuple(self.iterator.next())
+    
