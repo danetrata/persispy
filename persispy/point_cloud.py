@@ -33,6 +33,7 @@ class PointCloud:
 #                 "neighborhood_graph(epsilon, method)"]
 
     def __init__(self,points,space='affine'):
+
         '''
         Points should be a list of hashable objects.
 
@@ -56,6 +57,7 @@ class PointCloud:
 
 
     def __str__(self):
+
         try:
             repr(self.dimension())
         except AttributeError:
@@ -64,21 +66,27 @@ class PointCloud:
             ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
 
+
     def __repr__(self):
+
         return self._points.__repr__()
 
+
     def num_points(self):
+
         return len(self._points)
 
+
     def dimension(self):
+
         if self._space=='affine':
             return len(self._points[0]._coords)
         elif self._space=='projective':
             return len(self._points[0]._coords)-1
 
 
-
     def plot2d(self, axes=(0,1), save = False):
+
         if self._space=='affine':
             fig,(ax)=plt.subplots(1,1)
             fig.set_size_inches(10.0,10.0)
@@ -100,7 +108,9 @@ class PointCloud:
         else:
             return None
 
+
     def _display_plot(self, plt, method, save):
+
         if save is False:
             plt.show()
             plt.close()
@@ -123,7 +133,9 @@ class PointCloud:
                     plt.savefig('tests/'+save+'_'+str(attempt)+'.png')
         return True
 
+
     def plot3d(self,axes=(0,1,2), save = False):
+
         if self._space=='affine':
             fig=plt.figure()
             fig.set_size_inches(10.0,10.0)
@@ -157,6 +169,7 @@ class PointCloud:
 
     # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
     def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision', save = False):
+
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
             edges=[]
@@ -203,8 +216,10 @@ class PointCloud:
         else:
             return None
 
+
     # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
     def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False):
+
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
             edges=[]
@@ -234,8 +249,10 @@ class PointCloud:
         else:
             return None
 
+
     # Makes movie of 2-dimensional plots
     def film_neighborhood_graph(self,step,num_steps,fps=24,method='subdivision',file_name='movie.mp4'):
+
         '''
         WARNING: do not run this in a Dropbox folder.
 
@@ -290,9 +307,12 @@ class PointCloud:
 
 
     def neighborhood_graph(self,epsilon,method):
+
         return self._neighborhood_graph(epsilon,method,self._points,{v:set() for v in self._points})
 
+
     def _neighborhood_graph(self,epsilon,method,pointarray,dictionary):
+
         '''
         The 'method' string is separated by spaces. Acceptable values:
 
@@ -347,6 +367,7 @@ class PointCloud:
             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
 
     def _selectpoint(self,pointarray, k, n):
+
         #gives the kth smallest point of "self._points", according to the nth coordinate
         #we use this to give the median, but a general solution for k is needed for the recursive algorithm
         #this algorithm is O(n) for best and worst cases
@@ -375,7 +396,9 @@ class PointCloud:
         greater = [point for point in pointarray if point._coords[n] > pivot._coords[n]]
         return self._selectpoint(greater, k, n)
 
+
     def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
+
         #divides the space into two regions about the median point relative to "coordinate"
         #glues the two regions, then recursively calls itself on the two regions.
         if len(pointarray)>1:

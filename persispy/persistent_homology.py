@@ -15,9 +15,17 @@ class PersistentHomology:
             self._addSimplex(s)
         
     def compute(self, epsilon):
-        while self.eventQueue[0].epsilon<epsilon:
-            self.eventQueue[0].handle(self.bettyList)
-            del self.eventQueue[0]
+        while True:
+            if(len(self.eventQueue)!=0):
+                if(self.eventQueue[0].epsilon<epsilon):
+                    self.eventQueue[0].handle(self.bettyList)
+                    del self.eventQueue[0]
+                else:
+                    break
+            else:
+                break
+                    
+                
         
     def _addSimplex(self, Sim):
         if len(Sim)==0:
