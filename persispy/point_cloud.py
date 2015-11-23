@@ -104,29 +104,28 @@ class PointCloud:
             return None
 
 
-    def _display_plot(self, plt, method, save):
+    def _display_plot(self, plt, method, name):
 
         if save is False:
             plt.show()
             plt.close()
         elif save is not False:
+
+            def save(name): # overwrite protection
+
+                if os.path.isfile(name+'.png') is False:
+                    plt.savefig(name)
+                else:
+                    attempt = 2
+                    while(os.path.isfile(name+'_'+str(attempt)+'.png')):
+                        attempt = attempt + 1
+                    plt.savefig(name+'_'+str(attempt))
+
+
             if type(save) is bool: # default
-                if os.path.isfile(method+'.png') is False:
-                    plt.savefig(method)
-                else:
-                    attempt = 2
-                    while(os.path.isfile('plot3d_'+str(attempt)+'.png')):
-                        attempt = attempt + 1
-                    plt.savefig('plot3d_'+str(attempt))
+                save(method)
             elif type(save) is str: # if save gets a string
-                print save
-                if os.path.isfile(save+'.png') is False:
-                    plt.savefig(save)
-                else:
-                    attempt = 2
-                    while(os.path.isfile(save+'_'+str(attempt)+'.png')):
-                        attempt = attempt + 1
-                    plt.savefig(save+'_'+str(attempt))
+                save(name)
         return True
 
 

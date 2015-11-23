@@ -14,6 +14,7 @@ pDict = {
     "eightsurface"     : "4*z^4 + 1 * (x^2 + y^2 - 4*z^2)",
     "wideeightsurface" : "4*z^4 + 1/2 * (x^2 + y^2 - 4*z^2) - 1/4",
     "hyperbolid"       : "x^2 + y^2 - z^2 - 1",
+    "cubic"            : "x^3 + x^2 + x - 1"
 }
 
 
@@ -24,30 +25,39 @@ def main():
     print save
     print pDict.keys()
     for x in pDict.keys():
-        pc = phc(pDict[x], num_points = 1000)
-        print pc
-        epsilon = 0.2
         try:
             try:
-                print pc.neighborhood_graph(epsilon, method = "subdivision").connected_components_1()
+                pc = phc(pDict[x], num_points = 1000)
+                print pc
+                epsilon = 0.2
             except:
-                raise RuntimeError("failed to get the connected components")
+                raise RuntimeError("failed to get enough points of "+str(x))
 
+            try:
+                cp = pc.neighborhood_graph(epsilon, method = "subdivision").connected_components_1()
+                print "connected componenets",cp
+
+            except:
+                raise RuntimeError("failed to get the connected components of "+str(x))
+
+# plotting based on dimension
             dim = pc.dimension()
+
             try:
                 if dim == 2:
                     pc.plot2d(save = save)
                     if pc.plot2d_neighborhood_graph(epsilon, save = save) != True:
-                        raise RuntimeError
+                        raise RuntimeError("failed to plot2d "+str(x))
                 if dim == 3:
                     pc.plot3d(save = save)
                     if pc.plot3d_neighborhood_graph(epsilon, save = save) != True:
-                        raise RuntimeError
-            except:
-                raise RuntimeError("failed to generate a plot of dimension \""+dim+"\"")
+                        raise RuntimeError("failed to plot3d "+str(x))
 
-        except:
-            print "uh oh, trying next test"
+            except:
+                raise RuntimeError("failed to generate a plot of dimension \""+str(dim)+"\"")
+
+        except RuntimeError as inst:
+            print inst.args[0], " uh oh, trying next test"
     
 
 
