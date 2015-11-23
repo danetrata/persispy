@@ -13,9 +13,15 @@ from numpy import array
 import math
 import os as os
 
+import sys
+
+
+
+
+
+
 class PointCloud:
-
-
+    
 #     def __dir__(self):
 #         return ["num_points()", 
 #                 "dimension()", 
@@ -30,9 +36,9 @@ class PointCloud:
         '''
         Points should be a list of hashable objects.
 
-        Variables:
-            _points: a array of hashable points.
-            _space: either 'affine' or 'projective'.
+        Variables   :
+            _points : a array of hashable points.
+            _space  : either 'affine' or 'projective'.
         '''
         try:
             self._points=list(points)
@@ -72,7 +78,7 @@ class PointCloud:
 
 
 
-    def plot2d(self,axes=(0,1)):
+    def plot2d(self, axes=(0,1), save = False):
         if self._space=='affine':
             fig,(ax)=plt.subplots(1,1)
             fig.set_size_inches(10.0,10.0)
@@ -87,15 +93,37 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
-            plt.show()
-            plt.close()
 
+            self._display_plot(plt, "plot2d", save)
 
             return True
         else:
             return None
 
-    def plot3d(self,axes=(0,1,2)):
+    def _display_plot(self, plt, method, save):
+        if save is False:
+            plt.show()
+            plt.close()
+        elif save is not False:
+            if type(save) is bool: # default
+                if os.path.isfile('tests/plot3d.png') is False:
+                    plt.savefig('tests/plot3d.png')
+                else:
+                    attempt = 2
+                    while(os.path.isfile('tests/plot3d_'+str(attempt)+'.png')):
+                        attempt = attempt + 1
+                    plt.savefig('tests/plot3d_'+str(attempt)+'.png')
+            elif type(save) is str: # if save gets a string
+                if os.path.isfile('tests/'+save+'.png') is False:
+                    plt.savefig('tests/'+save+'.png')
+                else:
+                    attempt = 2
+                    while(os.path.isfile('tests/'+save+'_'+str(attempt)+'.png')):
+                        attempt = attempt + 1
+                    plt.savefig('tests/'+save+'_'+str(attempt)+'.png')
+        return True
+
+    def plot3d(self,axes=(0,1,2), save = False):
         if self._space=='affine':
             fig=plt.figure()
             fig.set_size_inches(10.0,10.0)
@@ -118,16 +146,17 @@ class PointCloud:
             # Camera distance (default is 10)
             ax.dist=10
             fig.add_axes(ax)
-            plt.show()
-            # Activate to save to file, deactivate above line
-#            plt.savefig('plot.png')
-            plt.close()
+
+            # whether to display plot or save it
+            self._display_plot(plt, "plot3d", save)
+
             return True
         else:
             return None
 
+
     # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision'):
+    def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision', save = False):
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
             edges=[]
@@ -167,14 +196,15 @@ class PointCloud:
 #             xcoords=[p._coords[axes[0]] for p in self._points]
 #             ycoords=[p._coords[axes[1]] for p in self._points]
 #             ax.plot(xcoords,ycoords,',')
-            plt.show()
-            plt.close()
+
+            self._display_plot(plt, "plot2d", save)
+
             return True
         else:
             return None
 
     # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision'):
+    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False):
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
             edges=[]
@@ -197,8 +227,9 @@ class PointCloud:
             ax.grid(True)
             ax.set_aspect('equal')
             ax.add_collection(lines)
-            plt.show()
-            plt.close()
+
+            self._display_plot(plt, "plot2d", save)
+
             return True
         else:
             return None
@@ -257,34 +288,6 @@ class PointCloud:
         else:
             return None
 
-#  neighborhood_graph(self,epsilon,method='subdivision'):
-#         if method=='subdivision':
-#             if self._space=='projective':
-#                 return self.neighborhood_graph(epsilon,method='exact')
-#             elif self._space=='affine':
-#                 return None
-#         elif method=='exact':
-#             '''
-#             Issue: this doesn't work because lists and numpy arrays are not hashable.
-#             '''
-#             dict={v:[] for v in self._points}
-#             for t in tuples(2,self._points):
-#                 if self._space=='affine':
-#                     dist=np.sqrt(sum((t[0]._coords-t[1]._coords)*(t[0]._coords-t[1]._coords)))
-#                     if dist<epsilon:
-#                         dict[t[0]].append([t[1],dist])
-#                         dict[t[1]].append([t[0],dist])
-#                 elif self._space=='projective':
-#                     return None
-#             return wsc.wGraph(dict)
-#         elif method=='approximate':
-#             return None
-#         elif method=='randomized':
-#             return None
-#         elif method=='landmarking':
-#             return None
-#         else:
-#             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
 
     def neighborhood_graph(self,epsilon,method):
         return self._neighborhood_graph(epsilon,method,self._points,{v:set() for v in self._points})
@@ -293,10 +296,10 @@ class PointCloud:
         '''
         The 'method' string is separated by spaces. Acceptable values:
 
-        "exact"									does "exact"
-        "subdivision"							does "subdivision" to infinite depth
-        "subdivision 3"							does "subdivision" to depth 3, then "exact"
-        "subdivision 7 approximate"				does "subdivision" to depth 7, then "approximate"
+        "exact"                     does "exact"
+        "subdivision"               does "subdivision" to infinite depth
+        "subdivision 3"             does "subdivision" to depth 3, then "exact"
+        "subdivision 7 approximate" does "subdivision" to depth 7, then "approximate"
 
         '''
         methodarray=method.split(' ')
