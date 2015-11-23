@@ -2,35 +2,54 @@
 from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
+from datetime import datetime
+import sys
+sys.setrecursionlimit(1000)
 
 pDict = {
-    "circle"     : "x^2 + y^2 - 1",
-    "sphere"     : "x^2 + y^2 + z^2 - 1",
-    "torus"      : "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2",
-    "hyperbolid" : "x^2 + y^2 - z^2 - 1",
-    "line"       : "a*x",
-    "quadratic"  : "a*x^2 + b*x + c",
-    "cubic"      : "a*x^3 + b*x^2 + c*x + d",
-    "quartic"    : "a*x^4 + b*x^3 + c*x^2 + d*x + e"
+    "circle"           : "x^2 + y^2 - 1",
+    "sphere"           : "x^2 + y^2 + z^2 - 1",
+    "torus"            : "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2",
+    "doubletorus"      : "((x^2 + y^2)^2 - x^2 +y^2)^2 + z - 1/2",
+    "eightsurface"     : "4*z^4 + 1 * (x^2 + y^2 - 4*z^2)",
+    "wideeightsurface" : "4*z^4 + 1/2 * (x^2 + y^2 - 4*z^2) - 1/4",
+    "hyperbolid"       : "x^2 + y^2 - z^2 - 1",
 }
 
 
 
 def main():
+    today = datetime.today()
+    save = str(today.month)+"-"+str(today.day)
+    print save
+    print pDict.keys()
+    for x in pDict.keys():
+        pc = phc(pDict[x], num_points = 1000)
+        print pc
+        epsilon = 0.2
+        try:
+            try:
+                print pc.neighborhood_graph(epsilon, method = "subdivision").connected_components_1()
+            except:
+                raise RuntimeError("failed to get the connected components")
 
-    runs = 0
-    pc = phc(pDict["quadratic"], num_points)
-    z = "small"
-    while runs < 10:
-        runs = runs + 1
+            dim = pc.dimension()
+            try:
+                if dim == 2:
+                    pc.plot2d(save = save)
+                    if pc.plot2d_neighborhood_graph(epsilon, save = save) != True:
+                        raise RuntimeError
+                if dim == 3:
+                    pc.plot3d(save = save)
+                    if pc.plot3d_neighborhood_graph(epsilon, save = save) != True:
+                        raise RuntimeError
+            except:
+                raise RuntimeError("failed to generate a plot of dimension \""+dim+"\"")
 
-        for epsilon in [0.2, 0.1]:
-            pc.neighborhood_graph(epsilon, "subdivision")
+        except:
+            print "uh oh, trying next test"
+    
 
-            x = len(pc.points)
-            y = pc.degree
-
-        pc.find_more_points(1000)
 
     """ 
     pseudocode:

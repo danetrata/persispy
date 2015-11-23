@@ -29,6 +29,7 @@ class phc(object):
 
         self._bounds = bounds
         self._complex_epsilon = 0.1
+        self._failure = 100
 
         self.eqn = eqn
 
@@ -109,6 +110,7 @@ class phc(object):
     def find_more_points(self, num_points, return_complex = False):
         # phcpy solver
         points = []
+        failure = 0
         while(len(points) < num_points):
             p = self._system()
             phcSol = track(p, self._startSystem, self._startSol)
@@ -125,6 +127,7 @@ class phc(object):
             for i in phcSol:
                 if self._DEBUG: print "phc solution: \n", i 
                 d = strsol2dict(i)
+                
                 point = [d[x] for x in self.varList]
                 if return_complex:
                     points.append(tuple(point))
@@ -141,8 +144,14 @@ class phc(object):
                                     and len(points) < num_points: 
                                 points.append(tuple([x.real for x in point]))
                                 if self._DEBUG: print "appended point:",[x.real for x in point]
+                                failure = 0
                         else:
                             closeness = False
+                            failure = failure + 1
+            if self._failure <= failure:
+                raise RuntimeError("equation too many complex solutions in a row")
+
+
 
         if self._DEBUG: print "points: ",points
 

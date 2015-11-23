@@ -30,8 +30,8 @@ def test_3():
 
 
 def main():
-    test_1()
-    test_2()
+#     test_1()
+#     test_2()
     test_3()
 
 

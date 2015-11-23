@@ -111,21 +111,22 @@ class PointCloud:
             plt.close()
         elif save is not False:
             if type(save) is bool: # default
-                if os.path.isfile('tests/plot3d.png') is False:
-                    plt.savefig('tests/plot3d.png')
+                if os.path.isfile(method+'.png') is False:
+                    plt.savefig(method)
                 else:
                     attempt = 2
-                    while(os.path.isfile('tests/plot3d_'+str(attempt)+'.png')):
+                    while(os.path.isfile('plot3d_'+str(attempt)+'.png')):
                         attempt = attempt + 1
-                    plt.savefig('tests/plot3d_'+str(attempt)+'.png')
+                    plt.savefig('plot3d_'+str(attempt))
             elif type(save) is str: # if save gets a string
-                if os.path.isfile('tests/'+save+'.png') is False:
-                    plt.savefig('tests/'+save+'.png')
+                print save
+                if os.path.isfile(save+'.png') is False:
+                    plt.savefig(save)
                 else:
                     attempt = 2
-                    while(os.path.isfile('tests/'+save+'_'+str(attempt)+'.png')):
+                    while(os.path.isfile(save+'_'+str(attempt)+'.png')):
                         attempt = attempt + 1
-                    plt.savefig('tests/'+save+'_'+str(attempt)+'.png')
+                    plt.savefig(save+'_'+str(attempt))
         return True
 
 
