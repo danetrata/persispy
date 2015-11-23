@@ -13,11 +13,6 @@ from numpy import array
 import math
 import os as os
 
-import sys
-
-
-
-
 
 
 class PointCloud:
