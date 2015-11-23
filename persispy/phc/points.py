@@ -13,6 +13,9 @@ from phcpy.solutions import strsol2dict # points
 from persispy.point_cloud import PointCloud
 from persispy.hash_point import HashPoint
 
+import sys
+sys.setrecursionlimit(25000)
+
 
 # TODO: Implement poisson sampling
 class phc(object):
@@ -21,7 +24,7 @@ class phc(object):
     def __dir__(self):
         return ["eqn", "varList", "degree", "points", "find_more_points()"]
 
-    def __init__(self, eqn, bounds = 1, num_points = 1, return_complex = False, DEBUG = False):
+    def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, DEBUG = False):
         self._DEBUG = DEBUG
 
         self._bounds = bounds
