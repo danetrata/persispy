@@ -29,7 +29,7 @@ class phc(object):
 
         self._bounds = bounds
         self._complex_epsilon = 0.1
-        self._failure = 100
+        self._failure = 1000
 
         self.eqn = eqn
 
