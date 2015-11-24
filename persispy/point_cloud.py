@@ -80,15 +80,17 @@ class PointCloud:
             return len(self._points[0]._coords)-1
 
 
-    def plot2d(self, axes=(0,1), save = False):
+    def plot2d(self, axes=(0,1), save = False, title = False):
 
         if self._space=='affine':
             fig,(ax)=plt.subplots(1,1)
             fig.set_size_inches(10.0,10.0)
+            if title is not False:
+                fig.suptitle(title)
             xcoords=[p._coords[axes[0]] for p in self._points]
             ycoords=[p._coords[axes[1]] for p in self._points]
 
-            ax.plot(xcoords,ycoords,'g*')
+            ax.plot(xcoords,ycoords,'b*')
 
             ax.grid(True)
             ax.axis([1.1*min(xcoords),1.1*max(xcoords),1.1*min(ycoords),1.1*max(ycoords)])
@@ -104,14 +106,13 @@ class PointCloud:
             return None
 
 
-    def _display_plot(self, plt, method, name):
+    def _display_plot(self, plt, method, save):
 
         if save is False:
             plt.show()
-            plt.close()
         elif save is not False:
 
-            def save(name): # overwrite protection
+            def save_file(name): # overwrite protection
 
                 if os.path.isfile(name+'.png') is False:
                     plt.savefig(name)
@@ -123,17 +124,20 @@ class PointCloud:
 
 
             if type(save) is bool: # default
-                save(method)
+                save_file(method)
             elif type(save) is str: # if save gets a string
-                save(name)
+                save_file(save)
+        plt.close()
         return True
 
 
-    def plot3d(self,axes=(0,1,2), save = False):
+    def plot3d(self,axes=(0,1,2), save = False, title = False):
 
         if self._space=='affine':
             fig=plt.figure()
             fig.set_size_inches(10.0,10.0)
+            if title is not False:
+                fig.suptitle(title)
             ax = plt3.Axes3D(fig)
             xcoords=[p._coords[axes[0]] for p in self._points]
             ycoords=[p._coords[axes[1]] for p in self._points]
@@ -163,7 +167,7 @@ class PointCloud:
 
 
     # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision', save = False):
+    def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision', save = False, title = False):
 
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -197,6 +201,8 @@ class PointCloud:
             lines=mpl.collections.LineCollection(edges,color=c)
             fig,(ax)=plt.subplots()
             fig.set_size_inches(10.0,10.0)
+            if title is not False:
+                fig.suptitle(title)
             ax.grid(True)
             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
             ax.set_aspect('equal')
@@ -205,7 +211,7 @@ class PointCloud:
 #             ycoords=[p._coords[axes[1]] for p in self._points]
 #             ax.plot(xcoords,ycoords,',')
 
-            self._display_plot(plt, "plot2d", save)
+            self._display_plot(plt, "plot2d_ng", save)
 
             return True
         else:
@@ -213,7 +219,7 @@ class PointCloud:
 
 
     # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False):
+    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False, title = False):
 
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -226,8 +232,10 @@ class PointCloud:
             lines=a3.art3d.Poly3DCollection(edges)
             lines.set_color([1,.5,.5,.5])
             fig=plt.figure()
-            ax = plt3.Axes3D(fig)
             fig.set_size_inches(10.0,10.0)
+            if title is not False:
+                fig.suptitle(title)
+            ax = plt3.Axes3D(fig)
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
@@ -238,7 +246,7 @@ class PointCloud:
             ax.set_aspect('equal')
             ax.add_collection(lines)
 
-            self._display_plot(plt, "plot2d", save)
+            self._display_plot(plt, "plot3d_ng", save)
 
             return True
         else:
