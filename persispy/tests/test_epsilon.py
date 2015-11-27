@@ -3,8 +3,12 @@ from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
 from datetime import datetime
-import sys
-sys.setrecursionlimit(1000)
+from sympy import symbols
+from numpy.random import random_integers
+from random import choice
+
+# import sys
+# sys.setrecursionlimit(1000)
 
 pDict = {
     "circle"           : "x^2 + y^2 - 1",
@@ -16,89 +20,131 @@ pDict = {
     "degree3sphere"    : "x^3 + y^3 + z^3 - 1"
 }
 
-def try_persispy(eqn, num_points, csv):
+def try_epsilon_tests(eqn, num_points, csv, filepath):
+
 
     totalFailures = []
     for epsilon in [0.3, 0.25, 0.2, 0.15, 0.1]:
-        failures = [eqn+" e: "+str(epsilon)]
+        failures = [str(eqn)+" e: "+str(epsilon)]
         row = []
         try:
-            pc = phc(eqn, num_points = num_points, bounds = 3)
-            row.append(pc.eqn)
-            row.append(pc.degree)
-            row.append("coeffs")
-            row.append(num_points)
-            row.append(epsilon)
+            pc = phc(eqn, num_points = num_points, bounds = 50)
+            dim = pc.dimension()
+            row.append(str(pc.eqn))
+            row.append(str(pc.degree))
+            row.append(str(pc.total_coeff))
+            row.append(str(num_points))
+            row.append(str(epsilon))
         except StandardError as inst:
-            row.append(eqn)
+            row.append(str(eqn))
             row.append("failed")
             row.append("failed")
             row.append("failed")
             row.append("failed")
+            row.append("failed\n")
             failures.append(inst.args[0])
+            break
 
         try:
             cp = pc.neighborhood_graph(epsilon, method = "subdivision").connected_components_1()
             print "connected componenets",cp
-            row.append(cp)
+            row.append(str(cp)+"\n")
         except StandardError as inst:
-            row.append("failed")
+            row.append("failed\n")
             failures.append(inst.args[0])
+        
+        print ','.join(row)
+        csv.write(','.join(row))
 
 # plotting based on dimension
-        dim = pc.dimension()
 
-        try:
-            if dim == 2 \
-                    or dim == 3:
-                pc.plot2d(save = save, title = pc.eqn)
-        except StandardError as inst:
-            failures.append(inst.args[0])
+        if epsilon == 0.2:
 
-        try:
-            if pc.plot2d_neighborhood_graph(epsilon, save = save, title = pc.eqn) != True:
-                raise RuntimeError("failed to plot2d "+str(x))
-        except StandardError as inst:
-            failures.append(inst.args[0])
+            try:
+                if dim == 2 \
+                        or dim == 3:
+                    pc.plot2d(save = filepath+"/plot2d", title = pc.eqn)
+            except StandardError as inst:
+                failures.append(inst.args[0])
 
-        try:
-            if dim == 3:
-                pc.plot3d(save = save, title = pc.eqn)
-        except StandardError as inst:
-            failures.append(inst.args[0])
-            
-        try:
-            if pc.plot3d_neighborhood_graph(epsilon, save = save, title = pc.eqn) != True:
-                raise RuntimeError("failed to plot3d "+str(x))
-        except StandardError as inst:
-            failures.append(inst.args[0])
+            try:
+                if pc.plot2d_neighborhood_graph(epsilon, save = filepath+"/plot2d_ng", title = pc.eqn) != True:
+                    raise RuntimeError("failed to plot2d "+str(x))
+            except StandardError as inst:
+                failures.append(inst.args[0])
+
+            try:
+                if dim == 3:
+                    pc.plot3d(save = filepath+"/plot3d", title = pc.eqn)
+            except StandardError as inst:
+                failures.append(inst.args[0])
+                
+            try:
+                if pc.plot3d_neighborhood_graph(epsilon, save = filepath+"/plot_ng", title = pc.eqn) != True:
+                    raise RuntimeError("failed to plot3d "+str(x))
+            except StandardError as inst:
+                failures.append(inst.args[0])
+                
+        totalFailures.append(failures)
 
 
+        
     return totalFailures
 
 
+from sympy.parsing.sympy_parser import parse_expr
+from numpy.random import uniform
+import os
+
 def main():
+
+#     for x in pDict.keys():
+#         try_epsilon_test(pDict[x])
+
     today = datetime.today()
-    save = str(today.month)+"-"+str(today.day)
-    print save
-    print pDict.keys()
-    for x in pDict.keys():
+    filepath = str(today.month)+"-"+str(today.day)
+
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+
+    testpath = filepath+'/data.csv'
+    if not os.path.isfile(testpath):
+        csv = open(testpath, 'w')
+        csv.write("Equation, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
+    else:
+        csv = open(testpath, 'a')
+
+    for x in range(5):
+        print "random eqn"
+
+        terms = ['u', 'v', 'w', 'x']
+        terms = terms[0:random_integers(1, 5)]
+        operators = [' + ', ' - ']
+
+        eqn = []
+        for x in terms:
+            coeff = uniform(-5,5)
+            degree = random_integers(1, 5) 
+            eqn.append(str(coeff)+" * "+x+" ** "+str(degree))
+
+            if terms[-1] != x:
+                eqn.append(choice(operators))
+
+        degree = random_integers(1, 2) 
+        terms = symbols(" ".join(terms))
+        eqn = parse_expr("("+"".join(eqn)+") ** "+str(degree))
+        print eqn
+
+        for num_points in [1000, 4000]:
+            print try_epsilon_tests(str(eqn.expand()), num_points, csv, filepath)
 
 
-        # catches all errors thrown and continues with next equation
-            
-        totalFailures.append(failures)
-        if len(failures) != 1:
-            print "collected the following errors"
-            for x in failures:
-                print x
-        print "running next test"
 
 
-    print "total failures"
-    for x in totalFailures:
-        print x
+
     print "all tests have run"
+    
+    csv.close()
 
     
 
