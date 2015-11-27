@@ -13,6 +13,8 @@ from phcpy.solutions import strsol2dict # points
 from persispy.point_cloud import PointCloud
 from persispy.hash_point import HashPoint
 
+from string import ascii_letters, digits
+
 import sys
 sys.setrecursionlimit(25000)
 
@@ -33,9 +35,9 @@ class phc(object):
 
         self.eqn = eqn
 
-        self.varList = self._parse(eqn)
+        self.varList, self.coeffList = self._parse(eqn)
+        self.total_coeff = sum(self.coeffList)
 
-        print self._system()
         self.degree = self._degree()
         self.points = []
 
@@ -49,11 +51,10 @@ class phc(object):
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
     def _parse(self, eqn):
-        phcEqn = eqn+";"
 
         if self._DEBUG:
             print "====="
-            print "input eqn: ", phcEqn
+            print "input eqn: ", eqn+";"
             print "====="
 
         terms = eqn
@@ -69,7 +70,36 @@ class phc(object):
                 varList.append(x)
         varList.sort()
         if self._DEBUG: print "list of variables: ", varList
-        return varList
+
+        coeffs = eqn
+        coeffs = coeffs.replace("-", "+")
+        coeffs = coeffs.replace(" ", "")
+        coeffs = coeffs.split("+")
+        coeffList = []
+
+        for x in coeffs:
+            has_term = False
+            for y in x:
+                if y in ascii_letters:
+                    has_term = True
+                    break
+            if has_term:
+                cut = 0
+                for y in x:
+                    if y in digits \
+                            or y == ".":
+                        cut = cut + 1
+                    else:
+                        if cut == 0:
+                            coeffList.append(1)
+                        else:
+                            coeffList.append(float(x[0:cut]))
+                        break
+
+
+
+
+        return varList, coeffList
 
     def _degree(self):
         return total_degree(self._system())
@@ -237,7 +267,7 @@ class phc(object):
 
 
 def main():
-    pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
+    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 10, DEBUG = True)
     print pc
     pc._DEBUG = False
     pc.find_more_points(10)
@@ -245,6 +275,7 @@ def main():
     print pc[0]
     print pc.points[0]
     print pc.degree
+    print pc.total_coeff
 
 
 if __name__ == "__main__": main()
