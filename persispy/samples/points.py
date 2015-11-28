@@ -24,6 +24,8 @@ import scipy.constants as scic
 from persispy import point_cloud, hash_point
 import numpy as np
 
+
+# 3d examples
 def sphere(num_points,radius=1,method='rejection'):
     '''
     Returns a PointCloud with num_points random points on the 2-sphere of given radius. With

@@ -42,10 +42,17 @@ class phc(object):
         self.points = []
 
 
-
-
         self._startSystem, self._startSol = self._start_system()
-        self.find_more_points(num_points, return_complex)
+        
+        remainingPoints = num_points
+        partition = 200
+        if num_points <= partition:
+            partition = num_points
+        while(remainingPoints > 0):
+            remainingPoints = remainingPoints - partition
+            self.find_more_points(partition, return_complex)
+
+
         self.__call__()
 
     # Parsing target variety into a string usable by phcpy and to generate
@@ -138,6 +145,7 @@ class phc(object):
     #  Uses the already made start system. Otherwise, identical to 
     #  the block above
     def find_more_points(self, num_points, return_complex = False):
+        
         # phcpy solver
         points = []
         failure = 0

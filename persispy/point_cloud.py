@@ -49,6 +49,7 @@ class PointCloud:
 
         self._points = points
         self._space = space
+        self._fig = None
 
 
     def __str__(self):
@@ -83,7 +84,12 @@ class PointCloud:
     def plot2d(self, axes=(0,1), save = False, title = False):
 
         if self._space=='affine':
-            fig,(ax)=plt.subplots(1,1)
+
+            if self._fig is None:
+                fig=plt.figure()
+            plt.clf()
+
+            ax = fig.add_subplot(111)
             fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
@@ -100,6 +106,7 @@ class PointCloud:
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
             self._display_plot(plt, "plot2d", save)
+            plt.close()
 
             return True
         else:
@@ -127,14 +134,18 @@ class PointCloud:
                 save_file(method)
             elif type(save) is str: # if save gets a string
                 save_file(save)
-        plt.close()
         return True
 
 
     def plot3d(self,axes=(0,1,2), save = False, title = False):
 
         if self._space=='affine':
-            fig=plt.figure()
+
+            if self._fig is None: # faster to clear than to close and open
+                fig = plt.figure()
+            plt.clf()
+
+            ax = fig.add_subplot(111)
             fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
@@ -199,7 +210,12 @@ class PointCloud:
                         edges.append([[qc[axes[0]],qc[axes[1]]],[pc[axes[0]],pc[axes[1]]]])
                         c.append(((p._coords[shading_axis]-minz)/(maxz-minz),.5,.5,.5))
             lines=mpl.collections.LineCollection(edges,color=c)
-            fig,(ax)=plt.subplots()
+
+            if self._fig is None: # faster to clear than to close and open
+                fig = plt.figure()
+            plt.clf()
+
+            ax = fig.add_subplot(111)
             fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
@@ -231,10 +247,14 @@ class PointCloud:
                     edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
             lines=a3.art3d.Poly3DCollection(edges)
             lines.set_color([1,.5,.5,.5])
-            fig=plt.figure()
+
+            if self._fig is None:
+                fig=plt.figure()
+
             fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
+
             ax = plt3.Axes3D(fig)
             ax.set_xlabel('x')
             ax.set_ylabel('y')
@@ -248,6 +268,7 @@ class PointCloud:
 
             self._display_plot(plt, "plot3d_ng", save)
 
+            plt.close()
             return True
         else:
             return None
@@ -309,7 +330,7 @@ class PointCloud:
             return None
 
 
-    def neighborhood_graph(self,epsilon,method):
+    def neighborhood_graph(self,epsilon,method = "subdivision"):
 
         return self._neighborhood_graph(epsilon,method,self._points,{v:set() for v in self._points})
 
@@ -326,7 +347,9 @@ class PointCloud:
 
         '''
         methodarray=method.split(' ')
+
         if methodarray[0]=='subdivision':
+
             if self._space=='projective':
                 return self.neighborhood_graph(epsilon,method='exact')
             elif self._space=='affine':
@@ -341,12 +364,16 @@ class PointCloud:
                         self._subdivide_neighbors(epsilon, dictionary, pointarray, depth=d)
                         return wsc.wGraph(dictionary)
                     else:
-                        self._subdivide_neighbors(epsilon, dictionary, pointarray, m, depth=d)
+                        self._subdivide_neighbors(epsilon, dictionary, pointarray, coordinate = m, depth=d)
                         return wsc.wGraph(dictionary)
-                else:
+                else: #  most calls end up here
+                      #  also starts the recursion
+
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
-                    return wsc.wGraph(dictionary)
-        elif methodarray[0]=='exact':
+                    # mystery dictionary assignments..?
+                    return wsc.wGraph(dictionary)                             
+
+        elif methodarray[0] == 'exact':
             '''
             Issue: this doesn't work because lists and numpy arrays are not hashable.
             '''
@@ -360,20 +387,32 @@ class PointCloud:
                     elif self._space=='projective':
                         return None
             return wsc.wGraph(dictionary)
+
+        elif methodarray[0] == 'nonrecursive_subdivision':
+            if self._space == 'affine':
+                self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
+                return wsc.wGraph(dictionary)                             
+            return None
         elif methodarray[0]=='approximate':
             return None
         elif methodarray[0]=='randomized':
             return None
         elif methodarray[0]=='landmarking':
             return None
+
         else:
             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
+
+    def _nonrecursive_subdivision(self, e, dictionary, pointarray):
+        raise NotImplementedError 
+
 
     def _selectpoint(self,pointarray, k, n):
 
         #gives the kth smallest point of "self._points", according to the nth coordinate
         #we use this to give the median, but a general solution for k is needed for the recursive algorithm
         #this algorithm is O(n) for best and worst cases
+
 
         a = pointarray[:]
         c = []
@@ -388,28 +427,31 @@ class PointCloud:
 
         lesser = [point for point in pointarray if point._coords[n] < pivot._coords[n]]
         if len(lesser) > k:
-            return self._selectpoint(lesser, k, n)
+            return self._selectpoint(lesser, k, n) # recursive
         k -= len(lesser)
 
         equal = [point for point in pointarray if point._coords[n] == pivot._coords[n]]
         if len(equal) > k:
-            return pivot
+            return pivot # basecase
         k -= len(equal)
 
         greater = [point for point in pointarray if point._coords[n] > pivot._coords[n]]
-        return self._selectpoint(greater, k, n)
+        return self._selectpoint(greater, k, n) # recursive
 
 
     def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
-
-        #divides the space into two regions about the median point relative to "coordinate"
-        #glues the two regions, then recursively calls itself on the two regions.
+        #  method and depth are accumulators for the recursive calls
+        #  divides the space into two regions about the median point relative to "coordinate"
+        #  glues the two regions, then recursively calls itself on the two regions.
         if len(pointarray)>1:
             median = self._selectpoint(pointarray, len(pointarray)/2, coordinate)
-            smaller = []
-            bigger = []
+
+            
+            smaller     = []
+            bigger      = []
             gluesmaller = []
-            gluebigger = []
+            gluebigger  = []
+
             #split into two regions
             for i in range(len(pointarray)):
                 if pointarray[i]._coords[coordinate] <  median._coords[coordinate]:
@@ -421,27 +463,30 @@ class PointCloud:
                     bigger.append(pointarray[i])
                     if pointarray[i]._coords[coordinate] < median._coords[coordinate]+e:
                         gluebigger.append(pointarray[i])
-            #glue together the two regions
 
+            #glue together the two regions
             for i in range(len(gluesmaller)):
                 for j in range(len(gluebigger)):
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
                     if dist<e:
+                        
                         dictionary[gluesmaller[i]].add((gluebigger[j],dist))
-                    #    dict[gluesmaller[i]].sort(key = lambda x: len(dict[x]))
                         dictionary[gluebigger[j]].add((gluesmaller[i],dist))
-                    #    dict[gluebigger[j]].sort(key = lambda x: len(dict[x]))
 
+
+
+    # def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
             #recursively compute for the two regions, now using a different reference coordinate, to reduce gluing area
             if depth == -1: #depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate+1)%self.dimension()
-                self._subdivide_neighbors(e, dictionary, smaller, coordinate, method, depth=-1)
+                self._subdivide_neighbors(e, dictionary, smaller, coordinate, method, depth=-1) 
                 self._subdivide_neighbors(e, dictionary, bigger, coordinate, method, depth=-1)
-            if depth == 0:
-                self._neighborhood_graph(e,method,smaller,dictionary)
-                self._neighborhood_graph(e,method,bigger,dictionary)
-            if depth > 0:
-                coordinate = (coordinate+1)%self.dimension()
-                self._subdivide_neighbors(e, depth-1, coordinate, smaller)
-                self._subdivide_neighbors(e, depth-1, coordinate, bigger)
+#             if depth > 0:
+#                 coordinate = (coordinate+1)%self.dimension()
+#                 self._subdivide_neighbors(e, depth-1, coordinate, smaller)
+#                 self._subdivide_neighbors(e, depth-1, coordinate, bigger)
+#     # def _selectpoint(self, pointarray, k, n):
+#             if depth == 0:
+#                 self._neighborhood_graph(e,method,smaller,dictionary) 
+#                 self._neighborhood_graph(e,method,bigger,dictionary)
 
