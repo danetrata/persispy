@@ -58,7 +58,7 @@ def try_epsilon_tests(eqn, num_points, csv, filepath):
 
 # plotting based on dimension
 
-        if epsilon == 0.2:
+        if epsilon == None:
 
             try:
                 if dim == 2 \
@@ -118,7 +118,7 @@ def main():
         print "random eqn"
 
         terms = ['u', 'v', 'w', 'x']
-        terms = terms[0:random_integers(1, 5)]
+        terms = terms[0:random_integers(2, 3)]
         operators = [' + ', ' - ']
 
         eqn = []
@@ -135,7 +135,7 @@ def main():
         eqn = parse_expr("("+"".join(eqn)+") ** "+str(degree))
         print eqn
 
-        for num_points in [1000, 4000]:
+        for num_points in [4000]:
             print try_epsilon_tests(str(eqn.expand()), num_points, csv, filepath)
 
 
