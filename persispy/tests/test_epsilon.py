@@ -24,15 +24,17 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv):
     row = []
     failures = []
     try:
-        pc = phc(eqn, num_points = num_points, bounds = 20, return_complex = True)
+        pc = phc(eqn, num_points = num_points, return_complex = True)
         dim = pc.dimension()
         row.append(str(pc.eqn))
+        row.append(str(dim))
         row.append(str(pc.degree))
         row.append(str(pc.total_coeff))
         row.append(str(num_points))
         row.append(str(epsilon))
     except StandardError as inst:
         row.append(str(eqn))
+        row.append("failed")
         row.append("failed")
         row.append("failed")
         row.append("failed")
@@ -82,7 +84,7 @@ def sanity_check():
     testpath = filepath+'/temp.csv'
     if not os.path.isfile(testpath):
         csv = open(testpath, 'w')
-        csv.write("Equation, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
+        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
     else:
         csv = open(testpath, 'a')
     print try_epsilon_tests(pDict["sphere"], 500, 0.1, csv)
@@ -101,7 +103,7 @@ def main():
     testpath = filepath+'/data.csv'
     if not os.path.isfile(testpath):
         csv = open(testpath, 'w')
-        csv.write("Equation, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
+        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
     else:
         csv = open(testpath, 'a')
 
@@ -123,35 +125,7 @@ def main():
                 eqn.append(choice(operators))
 
         eqn.append(choice(operators))
-        constant = random_integers(1, 5) 
-        eqn.append(str(constant))
-
-        terms = symbols(" ".join(terms))
-        expand = random_integers(1, 2) 
-        eqn = parse_expr("("+"".join(eqn)+") ** "+str(expand))
-        print eqn.expand()
-
-        try:
-            for num_points in [250, 500, 750, 1000]:
-                for epsilon in [0.3, 0.25, 0.2, 0.15, 0.1]:
-                    
-#                 before = hp.heap()
-
-        terms = terms[0:random_integers(2, 4)]
-        operators = [' + ', ' - ']
-
-        eqn = []
-        for term in terms:
-#             coeff = uniform(-5, 5)
-            coeff = random_integers(-50, 50)
-            degree = random_integers(1, 4) 
-            eqn.append(str(coeff)+" * "+term+" ** "+str(degree))
-
-            if terms[-1] != term:
-                eqn.append(choice(operators))
-
-        eqn.append(choice(operators))
-        constant = random_integers(1, 5) 
+        constant = random_integers(1, 50) 
         eqn.append(str(constant))
 
         terms = symbols(" ".join(terms))
