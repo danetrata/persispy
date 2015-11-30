@@ -9,12 +9,21 @@
 \graphicspath{{./graphics/}}
 \usepackage[orientation=landscape,size=custom,width=48,height=36,scale=.6,debug]{beamerposter}
 \usepackage{mathptmx}
+\usepackage{verbatim}
 \renewcommand\sfdefault{ptm}
-
+\def\Z{\mathbb Z}
+\def\N{\mathbb N}
+\def\Q{\mathbb Q}
+\def\R{\mathbb R}
+\def\C{\mathbb C}
+\def\F{\mathbb F}
+\def\P{\mathbb P}
+\def\E{\mathbb E}
+\def\G{\mathbb G}
 % Header and footer 
 \newcommand{\footleft}{http://mcl.math.uic.edu/}
 \newcommand{\footright}{}
-\title{Vietoris-Rips complexes, random points on varieties, and persistent homology}
+\title{Vietoris-Rips complexes, ravfndom points on varieties, and persistent homology}
 \author{Daniel Etrata \quad Mason Boeman}
 \institute{Mentors: Benjamin Antieau and J\={a}nis Lazovskis}
 
@@ -28,20 +37,36 @@
 
 %-- Block 1-1
 \begin{block}{Summary}
-This is a poster containing text and other things. This part is the summary. People may read this.
+
+The project takes a variety of n-dimensions intersected by random lines to generate points. From this point cloud, an undirected neighborhood graph is constructed, where then the edges are assigned a weight. Then, the neighborhood graph undergoes the Vietoris-Rips expansion by constructing cofaces for which the vertex is maximal.
 \end{block}
+
+
 
 %-- Block 1-2
 \begin{block}{Motivation}
-You can make a poster very quickly and easily by cutting and pasting the \LaTeX\ codes from the paper!
+The goal of this project is to use persistent homology to study the topology of random complex algebraic varieties, geometric figures described as the solution sets of system of polynomial equations. 
+
 \end{block}
 
 %-- Block 1-3
-\begin{block}{Columns}
-The columns will automatically align with each other and try to look as nice as possible.
-You may have to add {\tt$\backslash$vspace\{1pt\}} commands to adjust the spacing here and
-there.  Remember that you can use positive or negative numbers.
+\begin{block}{Using PHCpack to find points}
+PHCpack is a polynomial system solver using homotopy continuation methods. Let $f(x) = 0$ be the target system. PHC constructs $g(x)=0$ start system. Then let $\gamma$ be the accessibility constant, $\gamma \in \C$ and $t$ be the continuation parameter, $t \in [0,1]$. The homotopy $h$ is defined as
+\begin{equation*}
+h(x,t) = \gamma \cdot (1-t)\cdot g(x) + t \cdot f(x) = 0
+\end{equation*}
+\begin{equation*}
+h(x, 0) =g(x)
+\end{equation*}
+\begin{equation*}
+h(x, 1) = f(x)
+\end{equation*}
+\includegraphics[width=.5\columnwidth]{sphere}
+\includegraphics[width=.5\columnwidth]{plot2d_9}
+
+
 \end{block}
+
 
 \end{column}%1
 
@@ -49,27 +74,19 @@ there.  Remember that you can use positive or negative numbers.
 \begin{column}{0.32\linewidth}
 
 %-- Block 2-1
-\begin{block}{Lists}
-\begin{itemize}
-\item You can make
-\item lists, that
-\item allow people to see quickly
-\end{itemize}
+\begin{block}{Neighborhood graphs}
 \end{block}
 
 %-- Block 2-2
-\begin{block}{Math}
-Include math within the text is as simple as $1+1=2$. You can also highlight more important equations like this:
-\[
-\int_0^1\sin(x)+\cos^2(x)+\alpha x\ dx
-\]
+\begin{block}{Vietoris-Rips complex}
+
 \end{block}
 
 %-- Block 2-3
 \begin{block}{Pictures}
 \begin{figure}[htb]
 \centering
-\includegraphics[width=.6\columnwidth]{science}
+\includegraphics[width=1\columnwidth]{plot2d_ng_61}
 \end{figure}
 \end{block}
 
@@ -79,19 +96,18 @@ Include math within the text is as simple as $1+1=2$. You can also highlight mor
 \begin{column}{0.32\linewidth}
 
 %-- Block 3-1
-\begin{block}{Experiments}
-Remember to put lots of figures on your poster... Nobody reads anymore!
+\begin{block}{Persistent homology}
+
 \end{block}
 
 %-- Block 3-2
-\begin{block}{Conclusion}
-Much less annoying than PowerPoint. Copy and Paste from your document. Overall, a great idea!
+\begin{block}{Experiments}
+
 \end{block}
 
 %-- Block 3-3
-\begin{block}{Logo}
-To change the logo (if you don't want to represent UIC), replace the file {\tt graphics/logo-uic.png} with the logo of your choice!
-Make sure the background is transparent.
+\begin{block}{Conclusion}
+
 \end{block}
 
 \end{column}%3
