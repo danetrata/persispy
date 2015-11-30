@@ -101,7 +101,7 @@ class PointCloud:
             xcoords=[p._coords[axes[0]] for p in self._points]
             ycoords=[p._coords[axes[1]] for p in self._points]
 
-            ax.plot(xcoords,ycoords,'b*')
+            ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
             ax.grid(True)
             ax.axis([1.1*min(xcoords),1.1*max(xcoords),1.1*min(ycoords),1.1*max(ycoords)])
@@ -158,7 +158,7 @@ class PointCloud:
             xcoords=[p._coords[axes[0]] for p in self._points]
             ycoords=[p._coords[axes[1]] for p in self._points]
             zcoords=[p._coords[axes[2]] for p in self._points]
-            ax.scatter(xcoords,ycoords,zcoords)
+            ax.scatter(xcoords, ycoords, zcoords, marker = '.', color = '#ff6666')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
