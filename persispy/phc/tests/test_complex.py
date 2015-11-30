@@ -20,8 +20,12 @@ def test_2():
 
 
 def test_3():
-    pc = phc(eqn= "x^2 + y^2 + z^2 - 1", num_points = 10000)
+    pc = phc(eqn= "x^2 + y^2 + z^2 - 1", num_points = 100, return_complex = True)
+    ng = pc.neighborhood_graph(0.2)
+    cp = ng.connected_components_1()
     print pc
+    print ng
+    print cp
 
 def test_3_ng():
     pc = phc(eqn= "x^3 + y^3 + z^3 - 1", num_points = 5)
@@ -59,7 +63,7 @@ def main():
 
     before = hp.heap()
     print before
-    test_3_ng()
+    test_3()
     after = hp.heap()
     leftover = after - before
     print leftover
