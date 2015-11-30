@@ -5,6 +5,7 @@
 % Load packages here
 \usepackage{amsmath,amssymb,array}
 \usepackage{graphicx,tcolorbox}
+\usepackage{ragged2e}
 \tcbuselibrary{listings,breakable,most,hooks,skins}
 \graphicspath{{./graphics/}}
 \usepackage[orientation=landscape,size=custom,width=48,height=36,scale=.6,debug]{beamerposter}
@@ -62,7 +63,7 @@ h(x, 0) =g(x)
 h(x, 1) = f(x)
 \end{equation*}
 \includegraphics[width=.5\columnwidth]{sphere}
-\includegraphics[width=.5\columnwidth]{plot2d_9}
+\includegraphics[width=.5\columnwidth]{plot2d_5}
 
 
 \end{block}
@@ -75,19 +76,13 @@ h(x, 1) = f(x)
 
 %-- Block 2-1
 \begin{block}{Neighborhood graphs}
-\end{block}
 
-%-- Block 2-2
-\begin{block}{Vietoris-Rips complex}
+The neighborhood graph of a set $S$ with a parameter $e$ is the graph with vertices in $S$, where en edge is contained in the neighborhood graph if and only if the distance between it's endpoints is less than $e$. Our quick edge algorithm takes as input a set of points $S$ of order $n$ in affine space, and some real number $e$, and produces a list of all edges that have length less than $e$. Our method uses recursion. If our ambient space has dimension $d$, let $k$ be some positive integer less than $d$. 
+\newline
+\newline
+First we compute the median value of the $k$-th coordinate of all the points in $S$, and call this $m$. Now we construct four subsets of $S$: $A$, $B$, $A^*$, and $B^*$. $A$ is the set of points whose $k$-th coordinate is less than $m$. $B$ is defined as $S-A$. $A^*$ and $B^*$ are subsets of $A$ and $B$ respectively where points in these sets have kth coordinate within $e$ of $m$. We add an edge to our list for every pair $(a,b)$ where $a$ in $A^*$ and $b$ in $B^*$, and they are within $e$ of each other. We then call the algorithm recursively, replacing $S$ with $A$ and $B$, each half the size.
 
-\end{block}
-
-%-- Block 2-3
-\begin{block}{Pictures}
-\begin{figure}[htb]
-\centering
-\includegraphics[width=1\columnwidth]{plot2d_ng_61}
-\end{figure}
+\includegraphics[width=1\columnwidth]{plot2d_ng_7}
 \end{block}
 
 \end{column}%2
