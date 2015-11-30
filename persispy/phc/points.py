@@ -15,8 +15,6 @@ from persispy.hash_point import HashPoint
 
 from string import ascii_letters, digits
 
-import sys
-sys.setrecursionlimit(25000)
 
 
 # TODO: Implement poisson sampling
@@ -29,14 +27,15 @@ class phc(object):
     def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, DEBUG = False):
         self._DEBUG = DEBUG
 
-        self._bounds = bounds
+#         self._bounds = bounds
         self._complex_epsilon = 0.1
-        self._failure = 1000
+        self._failure = 100
 
         self.eqn = eqn
 
         self.varList, self.coeffList = self._parse(eqn)
         self.total_coeff = sum(self.coeffList)
+        self._bounds = self.total_coeff
 
         self.degree = self._degree()
         self.points = []
@@ -44,13 +43,13 @@ class phc(object):
 
         self._startSystem, self._startSol = self._start_system()
         
-        remainingPoints = num_points
         partition = 200
-        if num_points <= partition:
-            partition = num_points
-        while(remainingPoints > 0):
-            remainingPoints = remainingPoints - partition
+            
+        i = 0
+        while(i < num_points/partition):
+            i = i + 1
             self.find_more_points(partition, return_complex)
+        self.find_more_points(num_points%partition, return_complex)
 
 
         self.__call__()
@@ -66,7 +65,7 @@ class phc(object):
 
         terms = eqn
         # Extracting terms from the target
-        for x in ["+","-","*","^"]: terms = terms.replace(x, " ")
+        for x in ["+","-","*","**","^"]: terms = terms.replace(x, " ")
         terms = terms.strip(" ")
         varList = []
         for x in terms:
@@ -189,9 +188,7 @@ class phc(object):
             if self._failure <= failure:
                 raise RuntimeError("equation too many complex solutions in a row")
 
-
-
-        if self._DEBUG: print "points: ",points
+        if self._DEBUG: print "points: ", points
 
         self.points = points + self.points
 
@@ -275,7 +272,7 @@ class phc(object):
 
 
 def main():
-    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 10, DEBUG = True)
+    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 301, DEBUG = True)
     print pc
     pc._DEBUG = False
     pc.find_more_points(10)
