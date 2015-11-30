@@ -107,18 +107,18 @@ def main():
     else:
         csv = open(testpath, 'a')
 
-    for x in range(100):
+    for x in range(200):
         print "random eqn"
 
-        terms = ['u', 'v', 'w', 'x']
-        terms = terms[0:random_integers(2, 4)]
+        terms = ['u', 'v', 'w', 'x', 'y', 'z']
+        terms = terms[0:random_integers(2, 6)]
         operators = [' + ', ' - ']
 
         eqn = []
         for term in terms:
 #             coeff = uniform(-5, 5)
             coeff = random_integers(-50, 50)
-            degree = random_integers(1, 4) 
+            degree = random_integers(1, 6) 
             eqn.append(str(coeff)+" * "+term+" ** "+str(degree))
 
             if terms[-1] != term:
@@ -129,13 +129,13 @@ def main():
         eqn.append(str(constant))
 
         terms = symbols(" ".join(terms))
-        expand = random_integers(1, 2) 
+        expand = random_integers(1, 1) 
         eqn = parse_expr("("+"".join(eqn)+") ** "+str(expand))
         print eqn.expand()
 
         try:
             for num_points in [250, 500, 750, 1000]:
-                for epsilon in [0.3, 0.25, 0.2, 0.15, 0.1]:
+                for epsilon in [0.3, 0.275, 0.25, 0.225, 0.2, 0.175, 0.15, 0.125, 0.1]:
                     
 #                 before = hp.heap()
 
