@@ -3,6 +3,7 @@ from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
 from datetime import datetime
+from sympy import symbols
 from numpy.random import random_integers
 from random import choice
 
@@ -19,15 +20,14 @@ pDict = {
     "degree3sphere"    : "x^3 + y^3 + z^3 - 1"
 }
 
-def try_epsilon_tests(eqn, num_points, epsilon, csv):
+def try_epsilon_tests(eqn, num_points, epsilon, csv, filepath):
 
     row = []
     failures = []
     try:
-        pc = phc(eqn, num_points = num_points, return_complex = True)
+        pc = phc(eqn, num_points = num_points, bounds = 20)
         dim = pc.dimension()
         row.append(str(pc.eqn))
-        row.append(str(dim))
         row.append(str(pc.degree))
         row.append(str(pc.total_coeff))
         row.append(str(num_points))
@@ -38,28 +38,24 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv):
         row.append("failed")
         row.append("failed")
         row.append("failed")
-        row.append("failed")
-        row.append("failed")
+        row.append("failed\n")
         failures.append(inst.args[0])
         return failures
 
     try:
-        ng = pc.neighborhood_graph(epsilon, method = "subdivision")
-        cp = ng.connected_components_1()
+        cp = pc.neighborhood_graph(epsilon, method = "subdivision").connected_components_1()
         print "connected componenets", cp
-        row.append(str(cp))
+        row.append(str(cp)+"\n")
     except StandardError as inst:
-        row.append("failed")
+        row.append("failed\n")
         failures.append(inst.args[0])
-        return failures
     
     print ','.join(row)
-    row[-1] = row[-1]+"\n"
     csv.write(','.join(row))
+
+
     return failures
 
-
-from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
 from numpy.random import uniform
 import os
@@ -77,19 +73,6 @@ def sanity_check():
     print "connected components"
     print cp
 
-    today = datetime.today()
-    filepath = str(today.month)+"-"+str(today.day)
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-    testpath = filepath+'/temp.csv'
-    if not os.path.isfile(testpath):
-        csv = open(testpath, 'w')
-        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
-    else:
-        csv = open(testpath, 'a')
-    print try_epsilon_tests(pDict["sphere"], 500, 0.1, csv)
-    csv.close()
-
 def main():
 
     import gc
@@ -98,12 +81,14 @@ def main():
 
     today = datetime.today()
     filepath = str(today.month)+"-"+str(today.day)
+
     if not os.path.exists(filepath):
         os.makedirs(filepath)
+
     testpath = filepath+'/data.csv'
     if not os.path.isfile(testpath):
         csv = open(testpath, 'w')
-        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
+        csv.write("Equation, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
     else:
         csv = open(testpath, 'a')
 
@@ -111,27 +96,25 @@ def main():
         print "random eqn"
 
         terms = ['u', 'v', 'w', 'x']
-        terms = terms[0:random_integers(2, 4)]
+        terms = terms[0:random_integers(3, 3)]
         operators = [' + ', ' - ']
 
         eqn = []
-        for term in terms:
-#             coeff = uniform(-5, 5)
-            coeff = random_integers(-50, 50)
-            degree = random_integers(1, 4) 
-            eqn.append(str(coeff)+" * "+term+" ** "+str(degree))
+        for x in terms:
+            coeff = uniform(-5,5)
+            degree = random_integers(2, 2) 
+            eqn.append(str(coeff)+" * "+x+" ** "+str(degree))
 
-            if terms[-1] != term:
+            if terms[-1] != x:
                 eqn.append(choice(operators))
 
-        eqn.append(choice(operators))
-        constant = random_integers(1, 50) 
-        eqn.append(str(constant))
-
+        expand = random_integers(1, 1) 
         terms = symbols(" ".join(terms))
-        expand = random_integers(1, 2) 
         eqn = parse_expr("("+"".join(eqn)+") ** "+str(expand))
         print eqn.expand()
+        
+
+
 
         try:
             for num_points in [250, 500, 750, 1000]:
@@ -139,14 +122,16 @@ def main():
                     
 #                 before = hp.heap()
 
-                    print try_epsilon_tests(str(eqn.expand()), num_points, epsilon, csv)
+                    print try_epsilon_tests(str(eqn.expand()), num_points, epsilon, csv, filepath)
 
 #                 after = hp.heap()
 #                 print after - before
+        
         except:
             pass
 
         gc.collect()
+
 
     print "all tests have run"
     
