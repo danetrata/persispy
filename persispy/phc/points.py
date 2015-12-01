@@ -13,6 +13,9 @@ from phcpy.solutions import strsol2dict # points
 from persispy.point_cloud import PointCloud
 from persispy.hash_point import HashPoint
 
+from string import ascii_letters, digits
+
+
 
 # TODO: Implement poisson sampling
 class phc(object):
@@ -21,40 +24,48 @@ class phc(object):
     def __dir__(self):
         return ["eqn", "varList", "degree", "points", "find_more_points()"]
 
-    def __init__(self, eqn, bounds = 1, num_points = 1, return_complex = False, DEBUG = False):
+    def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, DEBUG = False):
         self._DEBUG = DEBUG
 
-        self._bounds = bounds
+#         self._bounds = bounds
         self._complex_epsilon = 0.1
+        self._failure = 100
 
         self.eqn = eqn
 
-        self.varList = self._parse(eqn)
+        self.varList, self.coeffList = self._parse(eqn)
+        self.total_coeff = sum(self.coeffList)
+        self._bounds = self.total_coeff
 
-        print self._system()
         self.degree = self._degree()
         self.points = []
 
 
-
-
         self._startSystem, self._startSol = self._start_system()
-        self.find_more_points(num_points, return_complex)
+        
+        partition = 200
+            
+        i = 0
+        while(i < num_points/partition):
+            i = i + 1
+            self.find_more_points(partition, return_complex)
+        self.find_more_points(num_points%partition, return_complex)
+
+
         self.__call__()
 
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
     def _parse(self, eqn):
-        phcEqn = eqn+";"
 
         if self._DEBUG:
             print "====="
-            print "input eqn: ", phcEqn
+            print "input eqn: ", eqn+";"
             print "====="
 
         terms = eqn
         # Extracting terms from the target
-        for x in ["+","-","*","^"]: terms = terms.replace(x, " ")
+        for x in ["+","-","*","**","^"]: terms = terms.replace(x, " ")
         terms = terms.strip(" ")
         varList = []
         for x in terms:
@@ -65,7 +76,36 @@ class phc(object):
                 varList.append(x)
         varList.sort()
         if self._DEBUG: print "list of variables: ", varList
-        return varList
+
+        coeffs = eqn
+        coeffs = coeffs.replace("-", "+")
+        coeffs = coeffs.replace(" ", "")
+        coeffs = coeffs.split("+")
+        coeffList = []
+
+        for x in coeffs:
+            has_term = False
+            for y in x:
+                if y in ascii_letters:
+                    has_term = True
+                    break
+            if has_term:
+                cut = 0
+                for y in x:
+                    if y in digits \
+                            or y == ".":
+                        cut = cut + 1
+                    else:
+                        if cut == 0:
+                            coeffList.append(1)
+                        else:
+                            coeffList.append(float(x[0:cut]))
+                        break
+
+
+
+
+        return varList, coeffList
 
     def _degree(self):
         return total_degree(self._system())
@@ -104,8 +144,10 @@ class phc(object):
     #  Uses the already made start system. Otherwise, identical to 
     #  the block above
     def find_more_points(self, num_points, return_complex = False):
+        
         # phcpy solver
         points = []
+        failure = 0
         while(len(points) < num_points):
             p = self._system()
             phcSol = track(p, self._startSystem, self._startSol)
@@ -122,6 +164,7 @@ class phc(object):
             for i in phcSol:
                 if self._DEBUG: print "phc solution: \n", i 
                 d = strsol2dict(i)
+                
                 point = [d[x] for x in self.varList]
                 if return_complex:
                     points.append(tuple(point))
@@ -138,10 +181,14 @@ class phc(object):
                                     and len(points) < num_points: 
                                 points.append(tuple([x.real for x in point]))
                                 if self._DEBUG: print "appended point:",[x.real for x in point]
+                                failure = 0
                         else:
                             closeness = False
+                            failure = failure + 1
+            if self._failure <= failure:
+                raise RuntimeError("equation too many complex solutions in a row")
 
-        if self._DEBUG: print "points: ",points
+        if self._DEBUG: print "points: ", points
 
         self.points = points + self.points
 
@@ -225,7 +272,7 @@ class phc(object):
 
 
 def main():
-    pc = phc(eqn = "x^2 + y^2 - 1", num_points = 10, DEBUG = True)
+    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 301, DEBUG = True)
     print pc
     pc._DEBUG = False
     pc.find_more_points(10)
@@ -233,6 +280,7 @@ def main():
     print pc[0]
     print pc.points[0]
     print pc.degree
+    print pc.total_coeff
 
 
 if __name__ == "__main__": main()
