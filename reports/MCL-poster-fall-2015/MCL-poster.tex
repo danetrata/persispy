@@ -36,8 +36,9 @@
 %-- Block 1-1
 \begin{block}{Summary}
 
-The project takes a variety of n-dimensions intersected by random lines to generate points. From this point cloud, an undirected neighborhood graph is constructed,
-where the edges are assigned a weight. Then, the neighborhood graph undergoes the Vietoris-Rips expansion by constructing cofaces for which the vertex is maximal.
+The project takes a variety of n dimensions intersected by random lines to
+generate points. From this point cloud, a weighted undirected neighborhood graph is constructed.
+Then, the neighborhood graph undergoes the Vietoris-Rips expansion by constructing cofaces for which the vertex is maximal.
 \end{block}
 
 
@@ -66,6 +67,18 @@ h(x, 1) = f(x)
 
 
 \end{block}
+%-- Block 3-3
+\begin{block}{Citations}
+\hangindent1em
+\hangafter=1
+[1] Verschelde, J. (1999). "PHCpack: a general-purpose solver for polynomial systems by homotopy continuation.'' Algorithm 795 in  ACM Trans. Math. Softw. 
+
+%\hangindent1em
+%\hangafter=1
+%[2] Zomorodian, A. (2010). "Fast Construction of the Vietoris-Rips Complex." Computers \& Graphics, 34.3.
+
+\end{block}
+
 
 
 \end{column}%1
@@ -107,23 +120,10 @@ In the future, we would like to conduct a more thorough test relating
 connectivity, number of points, and the size of coefficients. In particular, we
 are interested in whether the sharp-threshold phenomenon found in random graphs
 can be detected in random points of algebraic varieties.
-
 The main future goal is to fully implement a persistence package that makes it
 possible to study the betti numbers of random algebraic varieties.
 
 \end{block}
-%-- Block 3-3
-\begin{block}{Citations}
-\hangindent1em
-\hangafter=1
-[1] Verschelde, J. (1999). "PHCpack: a general-purpose solver for polynomial systems by homotopy continuation.'' Algorithm 795 in  ACM Trans. Math. Softw. 
-
-%\hangindent1em
-%\hangafter=1
-%[2] Zomorodian, A. (2010). "Fast Construction of the Vietoris-Rips Complex." Computers \& Graphics, 34.3.
-
-\end{block}
-
 %-- Block 3-4
 \begin{block}{Another pretty picture}
 Below we show the neighborhood graph with $\epsilon=.2$ associated to $5000$
