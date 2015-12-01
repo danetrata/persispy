@@ -22,7 +22,7 @@
 \newcommand{\footleft}{http://mcl.math.uic.edu/}
 \newcommand{\footright}{}
 \title{Vietoris-Rips complexes, random points on varieties, and persistent homology}
-\author{Daniel Etrata \quad Mason Boeman}
+\author{Mason Boeman \quad Daniel Etrata}
 \institute{Mentors: Benjamin Antieau and J\={a}nis Lazovskis}
 
 % Main document
@@ -36,14 +36,16 @@
 %-- Block 1-1
 \begin{block}{Summary}
 
-The project takes a variety of n-dimensions intersected by random lines to generate points. From this point cloud, an undirected neighborhood graph is constructed, where then the edges are assigned a weight. Then, the neighborhood graph undergoes the Vietoris-Rips expansion by constructing cofaces for which the vertex is maximal.
+The project takes a variety of n-dimensions intersected by random lines to generate points. From this point cloud, an undirected neighborhood graph is constructed,
+where the edges are assigned a weight. Then, the neighborhood graph undergoes the Vietoris-Rips expansion by constructing cofaces for which the vertex is maximal.
 \end{block}
 
 
 
 %-- Block 1-2
 \begin{block}{Motivation}
-The goal of this project is to use persistent homology to study the topology of random complex algebraic varieties, geometric figures described as the solution sets of system of polynomial equations. 
+The goal of this project is to use persistent homology to study the topology of random complex algebraic varieties,
+geometric figures described as the solution sets of system of polynomial equations. 
 
 \end{block}
 
@@ -74,7 +76,11 @@ h(x, 1) = f(x)
 %-- Block 2-1
 \begin{block}{Neighborhood graphs}
 
-The neighborhood graph of a set $S$ with a parameter $\epsilon$ is the graph with vertices in $S$, where an edge is contained in the neighborhood graph if and only if the distance between it's endpoints is less than $\epsilon$. Our quick edge algorithm takes as input a set of points $S$ of order $n$ in affine space, and some real number $\epsilon$, and produces a list of all edges that have length less than $\epsilon$. Our method uses recursion. If our ambient space has dimension $d$, let $k$ be some positive integer less than $d$. 
+The neighborhood graph of a set $S$ with a parameter $\epsilon$ is the graph
+with vertices in $S$, where an edge is contained in the neighborhood graph if
+and only if the distance between it's endpoints is less than $\epsilon$. Our
+quick edge algorithm takes as input a set of points $S$ of order $n$ in affine
+space, and some positive real number $\epsilon$, and produces a list of all edges that have length less than $\epsilon$. Our method uses recursion. If our ambient space has dimension $d$, let $k$ be some positive integer less than $d$. 
 \\
 
 First we compute the median value of the $k$-th coordinate of all the points in $S$, and call this $m$. Now we construct four subsets of $S$: $A$, $B$, $A^*$, and $B^*$. $A$ is the set of points whose $k$-th coordinate is less than $m$. $B$ is defined as $S-A$. $A^*$ and $B^*$ are subsets of $A$ and $B$ respectively where points in these sets have kth coordinate within $\epsilon$ of $m$. We add an edge to our list for every pair $(a,b)$ where $a$ in $A^*$ and $b$ in $B^*$, and they are within $\epsilon$ of each other. We then call the algorithm recursively, replacing $S$ with $A$ and $B$, each half the size.
@@ -88,13 +94,23 @@ First we compute the median value of the $k$-th coordinate of all the points in 
 \begin{column}{0.32\linewidth}
 
 %-- Block 3-1
-\begin{block}{Persistent homology}
-
+\begin{block}{Some connectivity tests}
+\includegraphics[width=1\columnwidth]{23plots.png}
 \end{block}
 
-%-- Block 3-2
-\begin{block}{Conclusion}
 
+
+%-- Block 3-2
+\begin{block}{Persistence and future work}
+\includegraphics[width=1\columnwidth]{23plots.png}
+
+In the future, we would like to conduct a more thorough test relating
+connectivity, number of points, and the size of coefficients. In particular, we
+are interested in whether the sharp-threshold phenomenon found in random graphs
+can be detected in random points of algebraic varieties.
+
+The main future goal is to fully implement a persistence package that makes it
+possible to study the betti numbers of random algebraic varieties.
 
 \end{block}
 %-- Block 3-3
