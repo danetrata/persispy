@@ -24,7 +24,7 @@
 \newcommand{\footleft}{http://mcl.math.uic.edu/}
 \newcommand{\footright}{}
 \title{Vietoris-Rips complexes, random points on varieties, and persistent homology}
-\author{Daniel Etrata \quad Mason Boeman}
+\author{Mason Boeman \quad Daniel Etrata}
 \institute{Mentors: Benjamin Antieau and J\={a}nis Lazovskis}
 
 % Main document
@@ -74,14 +74,10 @@ When $t=1$, PHC has arrived at the solution. In this case, the solution is on th
 
 \end{block}
 
-
 \end{column}%1
 
 %-- Column 2 ---------------------------------------------------
 \begin{column}{0.32\linewidth}
-
-
-
 
 %-- Block 2-1
 \begin{block}{Neighborhood graphs}
@@ -94,33 +90,48 @@ The neighborhood graph of a set $S$ with a parameter $\epsilon$ is the graph wit
 First we compute the median value of the $k$-th coordinate of all the points in $S$, and call this $m$. Now we construct four subsets of $S$: $A$, $B$, $A^*$, and $B^*$. $A$ is the set of points whose $k$-th coordinate is less than $m$. $B$ is defined as $S-A$. $A^*$ and $B^*$ are subsets of $A$ and $B$ respectively where points in these sets have kth coordinate within $\epsilon$ of $m$. We add an edge to our list for every pair $(a,b)$ where $a$ in $A^*$ and $b$ in $B^*$, and they are within $\epsilon$ of each other. We then call the algorithm recursively, replacing $S$ with $A$ and $B$, each half the size.
 \\
 \centering
-\includegraphics[width=1\columnwidth]{plot2d_ng_7}
+\includegraphics[width=.8\columnwidth]{plot2d_ng_7}
 \end{block}
 
+%-- Block 3-3
+\begin{block}{Citations}
+\hangindent1em
+\hangafter=1
+[1] Verschelde, J. (1999). "PHCpack: a general-purpose solver for polynomial systems by homotopy continuation.'' Algorithm 795 in  ACM Trans. Math. Softw. 
+
+%\hangindent1em
+%\hangafter=1
+%[2] Zomorodian, A. (2010). "Fast Construction of the Vietoris-Rips Complex." Computers \& Graphics, 34.3.
+\end{block}
 \end{column}%2
 
 %-- Column 3 ---------------------------------------------------
 \begin{column}{0.32\linewidth}
 
 %-- Block 3-1
-\begin{block}{Persistent homology}
-
+\begin{block}{Some connectivity tests}
+\includegraphics[width=1\columnwidth]{2-3_plots}
 \end{block}
+
+
 
 %-- Block 3-2
-\begin{block}{Conclusion}
-The random sampling implemented still leaves much to be desired. Instead, if the random points were chosen with more uniformity and with no overlap, greater detail could be achieved. A couple improvements to the speed can also be done through various multiprocessing techniques. 
-\end{block}
-%-- Block 3-3
-\begin{block}{Citations}
-\hangindent1em
-\hangafter=1
-[1] Verschelde, J. (1999). "PHCpack: a general-purpose solver for polynomial systems by homotopy continuation.'' Algorithm 795 in  ACM Trans. Math. Softw. 
-\\
+\begin{block}{Persistence and future work}
 
-%\hangindent1em
-%\hangafter=1
-%[2] Zomorodian, A. (2010). "Fast Construction of the Vietoris-Rips Complex." Computers \& Graphics, 34.3.
+In the future, we would like to conduct a more thorough test relating
+connectivity, number of points, and the size of coefficients. In particular, we
+are interested in whether the sharp-threshold phenomenon found in random graphs
+can be detected in random points of algebraic varieties. The random sampling implemented still leaves much to be desired. Instead, if the random points were chosen with more uniformity and with no overlap, greater detail could be achieved. A couple improvements to the speed can also be done through various multiprocessing techniques. 
+\end{block}
+
+%-- Block 3-4
+\begin{block}{Another pretty picture}
+\justify
+Below we show the neighborhood graph with $\epsilon=.2$ associated to $5000$
+random points on the torus. In this picture there are 17 connected components.
+\\
+\centering
+\includegraphics[width=.7\columnwidth]{torus.png}
 
 \end{block}
 
