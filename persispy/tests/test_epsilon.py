@@ -19,7 +19,37 @@ pDict = {
     "degree3sphere"    : "x^3 + y^3 + z^3 - 1"
 }
 
-def try_epsilon_tests(eqn, num_points, epsilon, csv):
+
+def phc_setup():
+
+    today = datetime.today()
+    filepath = str(today.month)+"-"+str(today.day)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    testpath = filepath+'/data.csv'
+    if not os.path.isfile(testpath):
+        csv = open(testpath, 'w')
+        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
+    else:
+        csv = open(testpath, 'a')
+
+    for x in range(200):
+        try:
+            num_points = 0
+            connected_components = -1
+            while connected_components != 1:
+                num_points = num_points + 10
+                for epsilon in [0.15]:
+                    connected_components = phc_epsilon_tests(pDict["sphere"], num_points, epsilon, csv)
+        except:
+            print "passed"
+            pass
+
+    print "all tests have run"
+    csv.close()
+
+
+def phc_epsilon_tests(eqn, num_points, epsilon, csv):
 
     row = []
     failures = []
@@ -56,8 +86,68 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv):
     print ','.join(row)
     row[-1] = row[-1]+"\n"
     csv.write(','.join(row))
-    return failures
+    return cp
 
+
+from persispy.samples import points
+
+def points_setup():
+
+    today = datetime.today()
+    filepath = "points-"+str(today.month)+"-"+str(today.day)
+    if not os.path.exists(filepath):
+        os.makedirs(filepath)
+    testpath = filepath+'/data.csv'
+    if not os.path.isfile(testpath):
+        csv = open(testpath, 'w')
+        csv.write("Number of points, Epsilon, Connected components\n")
+    else:
+        csv = open(testpath, 'a')
+
+    for x in range(200):
+        try:
+            num_points = 0
+            connected_components = -1
+            while connected_components != 1:
+                num_points = num_points + 10
+                for epsilon in [0.1]:
+                    connected_components = points_epsilon_tests(num_points, epsilon, csv)
+        except:
+            print "passed"
+            pass
+
+    print "all tests have run"
+    csv.close()
+
+def points_epsilon_tests(num_points, epsilon, csv):
+    pc = points.plane(num_points)
+
+    row = []
+    failures = []
+    try:
+        row.append(str(num_points))
+        row.append(str(epsilon))
+    except StandardError as inst:
+        row.append("failed")
+        row.append("failed")
+        row.append("failed")
+        failures.append(inst.args[0])
+        return failures
+
+    try:
+        ng = pc.neighborhood_graph(epsilon, method = "subdivision")
+        cp = ng.connected_components_1()
+        print "connected componenets", cp
+        row.append(str(cp))
+    except StandardError as inst:
+        row.append("failed")
+        failures.append(inst.args[0])
+        return failures
+    
+    print ','.join(row)
+    row[-1] = row[-1]+"\n"
+    csv.write(','.join(row))
+    return cp
 
 from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
@@ -87,87 +177,52 @@ def sanity_check():
         csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
     else:
         csv = open(testpath, 'a')
-    print try_epsilon_tests(pDict["sphere"], 500, 0.1, csv)
+    print phc_epsilon_tests(pDict["sphere"], 500, 0.1, csv)
     csv.close()
+
+
+def random_eqn():
+    print "random eqn"
+
+    terms = ['u', 'v', 'w', 'x', 'y', 'z']
+    terms = terms[0:random_integers(2, 6)]
+    operators = [' + ', ' - ']
+
+    eqn = []
+    for term in terms:
+        coeff = random_integers(-50, 50)
+        degree = random_integers(1, 6) 
+        eqn.append(str(coeff)+" * "+term+" ** "+str(degree))
+
+        if terms[-1] != term:
+            eqn.append(choice(operators))
+
+    eqn.append(choice(operators))
+    constant = random_integers(1, 50) 
+    eqn.append(str(constant))
+
+    terms = symbols(" ".join(terms))
+    expand = random_integers(1, 1) 
+    eqn = parse_expr("("+"".join(eqn)+") ** "+str(expand))
+    print eqn.expand()
+
+
+
+
 
 def main():
 
-    import gc
 
     sanity_check()
 
-    today = datetime.today()
-    filepath = str(today.month)+"-"+str(today.day)
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-    testpath = filepath+'/data.csv'
-    if not os.path.isfile(testpath):
-        csv = open(testpath, 'w')
-        csv.write("Equation, Dim, Degree, Coefficients, Number of points, Epsilon, Connected components\n")
-    else:
-        csv = open(testpath, 'a')
-
-    for x in range(200):
-        print "random eqn"
-
-        terms = ['u', 'v', 'w', 'x', 'y', 'z']
-        terms = terms[0:random_integers(2, 6)]
-        operators = [' + ', ' - ']
-
-        eqn = []
-        for term in terms:
-#             coeff = uniform(-5, 5)
-            coeff = random_integers(-50, 50)
-            degree = random_integers(1, 6) 
-            eqn.append(str(coeff)+" * "+term+" ** "+str(degree))
-
-            if terms[-1] != term:
-                eqn.append(choice(operators))
-
-        eqn.append(choice(operators))
-        constant = random_integers(1, 50) 
-        eqn.append(str(constant))
-
-        terms = symbols(" ".join(terms))
-        expand = random_integers(1, 1) 
-        eqn = parse_expr("("+"".join(eqn)+") ** "+str(expand))
-        print eqn.expand()
-
-        try:
-            for num_points in [250, 500, 750, 1000]:
-                for epsilon in [0.3, 0.275, 0.25, 0.225, 0.2, 0.175, 0.15, 0.125, 0.1]:
-                    
-#                 before = hp.heap()
-
-                    print try_epsilon_tests(str(eqn.expand()), num_points, epsilon, csv)
-
-#                 after = hp.heap()
-#                 print after - before
-        except:
-            pass
-
-        gc.collect()
-
-    print "all tests have run"
+    phc_setup()
     
-    csv.close()
+#     points_setup()
+
 
     
 
 
-    """ 
-    pseudocode:
-    let epsilon < 0:
-        then plot epsilon
-    plot(cp(coeff[small, large]), cp(num_points), cp(degree))
-    pc = phc(eqn)
-        test_coefficients(pc) = x
-            return cp
-        test_number_of_points(pc) = y
-            return cp
-        test_degree(pc) = z
-            return cp
-    """
 
 
 if __name__ == "__main__": main()
