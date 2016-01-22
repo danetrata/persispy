@@ -156,8 +156,14 @@ class PointCloud:
                 fig.suptitle(title)
             ax = plt3.Axes3D(fig)
             xcoords=[p._coords[axes[0]] for p in self._points]
-            ycoords=[p._coords[axes[1]] for p in self._points]
-            zcoords=[p._coords[axes[2]] for p in self._points]
+            try:
+                ycoords=[p._coords[axes[1]] for p in self._points]
+            except IndexError:
+                ycoords=[0 for _ in self._points]
+            try:
+                zcoords=[p._coords[axes[2]] for p in self._points]
+            except IndexError:
+                zcoords=[0 for _ in self._points]
             ax.scatter(xcoords, ycoords, zcoords, marker = '.', color = '#ff6666')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
