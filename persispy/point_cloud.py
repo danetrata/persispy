@@ -245,6 +245,8 @@ class PointCloud:
             return None
 
 
+# Considering Networkx or plotly to visualize graph
+
     # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
     def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False, title = False):
 
@@ -492,12 +494,12 @@ class PointCloud:
                 coordinate = (coordinate+1)%self.dimension()
                 self._subdivide_neighbors(e, dictionary, smaller, coordinate, method, depth=-1) 
                 self._subdivide_neighbors(e, dictionary, bigger, coordinate, method, depth=-1)
-#             if depth > 0:
-#                 coordinate = (coordinate+1)%self.dimension()
-#                 self._subdivide_neighbors(e, depth-1, coordinate, smaller)
-#                 self._subdivide_neighbors(e, depth-1, coordinate, bigger)
-#     # def _selectpoint(self, pointarray, k, n):
-#             if depth == 0:
-#                 self._neighborhood_graph(e,method,smaller,dictionary) 
-#                 self._neighborhood_graph(e,method,bigger,dictionary)
+            if depth > 0:
+                coordinate = (coordinate+1)%self.dimension()
+                self._subdivide_neighbors(e, depth-1, coordinate, smaller)
+                self._subdivide_neighbors(e, depth-1, coordinate, bigger)
+    # def _selectpoint(self, pointarray, k, n):
+            if depth == 0:
+                self._neighborhood_graph(e,method,smaller,dictionary) 
+                self._neighborhood_graph(e,method,bigger,dictionary)
 
