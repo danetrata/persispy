@@ -85,3 +85,12 @@ def cube(dim,num_points):
     Point cloud with 1000 points in real affine space of dimension 4
     '''
     return point_cloud.PointCloud([hash_point.HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
+
+def plane(num_points):
+    return point_cloud.PointCloud(
+            [hash_point.HashPoint(
+                npr.uniform(0, 1, size=2), 
+                index=n) 
+                for n in range(num_points)], 
+            space='affine')
+

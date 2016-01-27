@@ -27,7 +27,7 @@ class phc(object):
     def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, DEBUG = False):
         self._DEBUG = DEBUG
 
-#         self._bounds = bounds
+        self._bounds = bounds
         self._complex_epsilon = 0.1
         self._failure = num_points
 
@@ -35,7 +35,7 @@ class phc(object):
 
         self.varList, self.coeffList = self._parse(eqn)
         self.total_coeff = sum(self.coeffList)
-        self._bounds = self.total_coeff
+#         self._bounds = self.total_coeff
 
         self.degree = self._degree()
         self.points = []
@@ -168,17 +168,17 @@ class phc(object):
                     points.append(tuple(point))
                 else:
                     closeness = True 
-                    for x in point: 
+                    for component in point: 
                     # choses the points we want
-                        if self._is_close(x.imag) \
-                                and self._in_bounds(x.real):
+                        if self._is_close(component.imag) \
+                                and self._in_bounds(component.real):
                             # sometimes phcpy gives more points than we ask,
                             # thus the additional check
-                            if x == point[-1] \
+                            if component == point[-1] \
                                     and closeness == True \
                                     and len(points) < num_points: 
-                                points.append(tuple([x.real for x in point]))
-                                if self._DEBUG: print "appended point:",[x.real for x in point]
+                                points.append(tuple([component.real for component in point]))
+                                if self._DEBUG: print "appended point:",[component.real for component in point]
                                 failure = 0
                         else:
                             closeness = False
@@ -197,6 +197,7 @@ class phc(object):
     def _intersect(self):
         bounds = self._bounds
         rand_list = np.random.uniform(-bounds, bounds, size=len(self.varList))
+#         rand_list = np.random.normal(1, 1, size=len(self.varList))
         i = 0
         intersect = [] 
         for x in rand_list:
@@ -220,8 +221,11 @@ class phc(object):
 
     def _in_bounds(self, a):
         bounds = self._bounds
-        if bounds <= 0 \
-                or abs(bounds-abs(a)) <= bounds:
+        min = 0
+        max = 1
+        if bounds != 0 and \
+                min <= a and \
+                a <= max:
             if self._DEBUG: print "Selected component is in bounds"
             return True
         else:
@@ -284,6 +288,7 @@ def main():
     print pc.points[0]
     print pc.degree
     print pc.total_coeff
+    print pc.plot3d()
 
 
 
