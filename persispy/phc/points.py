@@ -29,7 +29,7 @@ class phc(object):
 
 #         self._bounds = bounds
         self._complex_epsilon = 0.1
-        self._failure = 100
+        self._failure = num_points
 
         self.eqn = eqn
 
@@ -53,6 +53,7 @@ class phc(object):
 
 
         self.__call__()
+
 
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
@@ -102,9 +103,6 @@ class phc(object):
                             coeffList.append(float(x[0:cut]))
                         break
 
-
-
-
         return varList, coeffList
 
     def _degree(self):
@@ -150,7 +148,7 @@ class phc(object):
         failure = 0
         while(len(points) < num_points):
             p = self._system()
-            phcSol = track(p, self._startSystem, self._startSol)
+            phcSol = track(p, self._startSystem, self._startSol, gamma=complex(0.824,0.5664))
             if self._DEBUG:
                 print "system of equations"
                 print "--"
@@ -212,7 +210,7 @@ class phc(object):
     # for dealing with the fact that PHC always returns complex solutions
     # To be used to detect solutions with complex parts close to given epsilon
     # Adjust epsilon to your liking.
-    # Note: phcpack almost always gives an imaginary parts, as small as 10^-48,
+    # Note: phcpack almost always gives an imaginary part, as small as 10^-48,
     # so epsilon != 0
     def _is_close(self, a, b = 0):
         epsilon = self._complex_epsilon
@@ -231,16 +229,18 @@ class phc(object):
 
     def __call__(self):
         cloudPoints = []
+        i = 0
         for coord in self.points:
             cloudPoints.append(
                 HashPoint(
                     np.array(
                         coord, 
                         dtype=complex
-                    )
+                    ),
+                    index = i
                 )
             )
-
+            i = i + 1
         self.pointCloud = PointCloud(cloudPoints) 
         return self.pointCloud
 
@@ -272,7 +272,10 @@ class phc(object):
 
 
 def main():
-    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 301, DEBUG = True)
+    global pc
+    pc = phc(eqn = "x^2 + y^2 + z^2 - 1", num_points = 301, DEBUG = True)
+    global ng
+    ng = pc.neighborhood_graph(0.2)
     print pc
     pc._DEBUG = False
     pc.find_more_points(10)
@@ -281,6 +284,7 @@ def main():
     print pc.points[0]
     print pc.degree
     print pc.total_coeff
+
 
 
 if __name__ == "__main__": main()

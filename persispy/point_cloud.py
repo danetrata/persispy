@@ -108,6 +108,8 @@ class PointCloud:
             ax.set_aspect('equal')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
             self._display_plot(plt, "plot2d", save)
@@ -226,6 +228,8 @@ class PointCloud:
                 fig.suptitle(title)
             ax.grid(True)
             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+            ax.set_xlim(-3,3)
+            ax.set_ylim(-3,3)
             ax.set_aspect('equal')
             ax.add_collection(lines)
 #             xcoords=[p._coords[axes[0]] for p in self._points]

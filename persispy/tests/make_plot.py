@@ -7,8 +7,8 @@ from sympy import symbols
 from numpy.random import random_integers
 from random import choice
 
-import sys
-sys.setrecursionlimit(7000)
+# import sys
+# sys.setrecursionlimit(1000)
 
 pDict = {
     "circle"           : "x^2 + y^2 - 1",
@@ -25,7 +25,7 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv, filepath):
     row = []
     failures = []
     try:
-        pc = phc(eqn, num_points = num_points, bounds = 20, DEBUG = True)
+        pc = phc(eqn, num_points = num_points, bounds = 20)
         dim = pc.dimension()
         row.append(str(pc.eqn))
         row.append(str(pc.degree))
@@ -40,7 +40,6 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv, filepath):
         row.append("failed")
         row.append("failed")
         failures.append(inst.args[0])
-        print row
         return failures
 
     try:
@@ -50,8 +49,7 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv, filepath):
     except StandardError as inst:
         row.append("failed")
         failures.append(inst.args[0])
-        print row
-#         return failures
+        return failures
     
     print ','.join(row)
     row[-1] = row[-1]+"\n"
@@ -60,30 +58,30 @@ def try_epsilon_tests(eqn, num_points, epsilon, csv, filepath):
     try:
         if dim == 2 \
                 or dim == 3:
-            pc.plot2d(save = True, title = pc.eqn)
+            pc.plot2d(save = filepath+"/plot2d/plot2d", title = pc.eqn)
     except StandardError as inst:
         failures.append(inst.args[0])
 
     try:
-        if pc.plot2d_neighborhood_graph(epsilon, save = True, title = pc.eqn) != True:
+        if pc.plot2d_neighborhood_graph(epsilon, save = filepath+"/plot2d_ng/plot2d_ng", title = pc.eqn) != True:
             raise RuntimeError("failed to plot2d "+str(x))
     except StandardError as inst:
         failures.append(inst.args[0])
 
     try:
         if dim == 3:
-            pc.plot3d(save = True, title = pc.eqn)
+            pc.plot3d(save = filepath+"/plot3d/plot3d", title = pc.eqn)
     except StandardError as inst:
         failures.append(inst.args[0])
         
     try:
-        if pc.plot3d_neighborhood_graph(epsilon, save = True, title = pc.eqn) != True:
+        if pc.plot3d_neighborhood_graph(epsilon, save = filepath+"/plot3d_ng/plot3d_ng", title = pc.eqn) != True:
             raise RuntimeError("failed to plot3d "+str(x))
     except StandardError as inst:
         failures.append(inst.args[0])
 
 
-    return failurezas
+    return failures
 
 from sympy.parsing.sympy_parser import parse_expr
 from numpy.random import uniform
@@ -121,11 +119,12 @@ def main():
     else:
         csv = open(testpath, 'a')
 
+    eqn = raw_input("enter an eqn to plot:\n")
     for x in range(1):
         try:
-            for num_points in [1000, 5000]:
+            for num_points in [750, 1000]:
                 for epsilon in [0.3, 0.25, 0.2, 0.15, 0.1]:
-                    print try_epsilon_tests(pDict["torus"], num_points, epsilon, csv, filepath)
+                    print try_epsilon_tests(eqn, num_points, epsilon, csv, filepath)
 
         except:
             pass
