@@ -9,14 +9,15 @@ def test_plots():
 #     point_cloud.PointCloud.plot3d(points.torus(1000))
 
 def test_weighted_graph():
-    pc = points.torus(1000)
+    pc = points.sphere(1000)
     ng = pc.neighborhood_graph(.1, method = "subdivision")
     print ng
 
-    print len(ng.connected_components())
+    print ng.connected_components_1()
+    pc.plot3d_neighborhood_graph(.1)
 
 def main():
-    test_plots()
-#    test_weighted_graph()
+#    test_plots()
+    test_weighted_graph()
 
 if __name__=="__main__": main()
