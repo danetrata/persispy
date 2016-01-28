@@ -57,6 +57,7 @@ class PointCloud:
         self._fig = None
 
 
+
     def __str__(self):
 
         try:
