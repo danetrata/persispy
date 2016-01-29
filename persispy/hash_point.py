@@ -14,6 +14,12 @@ class HashPoint:
     def __init__(self,coords,index=0):
         self._coords=np.array(coords)
         self._index=index
+	
+    def __len__(self):
+	return len(self._coords)
+
+    def __index__(self, key):
+	return self._coords[key]
 
     def __hash__(self):
         try:
