@@ -159,13 +159,10 @@ class PointCloud:
                 fig.suptitle(title)
             ax = plt3.Axes3D(fig)
             xcoords=[p._coords[axes[0]] for p in self._points]
-            try:
-                ycoords=[p._coords[axes[1]] for p in self._points]
-            except IndexError:
-                ycoords=[0 for _ in self._points]
-            try:
+            ycoords=[p._coords[axes[1]] for p in self._points]
+            if len(self._points[0]) == 3:
                 zcoords=[p._coords[axes[2]] for p in self._points]
-            except IndexError:
+            else:
                 zcoords=[0 for _ in self._points]
             ax.scatter(xcoords, ycoords, zcoords, marker = '.', color = '#ff6666')
             ax.set_xlabel('x')
@@ -262,7 +259,11 @@ class PointCloud:
                 pc=p._coords
                 for e in g._adj[p]:
                     qc=e[0]._coords
-                    edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
+                    if len(self._points[0]) == 3:
+                        edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
+                    else:
+                        edges.append(array([[qc[axes[0]],qc[axes[1]],qc[0]],[pc[axes[0]],pc[axes[1]],pc[0]]]))
+
             lines=a3.art3d.Poly3DCollection(edges)
             lines.set_color([1,.5,.5,.5])
 
@@ -488,6 +489,7 @@ class PointCloud:
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
                     if dist<e:
                         
+                        print "dist:", dist
                         dictionary[gluesmaller[i]].add((gluebigger[j],dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i],dist))
 

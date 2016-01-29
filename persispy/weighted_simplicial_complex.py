@@ -186,15 +186,15 @@ class wGraph:
         data=np.array([1.0 for x in range(len(indices))])
         return sparse.csr_matrix((data,indices,indptr),shape=((len(keys),len(keys))))
 
-    def connected_components_1(self):
+    def connected_components_1(self, return_labels = False):
         '''
         Output: a positive integer.
 
         TODO: write an algorithm to do this from the adjacency matrix, avoiding the
         construction of adjacency_matrix().
         '''
-        return csgraph.connected_components(self.adjacency_matrix(),directed=False,return_labels=False)
-
+        return csgraph.connected_components(self.adjacency_matrix(),directed=False, return_labels = return_labels)
+1
 def wRandomGraph(n,p,epsilon):
     '''
     Returns the Gilbert random graph G(n,p), which includes each edge independently with
