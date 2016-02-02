@@ -48,7 +48,12 @@ class PointCloud:
         try:
             hash(self._points[0])
         except TypeError:
-            raise TypeError('Input points should be of hashable points.')
+            print "Detected points are not HashPoint. Attempting to convert."
+            points = [hash_point.HashPoint(
+                    points[n], 
+                    index=n) 
+                    for n in range(len(points))] 
+#             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
 
@@ -70,13 +75,17 @@ class PointCloud:
 
 
     def __repr__(self):
-
         return self._points.__repr__()
 
 
     def num_points(self):
-
         return len(self._points)
+
+    def __len__(self):
+        return len(self._points)
+
+    def __getitem__(self, key):
+        return tuple(self._points[key]._coords)
 
 
     def dimension(self):
@@ -381,16 +390,16 @@ class PointCloud:
 
                     if m=='':
                         self._subdivide_neighbors(epsilon, dictionary, pointarray, depth=d)
-                        return wsc.wGraph(dictionary)
+                        return wsc.wGraph(dictionary, epsilon)
                     else:
                         self._subdivide_neighbors(epsilon, dictionary, pointarray, coordinate = m, depth=d)
-                        return wsc.wGraph(dictionary)
+                        return wsc.wGraph(dictionary, epsilon)
                 else: #  most calls end up here
                       #  also starts the recursion
 
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
                     # mystery dictionary assignments..?
-                    return wsc.wGraph(dictionary)                             
+                    return wsc.wGraph(dictionary, epsilon)                             
 
         elif methodarray[0] == 'exact':
             '''
@@ -405,12 +414,12 @@ class PointCloud:
                             dictionary[self._points[j]].add((self._points[i],dist))
                     elif self._space=='projective':
                         return None
-            return wsc.wGraph(dictionary)
+            return wsc.wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'nonrecursive_subdivision':
             if self._space == 'affine':
                 self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
-                return wsc.wGraph(dictionary)                             
+                return wsc.wGraph(dictionary, epsilon)                             
             return None
         elif methodarray[0]=='approximate':
             return None
@@ -489,7 +498,6 @@ class PointCloud:
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
                     if dist<e:
                         
-                        print "dist:", dist
                         dictionary[gluesmaller[i]].add((gluebigger[j],dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i],dist))
 

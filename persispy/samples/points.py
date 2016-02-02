@@ -94,3 +94,28 @@ def plane(num_points):
                 for n in range(num_points)], 
             space='affine')
 
+
+def main():
+    pc = plane(150)
+
+    string = ""
+    print pc
+    for i in pc:
+        string += "%10.10f %10.10f 0.1\n" % (i)
+
+    print string
+    save_to_file(string)
+
+def save_to_file(data):
+    """
+    Prompts the user for a file name
+    and writes the data to file.
+    """
+    name = raw_input("give a file name : ")
+    datafile = open(name, 'w')
+    datafile.write(str(data))
+    datafile.close()
+
+
+if __name__ == "__main__": main()
+

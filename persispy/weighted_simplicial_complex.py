@@ -33,7 +33,7 @@ class wSimplex:
             return False
 
 class wGraph:
-    def __init__(self,adjacencies):
+    def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
         Output: a wGraph object.
@@ -42,6 +42,7 @@ class wGraph:
             _adj: the adjacency dictionary.
         '''
         self._adj=adjacencies
+        self.epsilon = epsilon
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
