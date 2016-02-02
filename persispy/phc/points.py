@@ -184,7 +184,7 @@ class phc(object):
                             closeness = False
                             failure = failure + 1
             if self._failure <= failure:
-                raise RuntimeError("equation too many complex solutions in a row")
+                raise RuntimeError("equation has too many complex solutions in a row")
 
         if self._DEBUG: print "points: ", points
 
@@ -197,7 +197,7 @@ class phc(object):
     def _intersect(self):
         bounds = self._bounds
         rand_list = np.random.uniform(-bounds, bounds, size=len(self.varList))
-#         rand_list = np.random.normal(1, 1, size=len(self.varList))
+#         rand_list = np.random.normal(0, bounds, size=len(self.varList))
         i = 0
         intersect = [] 
         for x in rand_list:
@@ -221,8 +221,8 @@ class phc(object):
 
     def _in_bounds(self, a):
         bounds = self._bounds
-        min = 0
-        max = 1
+        min = -bounds
+        max = bounds
         if bounds != 0 and \
                 min <= a and \
                 a <= max:
@@ -277,11 +277,20 @@ class phc(object):
 
 def main():
     global pc
-    pc = phc(eqn = "x^2 + y^2 + z^2 - 1", num_points = 301, DEBUG = True)
+    user = raw_input("torus or sphere? ")
+    if user == "torus":
+        selection = "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2"
+    elif user == "sphere":
+        selection = "x^2 + y^2 + z^2 - 1"
+    else:
+        print "invalid input"
+        return
+
+    pc = phc(eqn = selection, num_points = 5000, bounds = 30)
+
     global ng
-    ng = pc.neighborhood_graph(0.2)
+#     ng = pc.neighborhood_graph(0.2)
     print pc
-    pc._DEBUG = False
     pc.find_more_points(10)
     print pc
     print pc[0]
@@ -289,6 +298,16 @@ def main():
     print pc.degree
     print pc.total_coeff
     print pc.plot3d()
+
+    saveUser = raw_input("save file? ")
+    if saveUser == "yes":
+        fileUser = raw_input("file name? ")
+        f = open(fileUser, "wa")
+        f.write(str(pc.points))
+        f.close()
+    else:
+        print "exiting"
+
 
 
 
