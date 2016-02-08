@@ -267,6 +267,7 @@ class PointCloud:
     def plot3d_neighborhood_graph(self, 
             epsilon, 
             axes=(0,1,2), 
+            cmap = 3,
             method='subdivision', 
             save = False, 
             title = False):
@@ -274,32 +275,15 @@ class PointCloud:
         """ 
         For a given epsilon, makes a 3-dimensional plot of a neighborhood 
         graph.
+        Currently, there are the following cmap options which are selected
+        by index:
+            0 - Dark2
+            1 - Accent
+            2 - Paired
+            3 - rainbow
         Also, the function can also take a different method, and 
         automatically save a plot with or without a title
         """
-
-
-#         def create_rainbow():
-#             rainbow = [ax._get_lines.color_cycle.next()]
-#             while True:
-#                 nextval = ax._get_lines.color_cycle.next()
-#                 if nextval not in rainbow:
-#                     rainbow.append(nextval)
-#                 else:
-#                     return rainbow
-# 
-#         import itertools
-#         import collections
-# 
-#         def next_color(ax):
-#             rainbow = create_rainbow()
-#             double_rainbow = collections.deque(rainbow)
-#             ax.set_edgecolors(double_rainbow[0])
-#             nextval = ax._edgecolors
-#             double_rainbow.rotate(-1)
-#             return nextval, itertools.cycle(double_rainbow)
-
-
 
         if self._space=='affine':
 
@@ -314,7 +298,9 @@ class PointCloud:
             g=self.neighborhood_graph(epsilon, method)
             adj = g._adj
             cp = g.connected_components()
-            cmap = plt.cm.Dark2
+            cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
+                    plt.cm.rainbow]
+            cmap = cmaps[cmap] # color mappings 
             line_colors = cmap(np.linspace(0,1, len(cp)))
 
             i = 0
@@ -323,7 +309,6 @@ class PointCloud:
                 if len(component) > 1:
                     for vertex in component:
                         for endPoint in adj[vertex]:
-
                             if len(self._points[0]) == 3:
                                 edges.append(
                                         array([
@@ -346,12 +331,8 @@ class PointCloud:
                                                 0]]
                                             )
                                         )
-
-
-
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[i])
-
                 ax.add_collection(lines)
                 i += 1
 
