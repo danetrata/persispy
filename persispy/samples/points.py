@@ -96,15 +96,24 @@ def plane(num_points):
 
 
 def main():
-    pc = plane(150)
+    npr.seed(1991)
+    pc = plane(50)
+    ng = pc.neighborhood_graph(0.16)
+    cp = ng.connected_components()
 
-    string = ""
-    print pc
-    for i in pc:
-        string += "%10.10f %10.10f 0.1\n" % (i)
+#     print cp
 
-    print string
-    save_to_file(string)
+#     print len(cp)
+#     n = 0
+#     for component in cp:
+#         print "component"
+#         print component[0]._coords
+#         for vertex in component:
+#             print vertex[0]._coords
+            
+    pc.plot3d_neighborhood_graph(0.16) 
+        
+
 
 def save_to_file(data):
     """

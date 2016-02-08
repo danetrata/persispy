@@ -198,7 +198,13 @@ class PointCloud:
 
 
     # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot2d_neighborhood_graph(self,epsilon,axes=(0,1),shading_axis=2,method='subdivision', save = False, title = False):
+    def plot2d_neighborhood_graph(self,
+            epsilon,
+            axes=(0,1),
+            shading_axis=2,
+            method='subdivision', 
+            save = False, 
+            title = False):
 
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -256,43 +262,108 @@ class PointCloud:
             return None
 
 
-# Considering Networkx or plotly to visualize graph
 
-    # Makes a 3-dimensional plot of a neighborhood graph, for a given epsilon
-    def plot3d_neighborhood_graph(self,epsilon,axes=(0,1,2),method='subdivision', save = False, title = False):
+
+    def plot3d_neighborhood_graph(self, 
+            epsilon, 
+            axes=(0,1,2), 
+            method='subdivision', 
+            save = False, 
+            title = False):
+
+        """ 
+        For a given epsilon, makes a 3-dimensional plot of a neighborhood 
+        graph.
+        Also, the function can also take a different method, and 
+        automatically save a plot with or without a title
+        """
+
+
+        def create_rainbow():
+            rainbow = [ax._get_lines.color_cycle.next()]
+            while True:
+                nextval = ax._get_lines.color_cycle.next()
+                if nextval not in rainbow:
+                    rainbow.append(nextval)
+                else:
+                    return rainbow
+
+        import itertools
+        import collections
+
+        def next_color(ax):
+            rainbow = create_rainbow()
+            double_rainbow = collections.deque(rainbow)
+            ax.set_edgecolors(double_rainbow[0])
+            nextval = ax._edgecolors
+            double_rainbow.rotate(-1)
+            return nextval, itertools.cycle(double_rainbow)
+
+
 
         if self._space=='affine':
-            g=self.neighborhood_graph(epsilon,method)
-            edges=[]
-            for p in self._points:
-                pc=p._coords
-                for e in g._adj[p]:
-                    qc=e[0]._coords
-                    if len(self._points[0]) == 3:
-                        edges.append(array([[qc[axes[0]],qc[axes[1]],qc[axes[2]]],[pc[axes[0]],pc[axes[1]],pc[axes[2]]]]))
-                    else:
-                        edges.append(array([[qc[axes[0]],qc[axes[1]],qc[0]],[pc[axes[0]],pc[axes[1]],pc[0]]]))
-
-            lines=a3.art3d.Poly3DCollection(edges)
-            lines.set_color([1,.5,.5,.5])
 
             if self._fig is None:
                 fig=plt.figure()
-
-            fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
 
             ax = plt3.Axes3D(fig)
+
+
+            g=self.neighborhood_graph(epsilon, method)
+            adj = g._adj
+            cp = g.connected_components()
+
+            n = 0
+            for component in cp:
+                edges = []
+                if len(component) > 1:
+                    for vertex in component:
+                        for endPoint in adj[vertex]:
+
+                            if len(self._points[0]) == 3:
+                                edges.append(
+                                        array([
+                                            [vertex[axes[0]],
+                                                vertex[axes[1]],
+                                                vertex[axes[2]]],
+                                            [endPoint[0][axes[0]],
+                                                endPoint[0][axes[1]],
+                                                endPoint[0][axes[2]]]]
+                                            )
+                                        )
+                            else:
+                                edges.append(
+                                        array([
+                                            [vertex[axes[0]],
+                                                vertex[axes[1]], 
+                                                0], 
+                                            [endPoint[0][axes[0]],
+                                                endPoint[0][axes[1]], 
+                                                0]]
+                                            )
+                                        )
+
+
+
+                lines = a3.art3d.Poly3DCollection(edges)
+                nextval, ax._get_lines.color_cycle = next_color(lines)
+
+                ax.add_collection(lines)
+
+            fig.set_size_inches(10.0,10.0)
+
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+
             ax.set_xlim(-3,3)
             ax.set_ylim(-3,3)
             ax.set_zlim(-3,3)
+
             ax.grid(True)
             ax.set_aspect('equal')
-            ax.add_collection(lines)
 
             self._display_plot(plt, "plot3d_ng", save)
 
@@ -358,13 +429,24 @@ class PointCloud:
             return None
 
 
-    def neighborhood_graph(self,epsilon,method = "subdivision"):
+    def neighborhood_graph(self,
+            epsilon,
+            method = "subdivision"):
+        """
+        calls the recursive function _neighborhood_graph
+        """
+        return self._neighborhood_graph(
+                epsilon,
+                method,
+                self._points,
+                {v:set() for v in self._points})
 
-        return self._neighborhood_graph(epsilon,method,self._points,{v:set() for v in self._points})
 
-
-    def _neighborhood_graph(self,epsilon,method,pointarray,dictionary):
-
+    def _neighborhood_graph(self,
+            epsilon,
+            method,
+            pointarray,
+            dictionary):
         '''
         The 'method' string is separated by spaces. Acceptable values:
 
@@ -389,17 +471,23 @@ class PointCloud:
                         m=m+' '
 
                     if m=='':
-                        self._subdivide_neighbors(epsilon, dictionary, pointarray, depth=d)
+                        self._subdivide_neighbors(epsilon, 
+                                dictionary, 
+                                pointarray, 
+                                depth=d)
                         return wsc.wGraph(dictionary, epsilon)
                     else:
-                        self._subdivide_neighbors(epsilon, dictionary, pointarray, coordinate = m, depth=d)
+                        self._subdivide_neighbors(epsilon, 
+                                dictionary, 
+                                pointarray, 
+                                coordinate = m, 
+                                depth=d)
                         return wsc.wGraph(dictionary, epsilon)
                 else: #  most calls end up here
                       #  also starts the recursion
-
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
                     # mystery dictionary assignments..?
-                    return wsc.wGraph(dictionary, epsilon)                             
+                    return wsc.wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
             '''
@@ -408,7 +496,8 @@ class PointCloud:
             for i in range(len(self._points)):
                 for j in range(i+1,len(self._points)):
                     if self._space=='affine':
-                        dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords)*(self._points[i]._coords-self._points[j]._coords)))
+#                         dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords) *(self._points[i]._coords-self._points[j]._coords)))
+                        dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords)**2))
                         if dist<epsilon:
                             dictionary[self._points[i]].add((self._points[j],dist))
                             dictionary[self._points[j]].add((self._points[i],dist))
@@ -419,7 +508,7 @@ class PointCloud:
         elif methodarray[0] == 'nonrecursive_subdivision':
             if self._space == 'affine':
                 self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
-                return wsc.wGraph(dictionary, epsilon)                             
+                return wsc.wGraph(dictionary,epsilon)
             return None
         elif methodarray[0]=='approximate':
             return None

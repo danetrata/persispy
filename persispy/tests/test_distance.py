@@ -41,23 +41,26 @@ def points_setup():
     csv = make_csv("Number of points, Distance, Connected components, Area")
 
 
-    for x in range(200):
-        print "running test", x
+    
+    distance = 0.056
+    while(distance < .3):
+        print "running test", distance
         try:
-            distance = 0
             connected_components = -1
             while connected_components != 1:
-                distance = distance + .01
-                for num_points in [150]:
+                distance = distance + .001
+                for num_points in range(10, 1000, 10):
                     connected_components = points_epsilon_tests(num_points, distance, csv)
-        except:
+#                     connected_components = points_epsilon_tests(num_points, distance, csv, eqn)
+        except StandardError as inst:
+            print inst
             print "skip"
             pass
 
     print "all tests have run"
     csv.close()
 
-from persispy.tests.area import area
+from persispy.tests.area import shapely_area
 from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
@@ -94,7 +97,7 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         failures.append(inst.args[0])
         return failures
     
-    diskArea = area(pc, distance)
+    diskArea = shapely_area(pc, distance)
     print "area:", diskArea
     row.append(str(diskArea))
     print ','.join(row)
