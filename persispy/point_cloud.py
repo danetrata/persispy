@@ -279,25 +279,25 @@ class PointCloud:
         """
 
 
-        def create_rainbow():
-            rainbow = [ax._get_lines.color_cycle.next()]
-            while True:
-                nextval = ax._get_lines.color_cycle.next()
-                if nextval not in rainbow:
-                    rainbow.append(nextval)
-                else:
-                    return rainbow
-
-        import itertools
-        import collections
-
-        def next_color(ax):
-            rainbow = create_rainbow()
-            double_rainbow = collections.deque(rainbow)
-            ax.set_edgecolors(double_rainbow[0])
-            nextval = ax._edgecolors
-            double_rainbow.rotate(-1)
-            return nextval, itertools.cycle(double_rainbow)
+#         def create_rainbow():
+#             rainbow = [ax._get_lines.color_cycle.next()]
+#             while True:
+#                 nextval = ax._get_lines.color_cycle.next()
+#                 if nextval not in rainbow:
+#                     rainbow.append(nextval)
+#                 else:
+#                     return rainbow
+# 
+#         import itertools
+#         import collections
+# 
+#         def next_color(ax):
+#             rainbow = create_rainbow()
+#             double_rainbow = collections.deque(rainbow)
+#             ax.set_edgecolors(double_rainbow[0])
+#             nextval = ax._edgecolors
+#             double_rainbow.rotate(-1)
+#             return nextval, itertools.cycle(double_rainbow)
 
 
 
@@ -314,8 +314,10 @@ class PointCloud:
             g=self.neighborhood_graph(epsilon, method)
             adj = g._adj
             cp = g.connected_components()
+            cmap = plt.cm.Dark2
+            line_colors = cmap(np.linspace(0,1, len(cp)))
 
-            n = 0
+            i = 0
             for component in cp:
                 edges = []
                 if len(component) > 1:
@@ -348,9 +350,10 @@ class PointCloud:
 
 
                 lines = a3.art3d.Poly3DCollection(edges)
-                nextval, ax._get_lines.color_cycle = next_color(lines)
+                lines.set_edgecolor(line_colors[i])
 
                 ax.add_collection(lines)
+                i += 1
 
             fig.set_size_inches(10.0,10.0)
 
