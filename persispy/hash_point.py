@@ -18,8 +18,9 @@ class HashPoint:
     def __len__(self):
 	return len(self._coords)
 
-    def __index__(self, key):
-	return self._coords[key]
+
+    def __getitem__(self, key):
+        return self._coords[key]
 
     def __hash__(self):
         try:
@@ -31,6 +32,16 @@ class HashPoint:
 
     def __repr__(self):
         return "point "+str(self._index)+": "+str(self._coords.__repr__())[6:-1]
+
+
+    def keys(self):
+        return self._index
+
+    def values(self):
+        return self._coords
+    
+    def items(self):
+        return self._index, self._coords
 
     def __cmp__(self,other):
         return self._index.__cmp__(other._index)

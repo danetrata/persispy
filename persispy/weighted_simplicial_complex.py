@@ -32,7 +32,9 @@ class wSimplex:
         else:
             return False
 
+import re
 class wGraph:
+
     def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
@@ -43,6 +45,14 @@ class wGraph:
         '''
         self._adj=adjacencies
         self.epsilon = epsilon
+
+
+#         adjDict = {}
+#         i = 0
+#         for key in self._adj:
+#             i += 1
+#             print i, "center", key.keys(), key.values()
+#             print self._adj[key]
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
@@ -77,24 +87,38 @@ class wGraph:
                     return e[1]
             return -1    
 
-    def connected_component(self,p,visited,n):
-        visited[p]=n
-        for q in self._adj[p]:
-            if not visited[q[0]]:
-                self.connected_component(q[0],visited,n)
+    def connected_component(self, point, visited, time):
+        """
+        notes the time in which a node was visited on the visited dict
+        """
+        visited[point]=time
+        for neighbor in self._adj[point]:
+            if not visited[neighbor[0]]:
+                self.connected_component(neighbor[0], visited, time)
 
     def connected_components(self):
         '''
         Returns a list wGraphs giving the connected components of the wGraph.
         '''
-        visited = {d[0]:0 for d in self._adj.keys()}
-        n=0
-        for p in self._adj.keys():
-            if visited[p[0]]==0:
-                n=n+1
-                self.connected_component(p[0],visited,n)
-        print n
-        return visited
+        visited = {d:0 for d in self._adj}
+
+        time=0
+        for point in self._adj:
+            if visited[point]==0:
+                time = time + 1
+                self.connected_component(point, visited, time)
+        
+        components = []
+        n = 0
+        for connected in range(1, time+1):
+            component = []
+            for point in visited:
+                if visited[point] == connected:
+                    n += 1
+                    component.append(point)
+            components.append(component)
+
+        return components
 
     def cloud_dist(self,pointlist):
         '''
@@ -161,6 +185,7 @@ class wGraph:
 
         if method=='inductive':
             return None
+
         elif method == 'incremental':
             complex = {n:[] for n in range(dimension+1)}
             for u in self._adj.keys():
@@ -195,7 +220,8 @@ class wGraph:
         construction of adjacency_matrix().
         '''
         return csgraph.connected_components(self.adjacency_matrix(),directed=False, return_labels = return_labels)
-1
+
+
 def wRandomGraph(n,p,epsilon):
     '''
     Returns the Gilbert random graph G(n,p), which includes each edge independently with

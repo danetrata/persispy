@@ -9,12 +9,12 @@ def test_plots():
 #     point_cloud.PointCloud.plot3d(points.torus(1000))
 
 def test_weighted_graph():
-    pc = points.sphere(1000)
-    ng = pc.neighborhood_graph(.1, method = "subdivision")
-    print ng
-
-    print ng.connected_components_1()
-    pc.plot3d_neighborhood_graph(.1)
+#     pc = points.sphere(1000)
+#     ng = pc.neighborhood_graph(.13, method = "subdivision")
+#     print ng
+#     print len(ng.connected_components())
+#     pc.plot3d_neighborhood_graph(.13)
+      points.torus(5000).plot3d_neighborhood_graph(.13)
 
 def main():
 #    test_plots()
