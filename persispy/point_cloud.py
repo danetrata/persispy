@@ -16,7 +16,7 @@ import os as os
 import sys
 
 
-
+import hash_edge, hash_point
 
 
 
@@ -303,15 +303,16 @@ class PointCloud:
             cmap = cmaps[cmap] # color mappings 
             line_colors = cmap(np.linspace(0,1, len(cp)))
 
-            i = 0
-            numEdges = 0
+            componentIndex = 0
+            totalEdges = 0
             for component in cp:
-                edges = []
+                edges = {}
                 if len(component) > 1:
+                    edgeIndex = 0
                     for vertex in component:
                         for endPoint in adj[vertex]:
                             if len(self._points[0]) == 3:
-                                edges.append(
+                                edges[edgeIndex] = hash_edge.HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]],
@@ -319,10 +320,10 @@ class PointCloud:
                                             [endPoint[0][axes[0]],
                                                 endPoint[0][axes[1]],
                                                 endPoint[0][axes[2]]]]
-                                            )
+                                            ), index = edgeIndex
                                         )
                             else:
-                                edges.append(
+                                edges[edgeIndex] = hash_edge.HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]], 
@@ -330,18 +331,17 @@ class PointCloud:
                                             [endPoint[0][axes[0]],
                                                 endPoint[0][axes[1]], 
                                                 0]]
-                                            )
+                                            ), index = edgeIndex
                                         )
-                for _edge in edges:
-                    numEdges += 1
-#                 print "number of edges", numEdges
+                            edgeIndex += 1
+#                 print "number of edges", totalEdges
 #                 print "length of edges", len(edges)
 #                 edges = np.array(edges)
 
 #                 print np.vstack(set(map(tuple, edges)))
 
 # #                 print "all", edges
-# #                 print "edges", numEdges
+# #                 print "edges", totalEdges
 #                 b = edges[np.lexsort(edges.reshape((edges.shape[0], -1 )).T)]
 #                 print len(b), len(edges)
 #                 print range(1, edges.ndim)
@@ -355,12 +355,17 @@ class PointCloud:
 #                                 )
 #                             )
 #                         ]
-
+                edges = edges.values()
+                edges = set(edges)
+                for _edge in edges:
+                    totalEdges += 1
+#                 print edges
                 lines = a3.art3d.Poly3DCollection(edges)
-                lines.set_edgecolor(line_colors[i])
+                lines.set_edgecolor(line_colors[componentIndex])
                 ax.add_collection(lines)
-                i += 1
+                componentIndex += 1
 
+            print totalEdges
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
             # place a text box in upper left in axes coords
             props = dict(boxstyle='round', facecolor='white', alpha=0.5)

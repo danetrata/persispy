@@ -48,7 +48,8 @@ class wGraph:
         self.epsilon = epsilon
 
 # place holder for more efficient recursive coding
-        sys.setrecursionlimit(len(adjacencies))
+        if len(adjacencies) > 1000:
+            sys.setrecursionlimit(len(adjacencies))
 
 
     @classmethod
