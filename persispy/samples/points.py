@@ -86,20 +86,43 @@ def cube(dim,num_points):
     '''
     return point_cloud.PointCloud([hash_point.HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
 
-def plane(num_points):
-    return point_cloud.PointCloud(
-            [hash_point.HashPoint(
-                npr.uniform(0, 1, size=2), 
-                index=n) 
-                for n in range(num_points)], 
-            space='affine')
+def plane(num_points, seed = False, return_seed = False):
+    """
+    takes the number of points and returns a list of 
+    uniform distribution of points
+    {(x,y): 0 < x < 1, 0 < y < 1}
+    Optional:
+    seed        - sets a particular random state
+    return_seed - returns a descriptive tuple of the random state
+    """
+    if seed:
+        npr.seed(seed)
+
+    if return_seed:
+        return_seed = npr.get_state()
+        return (point_cloud.PointCloud(
+                [hash_point.HashPoint(
+                    npr.uniform(0, 1, size=2), 
+                    index=n) 
+                    for n in range(num_points)], 
+                space='affine'),
+                return_seed
+                )
+
+    else:
+        return point_cloud.PointCloud(
+                [hash_point.HashPoint(
+                    npr.uniform(0, 1, size=2), 
+                    index=n) 
+                    for n in range(num_points)], 
+                space='affine')
 
 
 def main():
     npr.seed(1991)
     pc = plane(50)
     ng = pc.neighborhood_graph(0.16)
-    cp = ng.connected_components()
+    cp = ng.connected_components() 
 
 #     print cp
 
@@ -112,6 +135,7 @@ def main():
 #             print vertex[0]._coords
             
     pc.plot3d_neighborhood_graph(0.16) 
+
         
 
 

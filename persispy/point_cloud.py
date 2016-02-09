@@ -304,6 +304,7 @@ class PointCloud:
             line_colors = cmap(np.linspace(0,1, len(cp)))
 
             i = 0
+            numEdges = 0
             for component in cp:
                 edges = []
                 if len(component) > 1:
@@ -331,10 +332,40 @@ class PointCloud:
                                                 0]]
                                             )
                                         )
+                for _edge in edges:
+                    numEdges += 1
+#                 print "number of edges", numEdges
+#                 print "length of edges", len(edges)
+#                 edges = np.array(edges)
+
+#                 print np.vstack(set(map(tuple, edges)))
+
+# #                 print "all", edges
+# #                 print "edges", numEdges
+#                 b = edges[np.lexsort(edges.reshape((edges.shape[0], -1 )).T)]
+#                 print len(b), len(edges)
+#                 print range(1, edges.ndim)
+#                 print tuple(range(1, edges.ndim))
+#                 print "unique", b[
+#                         np.concatenate(
+#                             ([True], 
+#                                 np.any(b[1:] != b[:-1],
+#                                     axis = tuple(range(1, edges.ndim))
+#                                     )
+#                                 )
+#                             )
+#                         ]
+
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[i])
                 ax.add_collection(lines)
                 i += 1
+
+            textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
+            # place a text box in upper left in axes coords
+            props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+            ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+                    verticalalignment='top', bbox = props)
 
             fig.set_size_inches(10.0,10.0)
 
