@@ -1,11 +1,6 @@
 import numpy as np
 import hashlib as hashlib
 
-"""
-HashEdge's behavior will be different from HashPoint.
-In this module, we will use a factory to keep all of the HashPoint setup
-contained in here.
-"""
 
 '''
 Acts like a dict
@@ -28,6 +23,8 @@ class HashEdge:
 
 # assumes an undirected graph, where point and endPoints are unordered
 # allows cmp to compare the edge
+# "(0, 1)" assumes an a vertex and an endPoint
+
         for axis in (0, 1):
             edge = sorted( edge, key = lambda component: component[axis])
 

@@ -334,38 +334,22 @@ class PointCloud:
                                             ), index = edgeIndex
                                         )
                             edgeIndex += 1
-#                 print "number of edges", totalEdges
-#                 print "length of edges", len(edges)
-#                 edges = np.array(edges)
-
-#                 print np.vstack(set(map(tuple, edges)))
-
-# #                 print "all", edges
-# #                 print "edges", totalEdges
-#                 b = edges[np.lexsort(edges.reshape((edges.shape[0], -1 )).T)]
-#                 print len(b), len(edges)
-#                 print range(1, edges.ndim)
-#                 print tuple(range(1, edges.ndim))
-#                 print "unique", b[
-#                         np.concatenate(
-#                             ([True], 
-#                                 np.any(b[1:] != b[:-1],
-#                                     axis = tuple(range(1, edges.ndim))
-#                                     )
-#                                 )
-#                             )
-#                         ]
                 edges = edges.values()
                 edges = set(edges)
                 for _edge in edges:
                     totalEdges += 1
-#                 print edges
+
+                if DEBUG:
+                    print edges
+
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[componentIndex])
                 ax.add_collection(lines)
                 componentIndex += 1
+            
+            if DEBUG:
+                print totalEdges
 
-            print totalEdges
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
             # place a text box in upper left in axes coords
             props = dict(boxstyle='round', facecolor='white', alpha=0.5)
