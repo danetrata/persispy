@@ -4,6 +4,7 @@ import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from utils import tuples
 import itertools
+import sys
 
 class wSimplex:
     '''
@@ -46,13 +47,9 @@ class wGraph:
         self._adj=adjacencies
         self.epsilon = epsilon
 
+# place holder for more efficient recursive coding
+        sys.setrecursionlimit(len(adjacencies))
 
-#         adjDict = {}
-#         i = 0
-#         for key in self._adj:
-#             i += 1
-#             print i, "center", key.keys(), key.values()
-#             print self._adj[key]
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
