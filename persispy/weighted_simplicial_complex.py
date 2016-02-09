@@ -42,7 +42,12 @@ class wGraph:
         Output: a wGraph object.
 
         Variables:
-            _adj: the adjacency dictionary.
+            ._adj: the adjacency dictionary.
+            .epsilon: the distance between points
+            .edges: List of a edges of type set(vertex, endPoint),
+                created after .connected_edges() . Because we assume an 
+                unordered graph, the edges are unordered through the use
+                of hash_edge.HashEdge() .
         '''
         self._adj=adjacencies
         self.epsilon = epsilon
@@ -70,9 +75,16 @@ class wGraph:
             adj[e[1]].add((e[0],e[2]))
         return cls(adj)
 
+    """
+    start magic methods
+    """
     def __repr__(self):
         return 'Weighted graph with '+repr(self.num_points())+' points and '+repr(self.num_edges())+' edges'
 
+
+    """
+    end magic methods
+    """
     def degree(self,p):
         return len(self._adj[p])
 
@@ -97,6 +109,8 @@ class wGraph:
     def connected_components(self):
         '''
         Returns a list wGraphs giving the connected components of the wGraph.
+        Gives only a depth first search tree.
+        Call .connected_edges() for the connected component with edges.
         '''
         visited = {d:0 for d in self._adj}
 
@@ -107,15 +121,47 @@ class wGraph:
                 self.connected_component(point, visited, time)
         
         components = []
-        n = 0
         for connected in range(1, time+1):
             component = []
             for point in visited:
                 if visited[point] == connected:
-                    n += 1
                     component.append(point)
             components.append(component)
 
+        return components
+
+    import hash_edge
+    def connected_edges(self):
+        """
+        Returns a list of edges that make up a connected component
+        """
+
+        cp = self.connected_components()
+
+        components = []
+        for component in cp:
+            edges = {}
+            if len(component) > 1: # if the component is not a point
+                edgeIndex = 0
+                for vertex in component:
+                    for endPoint in adj[vertex]:
+                        edges[edgeIndex] = hash_edge.HashEdge(
+                                array([ vertex, endPoint]),
+                                index = edgeIndex
+                                )
+                        edgeIndex += 1
+            edges = edges.values()
+            edges = set(edges)
+            for _edge in edges:
+                totalEdges += 1
+
+            if DEBUG:
+                print edges
+
+            componentIndex += 1
+            components.append(edges)
+
+        self.edges = components
         return components
 
     def cloud_dist(self,pointlist):
