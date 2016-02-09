@@ -222,7 +222,7 @@ class wGraph:
 
 def wRandomGraph(n,p,epsilon):
     '''
-    Returns the Gilbert random graph G(n,p), which includes each edge independently with
+    Returns the Gilbert (Erdos-Renyi) random graph G(n,p), which includes each edge independently with
     probability 0<p<1. A random weight in the range [0,epsilon) is assigned to each edge.
     '''
     dictionary={v:[] for v in range(n)}
@@ -232,7 +232,7 @@ def wRandomGraph(n,p,epsilon):
                 w=epsilon*npr.random()
                 dictionary[i].append([j,w])
                 dictionary[j].append([i,w])
-    return wGraph(dictionary)
+    return wGraph(dictionary,epsilon)
 
 class wSimplicialComplex:
     def __init__(self,wgraph,simplices):
