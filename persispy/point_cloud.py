@@ -267,7 +267,7 @@ class PointCloud:
     def plot3d_neighborhood_graph(self, 
             epsilon, 
             axes=(0,1,2), 
-            cmap = 3,
+            cmap = 1,
             method='subdivision', 
             save = False, 
             title = False):
@@ -311,7 +311,7 @@ class PointCloud:
                     edgeIndex = 0
                     for vertex in component:
                         for endPoint in adj[vertex]:
-                            if len(self._points[0]) == 3:
+                            if len(self._points[0]) >= 3:
                                 edges[edgeIndex] = hash_edge.HashEdge(
                                         array([
                                             [vertex[axes[0]],
@@ -322,7 +322,7 @@ class PointCloud:
                                                 endPoint[0][axes[2]]]]
                                             ), index = edgeIndex
                                         )
-                            else:
+                            elif len(self._points[0]) == 2:
                                 edges[edgeIndex] = hash_edge.HashEdge(
                                         array([
                                             [vertex[axes[0]],

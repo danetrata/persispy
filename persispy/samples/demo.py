@@ -14,11 +14,15 @@ def test_weighted_graph():
 #     print ng
 #     print len(ng.connected_components())
 #     pc.plot3d_neighborhood_graph(.13)
+      points.flat_torus(5000).plot3d_neighborhood_graph(.1)
+      points.torus(5000).plot3d_neighborhood_graph(.13)
       points.torus(5000).plot3d_neighborhood_graph(.2)
       points.sphere(1000).plot3d_neighborhood_graph(.13)
 
 def main():
-#    test_plots()
+    # test_plots()
+    
     test_weighted_graph()
+
 
 if __name__=="__main__": main()
