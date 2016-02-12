@@ -16,10 +16,11 @@ NOTE:
 class HashEdge:
 
 
-    def __init__(self, edge, index = 0):
+    def __init__(self, edge, index = 0, DEBUG = False):
 
         self.index = index
-        print edge
+        if DEBUG:
+            print edge
 
 # assumes an undirected graph, where point and endPoints are unordered
 # allows cmp to compare the edge

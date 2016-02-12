@@ -22,17 +22,7 @@ import hash_edge, hash_point
 
 class PointCloud:
     
-#     def __dir__(self):
-#         return ["num_points()", 
-#                 "dimension()", 
-#                 "plot2d()", 
-#                 "plot3d()", 
-#                 "plot2d_neighborhood_graph(epsilon)", 
-#                 "plot3d_neighborhood_graph(epsilon)", 
-#                 "film_neighborhood_graph(step, num_steps)", 
-#                 "neighborhood_graph(epsilon, method)"]
-
-    def __init__(self,points,space='affine'):
+    def __init__(self, points, space='affine', gui = False):
 
         '''
         Points should be a list of hashable objects.
@@ -60,6 +50,7 @@ class PointCloud:
         self._points = points
         self._space = space
         self._fig = None
+        self.gui = gui
 
 
 
@@ -78,14 +69,14 @@ class PointCloud:
         return self._points.__repr__()
 
 
-    def num_points(self):
-        return len(self._points)
-
     def __len__(self):
         return len(self._points)
 
     def __getitem__(self, key):
         return tuple(self._points[key]._coords)
+
+    def num_points(self):
+        return len(self._points)
 
 
     def dimension(self):
@@ -130,13 +121,20 @@ class PointCloud:
             return None
 
 
-    def _display_plot(self, plt, method, save):
+    def _display_plot(self, plt, method, save, DEBUG = True):
+        """
+        We display a plot.
+        Additionally, we can instead save a plot automatically.
+        """
 
         if save is False:
             plt.show()
         elif save is not False:
 
-            def save_file(name): # overwrite protection
+            def save_file(name): 
+                """
+                Saves the current plot. Has overwrite safeguards.
+                """
 
                 if os.path.isfile(name+'.png') is False:
                     plt.savefig(name)
@@ -154,13 +152,14 @@ class PointCloud:
         return True
 
 
-    def plot3d(self,axes=(0,1,2), save = False, title = False):
+    def plot3d(self, axes=(0,1,2), save = False, title = False):
+        
 
         if self._space=='affine':
 
             if self._fig is None: # faster to clear than to close and open
                 fig = plt.figure()
-            plt.clf()
+            plt.clf() # clears the figure
 
             ax = fig.add_subplot(111)
             fig.set_size_inches(10.0,10.0)
@@ -197,7 +196,6 @@ class PointCloud:
             return None
 
 
-    # Makes a 2-dimensional plot of a neighborhood graph, for a given epsilon
     def plot2d_neighborhood_graph(self,
             epsilon,
             axes=(0,1),
@@ -205,6 +203,9 @@ class PointCloud:
             method='subdivision', 
             save = False, 
             title = False):
+        """
+        Plots the 2d neighborhood graph
+        """
 
         if self._space=='affine':
             g=self.neighborhood_graph(epsilon,method)
@@ -267,10 +268,11 @@ class PointCloud:
     def plot3d_neighborhood_graph(self, 
             epsilon, 
             axes=(0,1,2), 
-            cmap = 1,
+            cmap = 0,
             method='subdivision', 
             save = False, 
-            title = False):
+            title = False,
+            DEBUG = False):
 
         """ 
         For a given epsilon, makes a 3-dimensional plot of a neighborhood 
@@ -287,8 +289,10 @@ class PointCloud:
 
         if self._space=='affine':
 
-            if self._fig is None:
-                fig=plt.figure()
+            if self._fig is None: # faster to clear than to close and open
+                fig = plt.figure()
+
+            plt.clf()
             if title is not False:
                 fig.suptitle(title)
 
@@ -347,8 +351,7 @@ class PointCloud:
                 ax.add_collection(lines)
                 componentIndex += 1
             
-            if DEBUG:
-                print totalEdges
+            if DEBUG: print totalEdges
 
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
             # place a text box in upper left in axes coords
@@ -369,9 +372,14 @@ class PointCloud:
             ax.grid(True)
             ax.set_aspect('equal')
 
+            if self.gui:
+                return fig
+            print self._fig
             self._display_plot(plt, "plot3d_ng", save)
 
+            print self._fig
             plt.close()
+
             return True
         else:
             return None
@@ -437,7 +445,7 @@ class PointCloud:
             epsilon,
             method = "subdivision"):
         """
-        calls the recursive function _neighborhood_graph
+        calls the recursive function ._neighborhood_graph(...)
         """
         return self._neighborhood_graph(
                 epsilon,
@@ -524,16 +532,14 @@ class PointCloud:
         else:
             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
 
-    def _nonrecursive_subdivision(self, e, dictionary, pointarray):
-        raise NotImplementedError 
-
 
     def _selectpoint(self,pointarray, k, n):
 
-        #gives the kth smallest point of "self._points", according to the nth coordinate
-        #we use this to give the median, but a general solution for k is needed for the recursive algorithm
-        #this algorithm is O(n) for best and worst cases
-
+        """
+        gives the kth smallest point of "self._points", according to the nth coordinate
+        we use this to give the median, but a general solution for k is needed for the recursive algorithm
+        this algorithm is O(n) for best and worst cases
+        """
 
         a = pointarray[:]
         c = []
@@ -561,9 +567,11 @@ class PointCloud:
 
 
     def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
-        #  method and depth are accumulators for the recursive calls
-        #  divides the space into two regions about the median point relative to "coordinate"
-        #  glues the two regions, then recursively calls itself on the two regions.
+        """
+        method and depth are accumulators for the recursive calls
+        divides the space into two regions about the median point relative to "coordinate"
+        glues the two regions, then recursively calls itself on the two regions.
+        """
         if len(pointarray)>1:
             median = self._selectpoint(pointarray, len(pointarray)/2, coordinate)
 
