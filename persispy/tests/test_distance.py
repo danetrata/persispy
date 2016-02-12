@@ -46,11 +46,9 @@ def points_setup():
     while(distance < .3):
         print "running test", distance
         try:
-            connected_components = -1
-            while connected_components != 1:
-                distance = distance + .001
-                for num_points in range(10, 1000, 10):
-                    connected_components = points_epsilon_tests(num_points, distance, csv)
+            distance = distance + .001
+            for num_points in range(10, 1000, 10):
+                points_epsilon_tests(num_points, distance, csv)
 #                     connected_components = points_epsilon_tests(num_points, distance, csv, eqn)
         except StandardError as inst:
             print inst

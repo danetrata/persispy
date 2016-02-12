@@ -1,7 +1,6 @@
 # Summary of changes.
 # hash_point.HashPoint moved to ../hash_point.py
 # "points_*" in definition removed.
-# added backwards compatablity. eg: points/points_2sphere.py
 
 '''
 File: examples.py
@@ -21,7 +20,8 @@ function.
 
 import numpy.random as npr
 import scipy.constants as scic
-from persispy import point_cloud, hash_point
+from persispy.point_cloud import PointCloud
+from persispy.hash_point import HashPoint
 import numpy as np
 
 
@@ -41,33 +41,33 @@ def sphere(num_points,radius=1,method='rejection'):
     def normalize(x):
         return (1/np.sqrt(sum(x*x)))*x
     if method=='normalized':
-        return point_cloud.PointCloud([hash_point.HashPoint(normalize(2*npr.random(3)-1),index=n) for n in range(num_points)],space='affine')
+        return PointCloud([HashPoint(normalize(2*npr.random(3)-1),index=n) for n in range(num_points)],space='affine')
     elif method=='rectangular':
         angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-        return point_cloud.PointCloud([hash_point.HashPoint(radius*np.array([np.sin(angles[n][0])*np.cos(angles[n][1]),np.sin(angles[n][0])*np.sin(angles[n][1]),np.cos(angles[n][0])]),index=n) for n in range(num_points)],space='affine')
+        return PointCloud([HashPoint(radius*np.array([np.sin(angles[n][0])*np.cos(angles[n][1]),np.sin(angles[n][0])*np.sin(angles[n][1]),np.cos(angles[n][0])]),index=n) for n in range(num_points)],space='affine')
     elif method=='rejection':
         count = 0
         points=[]
         while count<num_points:
             pt=2*npr.random(3)-1
             if np.sqrt(sum(pt*pt)) <= radius:
-                points.append(hash_point.HashPoint(normalize(pt),count))
+                points.append(HashPoint(normalize(pt),count))
                 count=count+1
-        return point_cloud.PointCloud(points,space='affine')
+        return PointCloud(points,space='affine')
     else:
         raise TypeError('The argument "method" should be either "normalized", "rectangular", or "rejection".')
 
-def torus(num_points):
+def torus(num_points, gui = False):
     '''
     EXAMPLES:
     >>> points_3d_torus(1000)
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    hp = [hash_point.HashPoint(np.array([(2+np.cos(angles[n][0]))*np.cos(angles[n][1]),
+    hp = [HashPoint(np.array([(2+np.cos(angles[n][0]))*np.cos(angles[n][1]),
         (2+np.cos(angles[n][0]))*np.sin(angles[n][1]),
         np.sin(angles[n][0])]),index=n) for n in range(num_points)]
-    return point_cloud.PointCloud(hp,space='affine')
+    return PointCloud(hp, space='affine', gui = gui)
 
 def flat_torus(num_points):
     '''
@@ -76,7 +76,7 @@ def flat_torus(num_points):
     Point cloud with 1000 points in real affine space of dimension 4
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
-    return point_cloud.PointCloud([hash_point.HashPoint(np.array([np.cos(angles[n][0]),np.sin(angles[n][0]),np.cos(angles[n][1]),np.sin(angles[n][1])]),index=n) for n in range(num_points)],space='affine')
+    return PointCloud([HashPoint(np.array([np.cos(angles[n][0]),np.sin(angles[n][0]),np.cos(angles[n][1]),np.sin(angles[n][1])]),index=n) for n in range(num_points)],space='affine')
 
 def cube(dim,num_points):
     '''
@@ -84,9 +84,9 @@ def cube(dim,num_points):
     >>> points_cube(4,1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
-    return point_cloud.PointCloud([hash_point.HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
+    return PointCloud([HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
 
-def plane(num_points, seed = False, return_seed = False):
+def plane(num_points, side_length = 1, seed = False, return_seed = False):
     """
     takes the number of points and returns a list of 
     uniform distribution of points
@@ -100,9 +100,9 @@ def plane(num_points, seed = False, return_seed = False):
 
     if return_seed:
         return_seed = npr.get_state()
-        return (point_cloud.PointCloud(
-                [hash_point.HashPoint(
-                    npr.uniform(0, 1, size=2), 
+        return (PointCloud(
+                [HashPoint(
+                    npr.uniform(-side_length, side_length, size=2), 
                     index=n) 
                     for n in range(num_points)], 
                 space='affine'),
@@ -110,9 +110,9 @@ def plane(num_points, seed = False, return_seed = False):
                 )
 
     else:
-        return point_cloud.PointCloud(
-                [hash_point.HashPoint(
-                    npr.uniform(0, 1, size=2), 
+        return PointCloud(
+                [HashPoint(
+                    npr.uniform(-side_length, side_length, size=2), 
                     index=n) 
                     for n in range(num_points)], 
                 space='affine')
@@ -120,8 +120,8 @@ def plane(num_points, seed = False, return_seed = False):
 
 def main():
     npr.seed(1991)
-    pc = plane(50)
-    ng = pc.neighborhood_graph(0.16)
+    pc = plane(1500, 3)
+    ng = pc.neighborhood_graph(0.2)
     cp = ng.connected_components() 
 
 #     print cp
@@ -133,7 +133,6 @@ def main():
 #         print component[0]._coords
 #         for vertex in component:
 #             print vertex[0]._coords
-            
     pc.plot3d_neighborhood_graph(0.16) 
 
         
