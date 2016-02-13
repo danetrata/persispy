@@ -118,11 +118,47 @@ def plane(num_points, side_length = 1, seed = False, return_seed = False):
                 space='affine')
 
 
-def main():
+
+
+
+def wrapper():
     npr.seed(1991)
     pc = plane(1500, 3)
     ng = pc.neighborhood_graph(0.2)
-    cp = ng.connected_components() 
+    return ng.connected_components()
+
+def wrapper1():
+    npr.seed(1991)
+    pc = plane(1500, 3)
+    ng = pc.neighborhood_graph(0.2)
+    return ng.connected_components_1()
+
+def main():
+    
+#     import timeit as t
+#     print ".connected_components(): %f" % t.timeit(wrapper, number = 10)
+#     print ".connected_components_1(): %f" % t.timeit(wrapper1, number = 10)
+
+    import time
+    import sys
+
+    toolbar_width = 40
+
+# setup toolbar
+    sys.stdout.write("[%s]" % (" " * toolbar_width))
+    sys.stdout.flush()
+    sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+
+    for i in xrange(toolbar_width):
+        time.sleep(0.1) # do real work here
+        wrapper()
+        # update the bar
+        sys.stdout.write("-")
+        sys.stdout.flush()
+
+    sys.stdout.write("\n")
+
+#     cp = ng.connected_components() 
 
 #     print cp
 
@@ -133,7 +169,7 @@ def main():
 #         print component[0]._coords
 #         for vertex in component:
 #             print vertex[0]._coords
-    pc.plot3d_neighborhood_graph(0.16) 
+#     pc.plot3d_neighborhood_graph(0.16) 
 
         
 
