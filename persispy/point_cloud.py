@@ -499,6 +499,7 @@ class PointCloud:
                       #  also starts the recursion
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
                     # mystery dictionary assignments..?
+                    # {point: {adj points:distance}}
                     return wsc.wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
