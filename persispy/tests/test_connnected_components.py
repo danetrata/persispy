@@ -1,4 +1,5 @@
-# TODO: epsilon is a function of coefficients, number of points, and degree
+
+DEBUG = False
 
 # import sys
 # sys.setrecursionlimit(1000)
@@ -38,28 +39,89 @@ def make_csv(columnNames):
 
 def points_setup():
 
+    import sys, time
+
+    def up():
+        # My terminal breaks if we don't flush after the escape-code
+        sys.stdout.write('\x1b[1A')
+        sys.stdout.flush()
+
+    def down():
+        # I could use '\x1b[1B' here, but newline is faster and easier
+        sys.stdout.write('\n')
+        sys.stdout.flush()
+
     try: # runs if shapely if installed
         from persispy.tests.area import shapely_area
         csv = make_csv("Number of points, Distance, Connected components, Area")
     except:
         csv = make_csv("Number of points, Distance, Connected components")
 
+    from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker
 
-    
-    distance = 0.020
-    while(distance < .3):
-        print "running test", distance
+    widgetsOverall = ['Distance:', 
+            Percentage(), 
+            ' ',
+            Bar(marker= ">",
+                    left='[',
+                    right=']'),
+            ' ', 
+            ETA(), 
+            ' '
+    ]
+
+    widgetsSub =     ['Point:', 
+            Percentage(), 
+            ' ',
+            Bar(marker = RotatingMarker(),
+                    left='[(',
+                    right=')]'),
+            ' ', 
+            ETA(), 
+            ' '
+    ]
+
+    distance = 0.01
+    maxDistance = .3
+    incDistance = 0.01 # increment
+    minPoints = 50
+    maxPoints = 5000
+    incPoints = 50
+
+    pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
+    pbar.start()
+
+    while(distance <= maxDistance):
+
+
+        pbar.widgets[0] = "Distance %.2f:" % distance
+        if DEBUG: print "running test", distance
+
+        subBar = ProgressBar(widgets = widgetsSub, maxval = maxPoints)
+        subBar.start()
+
+        pbar.update(distance)
+        down() # To prepare for subBar
+
         try:
-            distance = distance + .005
-            for num_points in range(10, 2000, 10):
+            for num_points in range(minPoints, maxPoints, incPoints):
+                subBar.widgets[0] = "Points %i:" % num_points
                 points_epsilon_tests(num_points, distance, csv)
-#                     connected_components = points_epsilon_tests(num_points, distance, csv, eqn)
+                subBar.update(num_points)
+            subBar.finish()
         except StandardError as inst:
-            print inst
-            print "skip"
+            if DEBUG: print inst
+            if DEBUG: print "skip"
             pass
 
-    print "all tests have run"
+        distance += incDistance
+
+        up() # to cancel the '\n' of subBar
+        up() # to be at position of pBar
+
+    pbar.finish()
+
+    if DEBUG: print "all tests have run"
     csv.close()
 
 
@@ -71,38 +133,37 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
 
     row = []
     failures = []
+
     try:
         if eqn:
             pc = phc(eqn, num_points = num_points, return_complex = True)
-            
         else:
             pc = points.plane(num_points)
-
         row.append(str(num_points))
         row.append(str(distance))
     except StandardError as inst:
-        print inst
+        if DEBUG: print inst
         failures.append(inst.args[0])
         return failures
 
     try:
         ng = pc.neighborhood_graph(distance, method = "subdivision")
         cp = len(ng.connected_components())
-        print "connected componenets", cp
+        if DEBUG: print "connected components", cp
         row.append(str(cp))
     except StandardError as inst:
-        print inst
+        if DEBUG: print inst
         failures.append(inst.args[0])
         return failures
     
     try: # runs if shapely is installed
         diskArea = shapely_area(pc, distance)
-        print "area:", diskArea
+        if DEBUG: print "area:", diskArea
         row.append(str(diskArea))
     except:
         pass
 
-    print ','.join(row)
+    if DEBUG: print ','.join(row)
     row[-1] = row[-1]+"\n"
     csv.write(','.join(row))
     return cp
