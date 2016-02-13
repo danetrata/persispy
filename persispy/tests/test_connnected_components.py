@@ -86,15 +86,17 @@ def points_setup():
     incDistance = 0.01 # increment
     minPoints = 50
     maxPoints = 5000
-    incPoints = 50
+    incPoints = 100
 
     pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
     pbar.start()
 
+    padding = 15
+
     while(distance <= maxDistance):
 
-
-        pbar.widgets[0] = "Distance %.2f:" % distance
+        pbar.widgets[0] = "Distance %.2f" % distance
+        pbar.widgets[0] += ' ' * (padding - len(pbar.widgets[0]) + ':'
         if DEBUG: print "running test", distance
 
         subBar = ProgressBar(widgets = widgetsSub, maxval = maxPoints)
@@ -106,6 +108,7 @@ def points_setup():
         try:
             for num_points in range(minPoints, maxPoints, incPoints):
                 subBar.widgets[0] = "Points %i:" % num_points
+                subBar.widgets[0] += ' ' * (padding - len(subBar.widgets[0]) + ':'
                 points_epsilon_tests(num_points, distance, csv)
                 subBar.update(num_points)
             subBar.finish()
@@ -120,8 +123,9 @@ def points_setup():
         up() # to be at position of pBar
 
     pbar.finish()
+    down()
 
-    if DEBUG: print "all tests have run"
+    print "all tests have run"
     csv.close()
 
 
