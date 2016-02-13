@@ -38,16 +38,20 @@ def make_csv(columnNames):
 
 def points_setup():
 
-    csv = make_csv("Number of points, Distance, Connected components, Area")
+    try: # runs if shapely if installed
+        from persispy.tests.area import shapely_area
+        csv = make_csv("Number of points, Distance, Connected components, Area")
+    except:
+        csv = make_csv("Number of points, Distance, Connected components")
 
 
     
-    distance = 0.056
+    distance = 0.020
     while(distance < .3):
         print "running test", distance
         try:
-            distance = distance + .001
-            for num_points in range(10, 1000, 10):
+            distance = distance + .005
+            for num_points in range(10, 2000, 10):
                 points_epsilon_tests(num_points, distance, csv)
 #                     connected_components = points_epsilon_tests(num_points, distance, csv, eqn)
         except StandardError as inst:
@@ -58,7 +62,7 @@ def points_setup():
     print "all tests have run"
     csv.close()
 
-from persispy.tests.area import shapely_area
+
 from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
@@ -78,26 +82,26 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         row.append(str(distance))
     except StandardError as inst:
         print inst
-        row.append("failed")
-        row.append("failed")
-        row.append("failed")
         failures.append(inst.args[0])
         return failures
 
     try:
         ng = pc.neighborhood_graph(distance, method = "subdivision")
-        cp = ng.connected_components_1()
+        cp = len(ng.connected_components())
         print "connected componenets", cp
         row.append(str(cp))
     except StandardError as inst:
         print inst
-        row.append("failed")
         failures.append(inst.args[0])
         return failures
     
-    diskArea = shapely_area(pc, distance)
-    print "area:", diskArea
-    row.append(str(diskArea))
+    try: # runs if shapely is installed
+        diskArea = shapely_area(pc, distance)
+        print "area:", diskArea
+        row.append(str(diskArea))
+    except:
+        pass
+
     print ','.join(row)
     row[-1] = row[-1]+"\n"
     csv.write(','.join(row))
