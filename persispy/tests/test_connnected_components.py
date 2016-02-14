@@ -27,15 +27,15 @@ from random import choice
 def make_csv(columnNames):
     today = datetime.today()
     filepath = "points-"+str(today.month)+"-"+str(today.day)
-    if not os.path.exists(filepath):
-        os.makedirs(filepath)
-    testpath = filepath+'/data.csv'
-    if not os.path.isfile(testpath):
-        csv = open(testpath, 'w')
-        csv.write(columnNames+"\n")
-    else:
-        csv = open(testpath, 'a')
-    return csv
+    i = 1
+    while True:
+        testpath = filepath+'-data'+'('+str(i)+').csv'
+        if not os.path.isfile(testpath): # if the file doesn't exist
+            csv = open(testpath, 'w')
+            csv.write(columnNames+"\n")
+            return csv
+        else:
+            i += 1
 
 def points_setup():
 
@@ -81,12 +81,12 @@ def points_setup():
             ' '
     ]
 
-    distance = 0.01
+    distance = 0.05
     maxDistance = .3
-    incDistance = 0.01 # increment
-    minPoints = 50
-    maxPoints = 5000
-    incPoints = 100
+    incDistance = 0.05 # increment
+    minPoints = 500
+    maxPoints = 10000
+    incPoints = 500
 
     pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
     pbar.start()
@@ -96,7 +96,7 @@ def points_setup():
     while(distance <= maxDistance):
 
         pbar.widgets[0] = "Distance %.2f" % distance
-        pbar.widgets[0] += ' ' * (padding - len(pbar.widgets[0]) + ':'
+        pbar.widgets[0] += ' ' * (padding - len(pbar.widgets[0])) + ':'
         if DEBUG: print "running test", distance
 
         subBar = ProgressBar(widgets = widgetsSub, maxval = maxPoints)
@@ -108,7 +108,7 @@ def points_setup():
         try:
             for num_points in range(minPoints, maxPoints, incPoints):
                 subBar.widgets[0] = "Points %i:" % num_points
-                subBar.widgets[0] += ' ' * (padding - len(subBar.widgets[0]) + ':'
+                subBar.widgets[0] += ' ' * (padding - len(subBar.widgets[0])) + ':'
                 points_epsilon_tests(num_points, distance, csv)
                 subBar.update(num_points)
             subBar.finish()
