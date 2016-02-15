@@ -98,9 +98,13 @@ class Stats:
         return radius
 
 
+import sys
 def main():
     stat = Stats()
-    prompt = raw_input("Enter a filename: ")
+    if(1 < len(sys.argv)):
+        prompt = sys.argv[1]
+    else:
+        prompt = raw_input("Enter a filename: ")
     numPoints, distance = read_csv(prompt)
 
     dataSetName = ["number of points", "distance between points"]
@@ -121,7 +125,8 @@ def main():
 
     import matplotlib.pyplot as plt
     plt.plot(numPoints, distance, 'ro')
-    plt.title("Totally connected graphs")
+    plt.title("Totally connected graphs\n"+prompt)
+
     plt.xlabel(dataSetName[0])
     plt.ylabel(dataSetName[1])
     plt.show()

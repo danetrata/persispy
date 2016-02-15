@@ -102,6 +102,15 @@ class ProgressBarWidgetHFill(object):
         pass
 
 
+class ET(ProgressBarWidget):
+    def format_time(self, seconds):
+        return time.strftime('%H:%M:%S', time.gmtime(seconds))
+    def update(self, pbar):
+        if pbar.currval == 0:
+            return 'ET:  --:--:--'
+        else:
+            return 'Time: %s' % self.format_time(pbar.seconds_elapsed)
+
 class ETA(ProgressBarWidget):
     "Widget for the Estimated Time of Arrival"
     def format_time(self, seconds):
@@ -213,6 +222,7 @@ class ProgressBar(object):
                  fd=sys.stderr):
         assert maxval > 0
         self.maxval = maxval
+
         self.widgets = widgets
         self.fd = fd
         self.signal_set = False
@@ -231,6 +241,8 @@ class ProgressBar(object):
         self.prev_percentage = -1
         self.start_time = None
         self.seconds_elapsed = 0
+        self.update_interval = 10
+        self.last_update = 0
 
     def handle_resize(self, signum, frame):
         h,w=array('h', ioctl(self.fd,termios.TIOCGWINSZ,'\0'*8))[:2]
@@ -265,17 +277,20 @@ class ProgressBar(object):
         return ''.join(self._format_widgets()).ljust(self.term_width)
 
     def _need_update(self):
-        return int(self.percentage()) != int(self.prev_percentage)
+        if self.update_interval < self.seconds_elapsed - self.last_update:
+            self.last_update = self.seconds_elapsed
+            return True
+        return int(self.percentage()) != int(self.prev_percentage) 
 
     def update(self, value):
         "Updates the progress bar to a new value."
         assert 0 <= value <= self.maxval
         self.currval = value
-        if not self._need_update() or self.finished:
-            return
         if not self.start_time:
             self.start_time = time.time()
         self.seconds_elapsed = time.time() - self.start_time
+        if not self._need_update() or self.finished:
+            return
         self.prev_percentage = self.percentage()
         if value != self.maxval:
             self.fd.write(self._format_line() + '\r')

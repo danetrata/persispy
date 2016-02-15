@@ -135,7 +135,9 @@ class wGraph:
             for point in visited: # runs in O(|points in component|)
                 if visited[point] == connected:
                     component.append(point)
-            components.append(component)
+            if component:
+                components.append(component)
+
 
         return components
 
