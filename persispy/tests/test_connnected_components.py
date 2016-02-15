@@ -1,6 +1,4 @@
 
-DEBUG = False
-
 # import sys
 # sys.setrecursionlimit(1000)
 
@@ -24,20 +22,22 @@ from datetime import datetime
 from numpy.random import random_integers
 from random import choice
 
-def make_csv(columnNames):
+def make_csv(testName, columnNames):
     today = datetime.today()
-    filepath = "data-"+str(today.month)+"-"+str(today.day)
+    dirpath = "data/"
+    if not os.path.isdir(dirpath):
+        os.mkdir(dirpath)
     i = 1
     while True:
-        testpath = filepath+'-'+'('+str(i)+').csv'
-        if not os.path.isfile(testpath): # if the file doesn't exist
-            csv = open(testpath, 'w')
+        filepath = dirpath+testName+"-"+str(today.month)+"-"+str(today.day)+'-'+str(i)+'.csv'
+        if not os.path.isfile(filepath): # if the file doesn't exist
+            csv = open(filepath, 'w')
             csv.write(columnNames+"\n")
             return csv
         else:
             i += 1
 
-def points_setup():
+def points_setup(testName, eqn = False):
 
     import sys, time
 
@@ -52,87 +52,67 @@ def points_setup():
         sys.stdout.flush()
 
     try: # runs if shapely if installed
+        import shapely
         from persispy.tests.area import shapely_area
         csv = make_csv("Number of points, Distance, Connected components, Area")
     except:
-        csv = make_csv("Number of points, Distance, Connected components")
+        csv = make_csv(testName, "Number of points, Distance, Connected components")
 
-    from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker
+    from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker, ET
 
-    widgetsOverall = ['Distance:', 
+    widgetsOverall = ['Iter:0',
+            ' ',
+            'Skip:0', 
+            ' ',
             Percentage(), 
             ' ',
-            Bar(marker= ">",
+            Bar(marker= RotatingMarker(),
                     left='[',
                     right=']'),
-            ' ', 
-            ETA(), 
-            ' '
-    ]
-
-    widgetsSub =     ['Point:', 
-            Percentage(), 
             ' ',
-            Bar(marker = RotatingMarker(),
-                    left='[(',
-                    right=')]'),
-            ' ', 
+            ET(),
+            ' ',
             ETA(), 
             ' '
     ]
 
-    import numpy.random as np
-#     distance = 0.05
+
+    import numpy.random as npr
     distance = 0.001
     minDistance = 0.05
-    maxDistance = .3
+    maxDistance = .2
     incDistance = 0.05 # increment
     minPoints = 1
-#     minPoints = 500
-    maxPoints = 5000
+    maxPoints = 1000
     incPoints = 25
-#     incPoints = 500
 
     iteration = 0
-    iterations = 1000000
+    iterations = 10000
     pbar = ProgressBar(widgets = widgetsOverall, maxval = iterations)
-#     pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
     pbar.start()
 
     padding = 15
 
+    skip = 0
     while(iteration < iterations):
-        distance = np.uniform(minDistance, maxDistance)
-#     while(distance <= maxDistance):
 
-        pbar.widgets[0] = "Distance %.2f" % distance
-        pbar.widgets[0] += ' ' * (padding - len(pbar.widgets[0])) + ':'
+        distance = npr.uniform(minDistance, maxDistance)
+
         if DEBUG: print "running test", distance
 
-        subBar = ProgressBar(widgets = widgetsSub, maxval = maxPoints)
-        subBar.start()
-
-#         pbar.update(distance)
-        pbar.update(iteration)
-        down() # To prepare for subBar
-
         try:
-            for num_points in range(minPoints, maxPoints, incPoints):
-
-                subBar.widgets[0] = "Points %i:" % num_points
-                subBar.widgets[0] += ' ' * (padding - len(subBar.widgets[0])) + ':'
-                points_epsilon_tests(num_points, distance, csv)
-                subBar.update(num_points)
-            subBar.finish()
+            num_points = npr.random_integers(minPoints, maxPoints)
+            points_epsilon_tests(num_points, distance, csv, eqn)
+            widgetsOverall[0] = "Iteration:"+str(iteration)
         except StandardError as inst:
+            skip += 1
+            widgetsOverall[2] = "Skipped:"+str(skip)
             if DEBUG: print inst
             if DEBUG: print "skip"
             pass
 
-#         distance += incDistance
-
-        up() # to cancel the '\n' of subBar
-        up() # to be at position of pBar
+        pbar.update(iteration)
+        if DEBUG: print iteration
         iteration += 1
 
     pbar.finish()
@@ -186,10 +166,11 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
     return cp
 
 
+DEBUG = False
 def main():
 
-    points_setup()
-
+#     points_setup("sphere", "x^2 + y^2 + z^2 - 1")
+    points_setup("plane")
 
 if __name__ == "__main__": main()
     
