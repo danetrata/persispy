@@ -241,7 +241,7 @@ class ProgressBar(object):
         self.prev_percentage = -1
         self.start_time = None
         self.seconds_elapsed = 0
-        self.update_interval = 10
+        self.update_interval = 5
         self.last_update = 0
 
     def handle_resize(self, signum, frame):

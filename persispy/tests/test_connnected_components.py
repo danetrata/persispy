@@ -91,7 +91,6 @@ def points_setup(testName, eqn = False):
     pbar = ProgressBar(widgets = widgetsOverall, maxval = iterations)
     pbar.start()
 
-    padding = 15
 
     skip = 0
     while(iteration < iterations):
@@ -103,10 +102,10 @@ def points_setup(testName, eqn = False):
         try:
             num_points = npr.random_integers(minPoints, maxPoints)
             points_epsilon_tests(num_points, distance, csv, eqn)
-            widgetsOverall[0] = "Iteration:"+str(iteration)
+            widgetsOverall[0] = "Iter:"+str(iteration)
         except StandardError as inst:
             skip += 1
-            widgetsOverall[2] = "Skipped:"+str(skip)
+            widgetsOverall[2] = "Skip:"+str(skip)
             if DEBUG: print inst
             if DEBUG: print "skip"
             pass
