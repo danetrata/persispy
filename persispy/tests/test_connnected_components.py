@@ -26,10 +26,10 @@ from random import choice
 
 def make_csv(columnNames):
     today = datetime.today()
-    filepath = "points-"+str(today.month)+"-"+str(today.day)
+    filepath = "data-"+str(today.month)+"-"+str(today.day)
     i = 1
     while True:
-        testpath = filepath+'-data'+'('+str(i)+').csv'
+        testpath = filepath+'-'+'('+str(i)+').csv'
         if not os.path.isfile(testpath): # if the file doesn't exist
             csv = open(testpath, 'w')
             csv.write(columnNames+"\n")
@@ -81,19 +81,29 @@ def points_setup():
             ' '
     ]
 
-    distance = 0.05
+    import numpy.random as np
+#     distance = 0.05
+    distance = 0.001
+    minDistance = 0.05
     maxDistance = .3
     incDistance = 0.05 # increment
-    minPoints = 500
-    maxPoints = 10000
-    incPoints = 500
+    minPoints = 1
+#     minPoints = 500
+    maxPoints = 5000
+    incPoints = 25
+#     incPoints = 500
 
-    pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
+    iteration = 0
+    iterations = 1000000
+    pbar = ProgressBar(widgets = widgetsOverall, maxval = iterations)
+#     pbar = ProgressBar(widgets = widgetsOverall, maxval = maxDistance)
     pbar.start()
 
     padding = 15
 
-    while(distance <= maxDistance):
+    while(iteration < iterations):
+        distance = np.uniform(minDistance, maxDistance)
+#     while(distance <= maxDistance):
 
         pbar.widgets[0] = "Distance %.2f" % distance
         pbar.widgets[0] += ' ' * (padding - len(pbar.widgets[0])) + ':'
@@ -102,11 +112,13 @@ def points_setup():
         subBar = ProgressBar(widgets = widgetsSub, maxval = maxPoints)
         subBar.start()
 
-        pbar.update(distance)
+#         pbar.update(distance)
+        pbar.update(iteration)
         down() # To prepare for subBar
 
         try:
             for num_points in range(minPoints, maxPoints, incPoints):
+
                 subBar.widgets[0] = "Points %i:" % num_points
                 subBar.widgets[0] += ' ' * (padding - len(subBar.widgets[0])) + ':'
                 points_epsilon_tests(num_points, distance, csv)
@@ -117,10 +129,11 @@ def points_setup():
             if DEBUG: print "skip"
             pass
 
-        distance += incDistance
+#         distance += incDistance
 
         up() # to cancel the '\n' of subBar
         up() # to be at position of pBar
+        iteration += 1
 
     pbar.finish()
     down()
