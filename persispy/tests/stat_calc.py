@@ -1,31 +1,39 @@
 import csv
 
+def float_or_int(string):
+    try:
+        return int(string)
+    except ValueError:
+        return float(string)
+
 def read_csv(filename):
     """
-    checks for 1 connected component in column 3
     """
-    column1 = []
-    column2 = []
     with open(filename) as f:
         reader = csv.reader(f)
         next(reader) # assumes a header
-        for row in reader:
-            if row[2] == "1":
-                column1.append(float(row[0]))
-                column2.append(float(row[1]))
-        return column1, column2
+        sheet = [row for row in reader]
+        
+    columns = []
+    for column in zip(*sheet):
+        columns.append([float_or_int(item) for item in column])
+    return columns
+
 
 
 import matplotlib.pyplot as plt
-def scatter_plot(x, y):
+def plot_data(x, y, title, subtitle, xtitle, ytitle):
     """
     input: x axis, y axis
     where the index of each is a point
     creates a scatter plot
     """
-    plt.scatter(x, y)
-    plt.xlabel("Number of points")
-    plt.ylabel("Epsilon")
+
+    plt.plot(x, y, 'ro')
+    plt.title(title+"\n"+subtitle)
+
+    plt.xlabel(xtitle)
+    plt.ylabel(ytitle)
     plt.show()
 
 import numpy as np
@@ -43,7 +51,8 @@ class Stats:
         return sum(data)/len(data)
 
     def median(self, data):
-        data.sort()
+        temp = data
+        temp.sort()
         if len(data) % 2 == 0:
             mid = (len(data)/2)-1
             mid2 = len(data)/2
@@ -55,6 +64,7 @@ class Stats:
     def mode(self, data):
         d = {}
         for value in data:
+            value = int(value)
             if value not in d:
                 d[value] = 0
             else:
@@ -105,38 +115,59 @@ def main():
         prompt = sys.argv[1]
     else:
         prompt = raw_input("Enter a filename: ")
-    numPoints, distance = read_csv(prompt)
+    numPoints, distance, connectedComponents = read_csv(prompt)
+    dataSet = [numPoints, distance, connectedComponents]
 
-    dataSetName = ["number of points", "distance between points"]
-    i = 0
-    for dataSet in [numPoints, distance]:
-#         print dataSet
-        print "\n\n\n" + dataSetName[i]
-        print "size", len(numPoints)
-        print "mean", stat.mean(dataSet)
-        print "median", stat.median(dataSet)
-        print "mode", stat.mode(dataSet)
-        print "range", stat.range(dataSet)
-        print "varience", stat.varience(dataSet)
-        print "std dev", stat.standard_deviation(dataSet)
-        i += 1
+    dataSetName = ["number of points", 
+            "distance between points", 
+            "connected components"]
 
-    meanNumPoints = stat.mean(numPoints)
+#     i = 0
+#     for variable in dataSet:
+# #         print dataSet
+#         print "\n\n\n" + dataSetName[i]
+#         print "size", len(numPoints)
+#         print "mean", stat.mean(variable)
+#         print "median", stat.median(variable)
+#         print "mode", stat.mode(variable)
+#         print "range", stat.range(variable)
+#         print "varience", stat.varience(variable)
+#         print "std dev", stat.standard_deviation(variable)
+#         i += 1
+#     meanNumPoints = stat.mean(numPoints)
+    
+    totallyConnected = [[],[]]
+    for i in range(len(connectedComponents)):
+        if connectedComponents[i] == 1:
+            totallyConnected[0].append(numPoints[i])
+            totallyConnected[1].append(distance[i])
 
-    import matplotlib.pyplot as plt
-    plt.plot(numPoints, distance, 'ro')
-    plt.title("Totally connected graphs\n"+prompt)
+    for x in totallyConnected:
+        print len(x)
 
-    plt.xlabel(dataSetName[0])
-    plt.ylabel(dataSetName[1])
-    plt.show()
+    plot_data(numPoints,
+            connectedComponents,
+            "points and number of components",
+            prompt,
+            dataSetName[0],
+            dataSetName[2]
+            )
+    plot_data(distance,
+            connectedComponents,
+            "distance and number of components",
+            prompt,
+            dataSetName[1],
+            dataSetName[2]
+            )
+    plot_data(x = totallyConnected[0], 
+            y = totallyConnected[1], 
+            title = "totally connected components",
+            subtitle = prompt,
+            xtitle = dataSetName[0],
+            ytitle = dataSetName[1]
+            )
 
-#     print "radius in which points are connected is %f" % \
-#             stat.expected_connected_radius(1000)
-#             stat.expected_connected_radius(meanNumPoints)
-#     print "probablity that points are connected is", \
-#             stat.probably_connected(meanNumPoints)
-#     scatter_plot(numPoints, distance)
+
 
 
 if __name__ == "__main__": main()
