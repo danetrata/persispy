@@ -1,14 +1,11 @@
 import matplotlib, sys
 matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import Tkinter as tk
 
-# import point_cloud, hash_point
-from persispy.samples.points import torus
 
 class PersispyWindow:
     """
@@ -82,24 +79,19 @@ class PersispyWindow:
         
         panel.pack(side=tk.RIGHT, fill=tk.Y)
 
-    def _make_pointCloud(self):
-        self._hasPointCloud = True
-        self.pc = torus(self.numPoints.get(), gui = True)
 
-    def _make_plot(self):
-        return self.pc.plot3d_neighborhood_graph(self.distance.get(), cmap = self._colorOptions[self._color.get()])
 
+
+    from persispy.samples import plane
+    from persispy.plot import plot2d
     def _show_plot(self):
         """
         updates the canvas when graph is pressed
         """
-        if not self._hasPointCloud:
-            self._make_pointCloud()
+        pc = plane(100)
+        fig = pc.plot2d(gui = True)
 
-        if self._hasFig:
-            plt.clf()
-
-        self.canvas = FigureCanvasTkAgg(self._make_plot(), self._root)
+        self.canvas = FigureCanvasTkAgg(fig, self._root)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
         self.canvas.mpl_connect('key_press_event', self._on_key_event)
         self._hasFig = True

@@ -4,25 +4,22 @@ input: pointCloud OR
     wGraph
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 import time
 
-def plot():
-    """
-    http://bastibe.de/2013-05-30-speeding-up-matplotlib.html
-    speed up matplotlib.
-    have a return value that is usuable in the gui
-    """
-    fig, ax = plt.subplots()
-    line, = ax.plot(np.random.randn(100))
-    plt.show(block = False)
-
-    line.set_ydata(np.random.randn(100))
-    ax.draw_artist(ax.patch)
-    ax.draw_artist(line)
-    fig.cavnas.update()
-    fig.canvas.flush_events()
+"""
+http://bastibe.de/2013-05-30-speeding-up-matplotlib.html
+speed up matplotlib.
+have a return value that is usuable in the gui
+>>>    fig, ax = plt.subplots()
+>>>    line, = ax.plot(np.random.randn(100))
+>>>    plt.show(block = False)
+>>>    line.set_ydata(np.random.randn(100))
+>>>    ax.draw_artist(ax.patch)
+>>>    ax.draw_artist(line)
+>>>    fig.cavnas.update()
+>>>    fig.canvas.flush_events()
+"""
 
 def sanitize_points(points):
     """
@@ -38,24 +35,32 @@ def sanitize_edge(edges):
     """
     pass
 
+def show(fig):
+    """
+    Due to avoiding pyplot, we must handle all the backend calls...
+    """
+    master = tk.Tk()
+    canvas = FigureCanvasTkAgg(fig, master = master)
+    NavigationToolbar2TkAgg(canvas, master)
+    canvas.get_tk_widget().pack()
+    canvas.draw()
+    master.mainloop()
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import Tkinter as tk
 
-
-def plot2d(pointCloud, axes=(0,1), save = False, title = False):
-
-    pass
-
-
-    if self._fig is None:
-        fig=plt.figure()
-    plt.clf()
+def plot2d(pointCloud, gui = False):
+    """
+    avoiding pyplot to be able to display nicely in a GUI
+    """
+    fig = Figure()
 
     ax = fig.add_subplot(111)
     fig.set_size_inches(10.0,10.0)
-    if title is not False:
-        fig.suptitle(title)
-    xcoords=[p._coords[axes[0]] for p in self._points]
-    ycoords=[p._coords[axes[1]] for p in self._points]
+
+    xcoords=[p._coords[0] for p in pointCloud._points]
+    ycoords=[p._coords[1] for p in pointCloud._points]
 
     ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
@@ -66,10 +71,15 @@ def plot2d(pointCloud, axes=(0,1), save = False, title = False):
     ax.set_ylabel('y')
     ax.set_xlim(-3,3)
     ax.set_ylim(-3,3)
-    plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
+# what do?
+#     plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
-    self._display_plot(plt, "plot2d", save)
-    plt.close()
+    if gui:
+        return fig
+    else:
+        show(fig)
+
+
 
 
 
@@ -341,11 +351,11 @@ def plot3d_neighborhood_graph(self,
 if __name__ == "__main__": 
     from points import plane
 
-    pc = points.plane(200)
+    pc = plane(200)
 
-    pc.plot2d()
-    pc.plot3d()
+    plot2d(pc)
+#     pc.plot3d()
 
-    ng = pc.neighborhood_graph(.13)
-    ng.plot2d()
-    ng.plot3d()
+#     ng = pc.neighborhood_graph(.13)
+#     ng.plot2d()
+#     ng.plot3d()

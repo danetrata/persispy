@@ -30,8 +30,71 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle):
     """
 
     plt.plot(x, y, 'ro')
-    plt.title(title+"\n"+subtitle)
 
+    plt.title(title+"\n"+subtitle)
+    plt.xlabel(xtitle)
+    plt.ylabel(ytitle)
+
+    plt.show()
+
+from mpl_toolkits.mplot3d import Axes3D
+
+def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
+
+    fig = plt.figure()
+    ax = Axes3D(fig)
+    ax.scatter(x, y, z, marker = '.', color = '#ff6666')
+    plt.title(title+"\n"+subtitle)
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
+    ax.set_zlabel(ztitle)
+
+    plt.show()
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from scipy.interpolate import griddata
+def plot3d_surface(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
+
+    fig = plt.figure(figsize=plt.figaspect(0.5))
+    ax = fig.add_subplot(1, 2, 1, projection='3d')
+# note this: you can skip rows!
+
+    xi = np.linspace(min(x),max(x),100)
+    yi = np.linspace(min(y),max(y),100)
+# VERY IMPORTANT, to tell matplotlib how is your data organized
+    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
+
+    CS = plt.contour(xi, yi, zi, 15, linewidths=0.5, color='k')
+    ax = fig.add_subplot(1, 2, 2, projection='3d')
+
+    xig, yig = np.meshgrid(xi, yi)
+
+    surf = ax.plot_surface(xig, yig, zi, linewidth=0)
+
+    plt.title(title+"\n"+subtitle)
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
+    ax.set_zlabel(ztitle)
+
+    plt.show()
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde
+
+def heat_map(x, y, title, subtitle, xtitle, ytitle):
+
+# Calculate the point density
+    xy = np.vstack([x,y])
+    z = gaussian_kde(xy)(xy)
+    
+
+    fig, ax = plt.subplots()
+    ax.scatter(x, y, c=z, s=100, edgecolor='')
+    plt.title(title+"\n"+subtitle)
     plt.xlabel(xtitle)
     plt.ylabel(ytitle)
     plt.show()
@@ -145,6 +208,12 @@ def main():
     for x in totallyConnected:
         print len(x)
 
+    plot3d(numPoints, distance, connectedComponents,
+            "all data in one graph",
+            prompt,
+            dataSetName[0], dataSetName[1], dataSetName[2])
+
+
     plot_data(numPoints,
             connectedComponents,
             "points and number of components",
@@ -152,7 +221,21 @@ def main():
             dataSetName[0],
             dataSetName[2]
             )
+    heat_map(numPoints,
+            connectedComponents,
+            "points and number of components",
+            prompt,
+            dataSetName[0],
+            dataSetName[2]
+            )
     plot_data(distance,
+            connectedComponents,
+            "distance and number of components",
+            prompt,
+            dataSetName[1],
+            dataSetName[2]
+            )
+    heat_map(distance,
             connectedComponents,
             "distance and number of components",
             prompt,
