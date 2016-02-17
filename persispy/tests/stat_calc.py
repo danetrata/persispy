@@ -28,14 +28,53 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle):
     where the index of each is a point
     creates a scatter plot
     """
+    fig, ax = plt.subplots(2, sharex=True, sharey=True)
+    for sub in ax:
+        sub.set_xlim(min(x),max(x))
+        sub.set_ylim(min(y),max(y))
 
-    plt.plot(x, y, 'ro')
+    scatter(ax[0],
+            x,
+            y,
+            title,
+            subtitle,
+            xtitle,
+            ytitle
+            )
+    heat_map(ax[1],
+            x,
+            y,
+            title,
+            subtitle,
+            xtitle,
+            ytitle
+            )
 
-    plt.title(title+"\n"+subtitle)
-    plt.xlabel(xtitle)
-    plt.ylabel(ytitle)
+    fig.tight_layout()
 
     plt.show()
+    
+
+
+def scatter(ax, x, y, title, subtitle, xtitle, ytitle):
+    ax.plot(x, y, 'ro')
+
+    ax.set_title(title+"\n"+subtitle)
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
+
+
+def heat_map(ax, x, y, title, subtitle, xtitle, ytitle):
+
+# Calculate the point density
+    xy = np.vstack([x,y])
+    z = gaussian_kde(xy)(xy)
+    
+
+    ax.scatter(x, y, c=z, s=100, edgecolor='')
+    ax.set_title(title+"\n"+subtitle)
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
 
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -85,19 +124,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 
-def heat_map(x, y, title, subtitle, xtitle, ytitle):
-
-# Calculate the point density
-    xy = np.vstack([x,y])
-    z = gaussian_kde(xy)(xy)
-    
-
-    fig, ax = plt.subplots()
-    ax.scatter(x, y, c=z, s=100, edgecolor='')
-    plt.title(title+"\n"+subtitle)
-    plt.xlabel(xtitle)
-    plt.ylabel(ytitle)
-    plt.show()
 
 import numpy as np
 class Stats:
@@ -208,20 +234,9 @@ def main():
     for x in totallyConnected:
         print len(x)
 
-    plot3d(numPoints, distance, connectedComponents,
-            "all data in one graph",
-            prompt,
-            dataSetName[0], dataSetName[1], dataSetName[2])
 
 
     plot_data(numPoints,
-            connectedComponents,
-            "points and number of components",
-            prompt,
-            dataSetName[0],
-            dataSetName[2]
-            )
-    heat_map(numPoints,
             connectedComponents,
             "points and number of components",
             prompt,
@@ -235,13 +250,6 @@ def main():
             dataSetName[1],
             dataSetName[2]
             )
-    heat_map(distance,
-            connectedComponents,
-            "distance and number of components",
-            prompt,
-            dataSetName[1],
-            dataSetName[2]
-            )
     plot_data(x = totallyConnected[0], 
             y = totallyConnected[1], 
             title = "totally connected components",
@@ -249,6 +257,10 @@ def main():
             xtitle = dataSetName[0],
             ytitle = dataSetName[1]
             )
+    plot3d(numPoints, distance, connectedComponents,
+            "all data in one graph",
+            prompt,
+            dataSetName[0], dataSetName[1], dataSetName[2])
 
 
 
