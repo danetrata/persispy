@@ -16,13 +16,24 @@ def read_csv(filename):
         
     columns = []
     for column in zip(*sheet):
-        columns.append([float_or_int(item) for item in column])
+        columns.append(np.array([float_or_int(item) for item in column]))
     return columns
 
 
 
+def show(fig):
+    """
+    Due to avoiding pyplot, we must handle all the backend calls...
+    """
+    master = tk.Tk()
+    canvas = FigureCanvasTkAgg(fig, master = master)
+    NavigationToolbar2TkAgg(canvas, master)
+    canvas.get_tk_widget().pack()
+    canvas.draw()
+    master.mainloop()
+
 import matplotlib.pyplot as plt
-def plot_data(x, y, title, subtitle, xtitle, ytitle):
+def plot_data(x, y, title, subtitle, xtitle, ytitle, threshold = False):
     """
     input: x axis, y axis
     where the index of each is a point
@@ -30,8 +41,8 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle):
     """
     fig, ax = plt.subplots(2, sharex=True, sharey=True)
     for sub in ax:
-        sub.set_xlim(min(x),max(x))
-        sub.set_ylim(min(y),max(y))
+        sub.set_xlim(0, max(x))
+        sub.set_ylim(0, max(y))
 
     scatter(ax[0],
             x,
@@ -50,16 +61,25 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle):
             ytitle
             )
 
+        
+    for sub in ax:
+        if threshold:
+            add_threshold(sub, x, threshold)
+
     fig.tight_layout()
 
     plt.show()
     
-
+def add_threshold(ax, x, formula):
+    x = np.array(range(min(x), max(x)))
+    
+    f = formula(x) 
+    ax.plot(x, f, '-')
 
 def scatter(ax, x, y, title, subtitle, xtitle, ytitle):
     ax.plot(x, y, 'ro')
 
-    ax.set_title(title+"\n"+subtitle)
+    ax.set_title(title+"\n"+subtitle+" number of points: "+str(len(x)))
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
 
@@ -72,7 +92,7 @@ def heat_map(ax, x, y, title, subtitle, xtitle, ytitle):
     
 
     ax.scatter(x, y, c=z, s=100, edgecolor='')
-    ax.set_title(title+"\n"+subtitle)
+    ax.set_title(title+"\n"+subtitle+" number of points: "+str(len(x)))
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
 
@@ -87,6 +107,8 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
     ax.set_zlabel(ztitle)
+    ax.elev = 30
+    ax.axim = 25
 
     plt.show()
 
@@ -227,42 +249,93 @@ def main():
     
     totallyConnected = [[],[]]
     for i in range(len(connectedComponents)):
-        if connectedComponents[i] == 1:
+        if connectedComponents[i] == 1 and numPoints[i] > 50:
             totallyConnected[0].append(numPoints[i])
             totallyConnected[1].append(distance[i])
 
-    for x in totallyConnected:
-        print len(x)
 
 
 
-    plot_data(numPoints,
-            connectedComponents,
-            "points and number of components",
-            prompt,
-            dataSetName[0],
-            dataSetName[2]
-            )
-    plot_data(distance,
-            connectedComponents,
-            "distance and number of components",
-            prompt,
-            dataSetName[1],
-            dataSetName[2]
-            )
-    plot_data(x = totallyConnected[0], 
-            y = totallyConnected[1], 
-            title = "totally connected components",
-            subtitle = prompt,
-            xtitle = dataSetName[0],
-            ytitle = dataSetName[1]
-            )
-    plot3d(numPoints, distance, connectedComponents,
-            "all data in one graph",
-            prompt,
-            dataSetName[0], dataSetName[1], dataSetName[2])
+    if False:
+        plot3d(numPoints, distance, connectedComponents,
+                "all data in one graph",
+                prompt,
+                dataSetName[0], dataSetName[1], dataSetName[2])
 
+        plot_data(numPoints,
+                connectedComponents,
+                "points and number of components",
+                prompt,
+                dataSetName[0],
+                dataSetName[2]
+                )
+        plot_data(distance,
+                connectedComponents,
+                "distance and number of components",
+                prompt,
+                dataSetName[1],
+                dataSetName[2]
+                )
 
+    if False:
+        plot_data(x = totallyConnected[0], 
+                y = totallyConnected[1], 
+                title = "totally connected components",
+                subtitle = prompt,
+                xtitle = dataSetName[0],
+                ytitle = dataSetName[1],
+                threshold = lambda n: (np.log(n)+100)/(20*n)
+                )
+
+    from scipy.optimize import curve_fit
+    def func(n, c, omega): 
+        return ((np.log(n)+c)/(omega*n))**(1.0/2)
+
+#     cOptimized, omegaOptimized = curve_fit(func, 
+#             totallyConnected[0], 
+#             totallyConnected[1])
+#     print cOptimized, omegaOptimized
+#     
+#     while(True):
+#         comega = raw_input("enter c and \omega (seperated by a space): ")
+#         comega = [float(number) for number in comega.split(' ')]
+# 
+#         plot_data(x = totallyConnected[0], 
+#                 y = totallyConnected[1], 
+#                 title = "totally connected components",
+#                 subtitle = prompt,
+#                 xtitle = dataSetName[0],
+#                 ytitle = dataSetName[1],
+#                 threshold = lambda n: ((np.log(n)+comega[0])/(comega[1]*n))**(1.0/2)
+#                 )
+
+"""
+def findhttp://stackoverflow.com/questions/32146633/opencv-fit-the-detected-edges_first(item, vec):
+"""
+"""return the index of the first occurence of item in vec"""
+        if isinstance(vec, np.int64):
+            return vec
+        for i in range(len(vec)):
+            if item == vec[i]:
+                return i
+        return -1
+
+# Now the points we want are the lowest-index 255 in each row
+    window = numPoints.transpose()
+
+    xy = []
+    for i in range(len(window)):
+        col = window[i]
+        j = find_first(len(numPoints), col)
+        if j != -1:
+            xy.extend((i, j))
+# Reshape into [[x1, y1],...]
+    data = np.array(xy).reshape((-1, 2))
+
+    plt.figure(1, figsize=(8, 16))
+    ax1 = plt.subplot(211)
+    ax1.plot(data[:,1])
+    plt.show()
 
 
 if __name__ == "__main__": main()
