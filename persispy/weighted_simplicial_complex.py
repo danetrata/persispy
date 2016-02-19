@@ -4,6 +4,7 @@ import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from utils import tuples
 import itertools
+import sys
 
 class wSimplex:
     '''
@@ -33,15 +34,28 @@ class wSimplex:
             return False
 
 class wGraph:
-    def __init__(self,adjacencies):
+
+    def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
         Output: a wGraph object.
 
         Variables:
-            _adj: the adjacency dictionary.
+            ._adj: the adjacency dictionary.
+            .epsilon: the distance between points
+            .edges: List of a edges of type set(vertex, endPoint),
+                created after .connected_edges() . Because we assume an 
+                unordered graph, the edges are unordered through the use
+                of hash_edge.HashEdge() .
         '''
         self._adj=adjacencies
+        self.epsilon = epsilon
+
+# place holder for more efficient recursive coding
+# .connnected_components() has issues without
+        if len(adjacencies) > 1000:
+            sys.setrecursionlimit(len(adjacencies))
+
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
@@ -61,9 +75,23 @@ class wGraph:
             adj[e[1]].add((e[0],e[2]))
         return cls(adj)
 
+    """
+    start magic methods
+    """
     def __repr__(self):
         return 'Weighted graph with '+repr(self.num_points())+' points and '+repr(self.num_edges())+' edges'
 
+    def __len__(self):
+        """
+        also see order
+        returns the number of edges
+        """
+        return self.num_edges()
+
+
+    """
+    end magic methods
+    """
     def degree(self,p):
         return len(self._adj[p])
 
@@ -76,24 +104,73 @@ class wGraph:
                     return e[1]
             return -1    
 
-    def connected_component(self,p,visited,n):
-        visited[p]=n
-        for q in self._adj[p]:
-            if not visited[q[0]]:
-                self.connected_component(q[0],visited,n)
+    def connected_component(self, point, visited, time, DEBUG = False):
+        """
+        RECURSIVE
+        notes the time in which a node was visited on the visited dict
+        """
+        if DEBUG: print time
+        visited[point]=time
+        for neighbor in self._adj[point]:
+            if not visited[neighbor[0]]: # uses the fact that 0 evals to False
+                self.connected_component(neighbor[0], visited, time)
 
     def connected_components(self):
         '''
         Returns a list wGraphs giving the connected components of the wGraph.
+        Gives only a depth first search tree.
+        Call .connected_edges() for the connected component with edges.
         '''
-        visited = {d[0]:0 for d in self._adj.keys()}
-        n=0
-        for p in self._adj.keys():
-            if visited[p[0]]==0:
-                n=n+1
-                self.connected_component(p[0],visited,n)
-        print n
-        return visited
+        visited = {d:0 for d in self._adj}
+
+        time=0
+        for point in self._adj: # runs in O(|points| + |edges|)
+            if visited[point] == 0:
+                time = time + 1
+                self.connected_component(point, visited, time)
+        
+        components = []         
+        for connected in range(1, time+1): # runs in O(|components|)
+            component = []
+            for point in visited: # runs in O(|points in component|)
+                if visited[point] == connected:
+                    component.append(point)
+            if component:
+                components.append(component)
+
+
+        return components
+
+    import hash_edge
+
+    def connected_edges(self, DEBUG = False):
+        """
+        Returns a list of edges that make up a connected component
+        """
+
+        cp = self.connected_components()
+
+        components = []
+        for component in cp:
+            edges = {}
+            if len(component) > 1: # if the component is not a point
+                edgeIndex = 0
+                for vertex in component:
+                    for endPoint in adj[vertex]:
+                        edges[edgeIndex] = hash_edge.HashEdge(
+                                array([ vertex, endPoint]),
+                                index = edgeIndex
+                                )
+                        edgeIndex += 1
+            edges = edges.values()
+            edges = set(edges)
+
+            if DEBUG: print edges 
+            componentIndex += 1
+            components.append(edges)
+
+        self.edges = components
+        return components
 
     def cloud_dist(self,pointlist):
         '''
@@ -113,13 +190,16 @@ class wGraph:
     def num_points(self):
         return len(self._adj.keys())
 
+    def order(self):
+        return self.num_edges()
+
     def num_edges(self):
         count=0
         for v in self._adj.keys():
             count=count+len(self._adj[v])
         return count/2
 
-    def neighborhood_graph(self,epsilon):
+    def neighborhood_graph(self, epsilon):
         '''
         INPUT: epsilon.
         OUTPUT: the subgraph consisting of those edges with weight less than epsilon.
@@ -160,6 +240,7 @@ class wGraph:
 
         if method=='inductive':
             return None
+
         elif method == 'incremental':
             complex = {n:[] for n in range(dimension+1)}
             for u in self._adj.keys():
@@ -186,18 +267,17 @@ class wGraph:
         data=np.array([1.0 for x in range(len(indices))])
         return sparse.csr_matrix((data,indices,indptr),shape=((len(keys),len(keys))))
 
-    def connected_components_1(self):
+    def connected_components_1(self, return_labels = False):
         '''
         Output: a positive integer.
-
-        TODO: write an algorithm to do this from the adjacency matrix, avoiding the
         construction of adjacency_matrix().
         '''
-        return csgraph.connected_components(self.adjacency_matrix(),directed=False,return_labels=False)
+        return csgraph.connected_components(self.adjacency_matrix(),directed=False, return_labels = return_labels)
+
 
 def wRandomGraph(n,p,epsilon):
     '''
-    Returns the Gilbert random graph G(n,p), which includes each edge independently with
+    Returns the Gilbert (Erdos-Renyi) random graph G(n,p), which includes each edge independently with
     probability 0<p<1. A random weight in the range [0,epsilon) is assigned to each edge.
     '''
     dictionary={v:[] for v in range(n)}
@@ -207,7 +287,7 @@ def wRandomGraph(n,p,epsilon):
                 w=epsilon*npr.random()
                 dictionary[i].append([j,w])
                 dictionary[j].append([i,w])
-    return wGraph(dictionary)
+    return wGraph(dictionary,epsilon)
 
 class wSimplicialComplex:
     def __init__(self,wgraph,simplices):
