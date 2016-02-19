@@ -129,7 +129,7 @@ class wGraph:
         for k in keys:
             for v in self._adj[k]:
                 if v[1]<epsilon:
-                    adj[k].add(v)
+                    adj[k].append(v)
         return wGraph(adj)
 
     def VRComplex(self,epsilon,dimension,method='incremental'):
