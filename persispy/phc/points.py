@@ -27,15 +27,15 @@ class phc(object):
     def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, DEBUG = False):
         self._DEBUG = DEBUG
 
-#         self._bounds = bounds
+        self._bounds = bounds
         self._complex_epsilon = 0.1
-        self._failure = 100
+        self._failure = num_points
 
         self.eqn = eqn
 
         self.varList, self.coeffList = self._parse(eqn)
         self.total_coeff = sum(self.coeffList)
-        self._bounds = self.total_coeff
+#         self._bounds = self.total_coeff
 
         self.degree = self._degree()
         self.points = []
@@ -53,6 +53,7 @@ class phc(object):
 
 
         self.__call__()
+
 
     # Parsing target variety into a string usable by phcpy and to generate
     # intersects
@@ -102,9 +103,6 @@ class phc(object):
                             coeffList.append(float(x[0:cut]))
                         break
 
-
-
-
         return varList, coeffList
 
     def _degree(self):
@@ -150,7 +148,7 @@ class phc(object):
         failure = 0
         while(len(points) < num_points):
             p = self._system()
-            phcSol = track(p, self._startSystem, self._startSol)
+            phcSol = track(p, self._startSystem, self._startSol, gamma=complex(0.824,0.5664))
             if self._DEBUG:
                 print "system of equations"
                 print "--"
@@ -170,23 +168,23 @@ class phc(object):
                     points.append(tuple(point))
                 else:
                     closeness = True 
-                    for x in point: 
+                    for component in point: 
                     # choses the points we want
-                        if self._is_close(x.imag) \
-                                and self._in_bounds(x.real):
+                        if self._is_close(component.imag) \
+                                and self._in_bounds(component.real):
                             # sometimes phcpy gives more points than we ask,
                             # thus the additional check
-                            if x == point[-1] \
+                            if component == point[-1] \
                                     and closeness == True \
                                     and len(points) < num_points: 
-                                points.append(tuple([x.real for x in point]))
-                                if self._DEBUG: print "appended point:",[x.real for x in point]
+                                points.append(tuple([component.real for component in point]))
+                                if self._DEBUG: print "appended point:",[component.real for component in point]
                                 failure = 0
                         else:
                             closeness = False
                             failure = failure + 1
             if self._failure <= failure:
-                raise RuntimeError("equation too many complex solutions in a row")
+                raise RuntimeError("equation has too many complex solutions in a row")
 
         if self._DEBUG: print "points: ", points
 
@@ -199,6 +197,7 @@ class phc(object):
     def _intersect(self):
         bounds = self._bounds
         rand_list = np.random.uniform(-bounds, bounds, size=len(self.varList))
+#         rand_list = np.random.normal(0, bounds, size=len(self.varList))
         i = 0
         intersect = [] 
         for x in rand_list:
@@ -212,7 +211,7 @@ class phc(object):
     # for dealing with the fact that PHC always returns complex solutions
     # To be used to detect solutions with complex parts close to given epsilon
     # Adjust epsilon to your liking.
-    # Note: phcpack almost always gives an imaginary parts, as small as 10^-48,
+    # Note: phcpack almost always gives an imaginary part, as small as 10^-48,
     # so epsilon != 0
     def _is_close(self, a, b = 0):
         epsilon = self._complex_epsilon
@@ -222,8 +221,11 @@ class phc(object):
 
     def _in_bounds(self, a):
         bounds = self._bounds
-        if bounds <= 0 \
-                or abs(bounds-abs(a)) <= bounds:
+        min = -bounds
+        max = bounds
+        if bounds != 0 and \
+                min <= a and \
+                a <= max:
             if self._DEBUG: print "Selected component is in bounds"
             return True
         else:
@@ -231,16 +233,18 @@ class phc(object):
 
     def __call__(self):
         cloudPoints = []
+        i = 0
         for coord in self.points:
             cloudPoints.append(
                 HashPoint(
                     np.array(
                         coord, 
                         dtype=complex
-                    )
+                    ),
+                    index = i
                 )
             )
-
+            i = i + 1
         self.pointCloud = PointCloud(cloudPoints) 
         return self.pointCloud
 
@@ -272,15 +276,39 @@ class phc(object):
 
 
 def main():
-    pc = phc(eqn = "x^2 + 2.2*y^2 + 5*z^2 - 1", num_points = 301, DEBUG = True)
+    global pc
+    user = raw_input("torus or sphere? ")
+    if user == "torus":
+        selection = "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2"
+    elif user == "sphere":
+        selection = "x^2 + y^2 + z^2 - 1"
+    else:
+        print "invalid input"
+        return
+
+    pc = phc(eqn = selection, num_points = 5000, bounds = 30)
+
+    global ng
+#     ng = pc.neighborhood_graph(0.2)
     print pc
-    pc._DEBUG = False
     pc.find_more_points(10)
     print pc
     print pc[0]
     print pc.points[0]
     print pc.degree
     print pc.total_coeff
+    print pc.plot3d()
+
+    saveUser = raw_input("save file? ")
+    if saveUser == "yes":
+        fileUser = raw_input("file name? ")
+        f = open(fileUser, "wa")
+        f.write(str(pc.points))
+        f.close()
+    else:
+        print "exiting"
+
+
 
 
 if __name__ == "__main__": main()
