@@ -43,12 +43,14 @@ class wGraph:
         Variables:
             ._adj: the adjacency dictionary.
             .epsilon: the distance between points
+            .connected_components - Depth first search tree of components
+                created after .connected_components()
             .edges: List of a edges of type set(vertex, endPoint),
                 created after .connected_edges() . Because we assume an 
                 unordered graph, the edges are unordered through the use
                 of hash_edge.HashEdge() .
         '''
-        self._adj=adjacencies
+        self._adj = adjacencies
         self.epsilon = epsilon
 
 # place holder for more efficient recursive coding
@@ -118,7 +120,7 @@ class wGraph:
     def connected_components(self):
         '''
         Returns a list wGraphs giving the connected components of the wGraph.
-        Gives only a depth first search tree.
+        NOTICE: Gives only a depth first search tree.
         Call .connected_edges() for the connected component with edges.
         '''
         visited = {d:0 for d in self._adj}
@@ -139,35 +141,44 @@ class wGraph:
                 components.append(component)
 
 
+        self.connected_components = components
+
         return components
 
-    import hash_edge
 
-    def connected_edges(self, DEBUG = False):
+    def connected_edges(self, size = False, DEBUG = False):
         """
         Returns a list of edges that make up a connected component
         """
+        import hash_edge
+        from numpy import array
 
-        cp = self.connected_components()
+        cp = self.connected_components
 
+        componentIndex = 0
         components = []
         for component in cp:
             edges = {}
             if len(component) > 1: # if the component is not a point
                 edgeIndex = 0
                 for vertex in component:
-                    for endPoint in adj[vertex]:
+                    vertexList = list(vertex)
+                    while len(vertexList) < size:
+                        vertexList.append(0)
+                    for endPoint in self._adj[vertex]:
+                        endPointList = list(list(endPoint)[0])
+                        while len(endPointList) < size:
+                            endPointList.append(0)
                         edges[edgeIndex] = hash_edge.HashEdge(
-                                array([ vertex, endPoint]),
+                                array([ vertexList, endPointList]),
                                 index = edgeIndex
                                 )
                         edgeIndex += 1
-            edges = edges.values()
-            edges = set(edges)
-
-            if DEBUG: print edges 
-            componentIndex += 1
-            components.append(edges)
+            if edges:
+                componentIndex += 1
+                edges = edges.values()
+                edges = set(edges)
+                components.append(edges)
 
         self.edges = components
         return components

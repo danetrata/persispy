@@ -50,10 +50,8 @@ class HashEdge:
             return self._hash
 
     def __repr__(self):
-        return str(self.edge)
+        return "edge "+str(self.index) +": %s" % str(self.edge).replace('\n', '')
 
-    def __str__(self):
-        return "edge "+str(self.index)+": %s" % str(self.edge)
 
     def keys(self):
         return self.index
