@@ -8,6 +8,7 @@
 *.snm
 *.toc
 *.synctex.gz
+*.pdf
 
 # prefixes to ignore
 private*
