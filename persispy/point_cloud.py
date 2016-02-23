@@ -109,8 +109,8 @@ class PointCloud:
             ax.set_aspect('equal')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
-            ax.set_xlim(-3,3)
-            ax.set_ylim(-3,3)
+#             ax.set_xlim(-3,3)
+#             ax.set_ylim(-3,3)
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
             self._display_plot(plt, "plot2d", save)
@@ -199,7 +199,9 @@ class PointCloud:
     def plot2d_neighborhood_graph(self,
             epsilon,
             axes=(0,1),
-            shading_axis=2,
+            # Changed default shading_axis to 1 from 2. This is to fix an index
+            # error when plotting 2-dimensional point clouds. --Ben A.
+            shading_axis=1,
             method='subdivision', 
             save = False, 
             title = False):
@@ -217,6 +219,7 @@ class PointCloud:
             maxx=max(p._coords[axes[0]] for p in self._points)
             miny=min(p._coords[axes[1]] for p in self._points)
             maxy=max(p._coords[axes[1]] for p in self._points)
+            print maxx,minx
 
             # For the shading direction
             minz=min(p._coords[shading_axis] for p in self._points)
@@ -242,14 +245,26 @@ class PointCloud:
                 fig = plt.figure()
             plt.clf()
 
+
             ax = fig.add_subplot(111)
             fig.set_size_inches(10.0,10.0)
             if title is not False:
                 fig.suptitle(title)
             ax.grid(True)
+
+            # I've added this code from plot2d() to show points that might not
+            # be connected to any others. Previously, these were not visible in
+            # the graph. This particular choice of coloring might not be ideal
+            # in all circumstances.
+            xcoords=[p._coords[axes[0]] for p in self._points]
+            ycoords=[p._coords[axes[1]] for p in self._points]
+            ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
+
             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
-            ax.set_xlim(-3,3)
-            ax.set_ylim(-3,3)
+            # Commented these out as they resulted in a lot of empty space for
+            # me. --Ben A.
+#             ax.set_xlim(-3,3)
+#             ax.set_ylim(-3,3)
             ax.set_aspect('equal')
             ax.add_collection(lines)
 #             xcoords=[p._coords[axes[0]] for p in self._points]
