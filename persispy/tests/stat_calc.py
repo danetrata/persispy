@@ -62,24 +62,35 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle, threshold = False):
             )
 
         
-    for sub in ax:
-        if threshold:
-            add_threshold(sub, x, threshold)
+    if threshold:
+        for sub in ax:
+            function = lambda n: ((np.log(n)+threshold[0])/ \
+                    (threshold[1]*n))**(1.0/threshold[2])
+            add_threshold(sub, x, threshold, function)
 
     fig.tight_layout()
 
     plt.show()
     
-def add_threshold(ax, x, formula):
+def add_threshold(ax, x, threshold, formula):
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='serif')
+    textstr = r'${\frac{\ln n \cdot + %.2f}{%.2f \cdot n}}^{\frac{1}{%d}}$' \
+            % threshold
+    # place a text box in upper left in axes coords
+    props = dict(boxstyle='round', facecolor='white', alpha=0.7)
+    ax.text(0.1, 0.35, textstr, transform=ax.transAxes, fontsize=20,
+            verticalalignment='top', bbox = props)
+
     x = np.array(range(min(x), max(x)))
-    
     f = formula(x) 
     ax.plot(x, f, '-')
 
 def scatter(ax, x, y, title, subtitle, xtitle, ytitle):
     ax.plot(x, y, 'ro')
 
-    ax.set_title(title+"\n"+subtitle+" number of points: "+str(len(x)))
+    ax.set_title(title+"\n"+subtitle+" Number of Trials: "+str(len(x)))
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
 
@@ -92,17 +103,36 @@ def heat_map(ax, x, y, title, subtitle, xtitle, ytitle):
     
 
     ax.scatter(x, y, c=z, s=100, edgecolor='')
-    ax.set_title(title+"\n"+subtitle+" number of points: "+str(len(x)))
+    ax.set_title(title+"\n"+subtitle+" Number of Trials: "+str(len(x)))
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
 
 from mpl_toolkits.mplot3d import Axes3D
 
 def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
+    connected = []
+    totallyConnected = []
+    for i in range(len(z)):
+        if z[i] == 1:
+            totallyConnected.append((x[i], y[i], z[i]))
+        else:
+            connected.append((x[i], y[i], z[i]))
+    connected = zip(*connected)
+    totallyConnected = zip(*totallyConnected)
 
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.scatter(x, y, z, marker = '.', color = '#ff6666')
+    ax.scatter(connected[0], 
+            connected[1], 
+            connected[2], 
+            marker = '.', 
+            color = '#3399ff')
+    ax.scatter(totallyConnected[0], 
+            totallyConnected[1], 
+            totallyConnected[2],
+            marker = '.', 
+            color = '#ff33ff')
+
     plt.title(title+"\n"+subtitle)
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
@@ -112,34 +142,6 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
 
     plt.show()
 
-import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from scipy.interpolate import griddata
-def plot3d_surface(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
-
-    fig = plt.figure(figsize=plt.figaspect(0.5))
-    ax = fig.add_subplot(1, 2, 1, projection='3d')
-# note this: you can skip rows!
-
-    xi = np.linspace(min(x),max(x),100)
-    yi = np.linspace(min(y),max(y),100)
-# VERY IMPORTANT, to tell matplotlib how is your data organized
-    zi = griddata((x, y), z, (xi[None,:], yi[:,None]), method='cubic')
-
-    CS = plt.contour(xi, yi, zi, 15, linewidths=0.5, color='k')
-    ax = fig.add_subplot(1, 2, 2, projection='3d')
-
-    xig, yig = np.meshgrid(xi, yi)
-
-    surf = ax.plot_surface(xig, yig, zi, linewidth=0)
-
-    plt.title(title+"\n"+subtitle)
-    ax.set_xlabel(xtitle)
-    ax.set_ylabel(ytitle)
-    ax.set_zlabel(ztitle)
-
-    plt.show()
 
 
 import numpy as np
@@ -226,12 +228,13 @@ def main():
         prompt = sys.argv[1]
     else:
         prompt = raw_input("Enter a filename: ")
+    
     numPoints, distance, connectedComponents = read_csv(prompt)
     dataSet = [numPoints, distance, connectedComponents]
 
-    dataSetName = ["number of points", 
-            "distance between points", 
-            "connected components"]
+    dataSetName = ["Number of Points", 
+            "Distance Between Points", 
+            "Connected Components"]
 
 #     i = 0
 #     for variable in dataSet:
@@ -249,29 +252,46 @@ def main():
     
     totallyConnected = [[],[]]
     for i in range(len(connectedComponents)):
-        if connectedComponents[i] == 1 and numPoints[i] > 50:
+        if connectedComponents[i] == 1 and \
+                numPoints[i] > 50:
             totallyConnected[0].append(numPoints[i])
             totallyConnected[1].append(distance[i])
+    
+    def getx(point): return point[0]
+
+    image = zip(totallyConnected[0], totallyConnected[1])
+
+
+    import itertools
+    import operator
+    totallyConnectedEdge = []
+
+    for x, g in itertools.groupby(sorted(image, key = getx), key = getx):
+        totallyConnectedEdge.append(min(g, key = operator.itemgetter(1)))
+
+    totallyConnectedEdge = zip(*totallyConnectedEdge)
+
+                
 
 
 
 
-    if False:
+    if True:
         plot3d(numPoints, distance, connectedComponents,
-                "all data in one graph",
+                "All Data in One Graph",
                 prompt,
                 dataSetName[0], dataSetName[1], dataSetName[2])
 
         plot_data(numPoints,
                 connectedComponents,
-                "points and number of components",
+                "Points and Number of Components",
                 prompt,
                 dataSetName[0],
                 dataSetName[2]
                 )
         plot_data(distance,
                 connectedComponents,
-                "distance and number of components",
+                "Distance and Number of Components",
                 prompt,
                 dataSetName[1],
                 dataSetName[2]
@@ -280,7 +300,7 @@ def main():
     if False:
         plot_data(x = totallyConnected[0], 
                 y = totallyConnected[1], 
-                title = "totally connected components",
+                title = "Totally Connected Components",
                 subtitle = prompt,
                 xtitle = dataSetName[0],
                 ytitle = dataSetName[1],
@@ -288,54 +308,28 @@ def main():
                 )
 
     from scipy.optimize import curve_fit
+    dimension = input("enter the dimension: ")
     def func(n, c, omega): 
-        return ((np.log(n)+c)/(omega*n))**(1.0/2)
+        return ((np.log(n)+c)/(omega*n))**(1.0/dimension)
 
-#     cOptimized, omegaOptimized = curve_fit(func, 
-#             totallyConnected[0], 
-#             totallyConnected[1])
-#     print cOptimized, omegaOptimized
-#     
-#     while(True):
-#         comega = raw_input("enter c and \omega (seperated by a space): ")
-#         comega = [float(number) for number in comega.split(' ')]
-# 
-#         plot_data(x = totallyConnected[0], 
-#                 y = totallyConnected[1], 
-#                 title = "totally connected components",
-#                 subtitle = prompt,
-#                 xtitle = dataSetName[0],
-#                 ytitle = dataSetName[1],
-#                 threshold = lambda n: ((np.log(n)+comega[0])/(comega[1]*n))**(1.0/2)
-#                 )
+    cOptimized, omegaOptimized = curve_fit(func, 
+            totallyConnectedEdge[0], 
+            totallyConnectedEdge[1])
+    print cOptimized, omegaOptimized
+    
+    while(True):
+        comega = raw_input("enter c and \omega (seperated by a space): ")
+        c, omega = [float(number) for number in comega.split(' ')]
 
-"""
-def findhttp://stackoverflow.com/questions/32146633/opencv-fit-the-detected-edges_first(item, vec):
-"""
-"""return the index of the first occurence of item in vec"""
-        if isinstance(vec, np.int64):
-            return vec
-        for i in range(len(vec)):
-            if item == vec[i]:
-                return i
-        return -1
+        plot_data(x = totallyConnected[0], 
+                y = totallyConnected[1], 
+                title = "totally connected components",
+                subtitle = prompt,
+                xtitle = dataSetName[0],
+                ytitle = dataSetName[1],
+                threshold = (c, omega, dimension)
+                )
 
-# Now the points we want are the lowest-index 255 in each row
-    window = numPoints.transpose()
-
-    xy = []
-    for i in range(len(window)):
-        col = window[i]
-        j = find_first(len(numPoints), col)
-        if j != -1:
-            xy.extend((i, j))
-# Reshape into [[x1, y1],...]
-    data = np.array(xy).reshape((-1, 2))
-
-    plt.figure(1, figsize=(8, 16))
-    ax1 = plt.subplot(211)
-    ax1.plot(data[:,1])
-    plt.show()
 
 
 if __name__ == "__main__": main()

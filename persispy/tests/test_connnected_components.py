@@ -13,7 +13,6 @@ pDict = {
 }
 
 
-from persispy.samples import points
 from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
 from numpy.random import uniform
@@ -36,6 +35,9 @@ def make_csv(testName, columnNames):
             return csv
         else:
             i += 1
+
+def radius(num_points):
+    return (np.log(np.log(num_points))/num_points)**(1/2)
 
 def points_setup(testName, eqn = False):
 
@@ -95,20 +97,25 @@ def points_setup(testName, eqn = False):
     skip = 0
     while(iteration < iterations):
 
-        distance = npr.uniform(minDistance, maxDistance)
+#         distance = npr.uniform(minDistance, maxDistance)
 
         if DEBUG: print "running test", distance
 
-        try:
-            num_points = npr.random_integers(minPoints, maxPoints)
-            points_epsilon_tests(num_points, distance, csv, eqn)
-            widgetsOverall[0] = "Iter:"+str(iteration)
-        except StandardError as inst:
-            skip += 1
-            widgetsOverall[2] = "Skip:"+str(skip)
-            if DEBUG: print inst
-            if DEBUG: print "skip"
-            pass
+        for num_points in range(10, 500, 10):
+            distance = radius(num_points)
+
+
+            try:
+#             num_points = npr.random_integers(minPoints, maxPoints)
+                
+                points_epsilon_tests(num_points, distance, csv, eqn)
+                widgetsOverall[0] = "Iter:"+str(iteration)
+            except StandardError as inst:
+                skip += 1
+                widgetsOverall[2] = "Skip:"+str(skip)
+                if DEBUG: print inst
+                if DEBUG: print "skip"
+                pass
 
         pbar.update(iteration)
         if DEBUG: print iteration
@@ -121,9 +128,11 @@ def points_setup(testName, eqn = False):
     csv.close()
 
 
+import numpy as np
 from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
+from persispy.samples.points import plane
 
 def points_epsilon_tests(num_points, distance, csv, eqn = False):
 
