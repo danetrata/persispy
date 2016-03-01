@@ -20,6 +20,7 @@ class wSimplex:
         '''
         self._vertices=list(vertices)
         self._weight=weight
+        self._index=-1 #the index of this simplex in the compatible total ordering
 
     def weight(self):
         return self._weight
@@ -32,6 +33,19 @@ class wSimplex:
             return True
         else:
             return False
+    def __cmp__(self,other):
+        if self._weight!=other._weight:
+            return self._weight - other._weight
+        if len(self._vertices)!=len(other._vertices):
+            return len(self._vertices)-len(other._vertices)
+        if self._vertices!=other._vertices:
+            for i in range(len(_vertices)):
+                if self._vertices[i]!=other._vertices[i]:
+                    if self._vertices[i]<other._vertices[i]:
+                        return -1
+                    if self._vertices[i]>other._vertices[i]:
+                        return 1
+        return 0
 
 class wGraph:
 
