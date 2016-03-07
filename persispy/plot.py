@@ -48,6 +48,9 @@ def show(fig):
 
 from matplotlib.figure import Figure
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import Tkinter as tk
+
 from point_cloud import PointCloud
 from weighted_simplicial_complex import wGraph
 
@@ -56,7 +59,6 @@ import matplotlib.pyplot as plt
 def plot2d(graph, gui = False):
     if isinstance(graph, PointCloud):
         fig = plot2d_pc(graph, gui)
-        print(type(fig))
         return fig
     if isinstance(graph, wGraph):
         return plot2d_ng(graph, gui)
@@ -69,7 +71,6 @@ def plot3d(graph, gui = False):
 
 def plot2d_pc(pointCloud, gui = False):
     """
-    avoiding pyplot to be able to display nicely in a GUI
     """
 #     fig = Figure()
 
@@ -96,12 +97,6 @@ def plot2d_pc(pointCloud, gui = False):
         return fig
     else:
         show(fig)
-
-
-
-
-
-
 
 def plot2d_ng(wGraph,
         axes=(0,1),
@@ -205,13 +200,8 @@ def plot2d_ng(wGraph,
     else:
         show(fig)
 
-
-
 def plot3d_pc(self, axes=(0,1,2), save = False, title = False):
-    
-
     if self._space=='affine':
-
         if self._fig is None: # faster to clear than to close and open
             fig = plt.figure()
         plt.clf() # clears the figure
@@ -250,9 +240,6 @@ def plot3d_pc(self, axes=(0,1,2), save = False, title = False):
     else:
         return None
 
-
-
-
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d as a3
 from mpl_toolkits.mplot3d import Axes3D
@@ -279,9 +266,14 @@ def plot3d_ng(wGraph,
     """
 
 
+
     fig = plt.figure()
+
+
     canvas = FigureCanvasTkAgg(fig)
     fig.set_canvas(plt.gcf().canvas)
+
+
     ax = Axes3D(fig)
 
     epsilon = wGraph.epsilon
@@ -296,7 +288,6 @@ def plot3d_ng(wGraph,
     totalEdges = 0
     cp = wGraph.connected_edges(size = 3)
 
-    
 
     for components in cp:
         for _ in components:
