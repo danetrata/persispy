@@ -73,26 +73,99 @@ defaultWidget = ['Iter:0',
         ' '
 ]
 
-subWidget =     ['Point:', 
+pointWidget =     ['Point:', 
         Percentage(), 
         ' ',
         Bar(marker = RotatingMarker(),
                 left='[(',
                 right=')]'),
         ' ', 
+        ET(),
+        ' ',
         ETA(), 
         ' '
 ]
 
+def updatePointBar(bar, numPoints):
+    bar.widgets[0] = "Points %i:" % numPoints
+    bar.update(numPoints)
 
-def stratified(minPoints, maxPoints, incPoints, repeat = 1):
+
+distanceWidget =     ['Distance:', 
+        Percentage(), 
+        ' ',
+        Bar(marker = RotatingMarker(),
+                left='[(',
+                right=')]'),
+        ' ', 
+        ET(),
+        ' ',
+        ETA(), 
+        ' '
+]
+
+def updateDistanceBar(bar, distance):
+    bar.widgets[0] = "Distance %i:" % distance
+    bar.update(distance)
+
+
+def double_stratified(
+        (minPoints, maxPoints, incPoints),
+        (minDistance, maxDistance, incDistance)):
+    """
+    We then step through through a range of points, and then for these points,
+    step through a range of distances, and count the number of connected
+    components
+    """
+    eqn = False
+    testName = "plane"
+    csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
+
+
+    pointBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
+    pointBar.start()
+
+
+    for numPoints in range(minPoints, maxPoints, incPoints):
+
+        down() # To prepare for subBar
+        distanceBar = ProgressBar(widgets = distanceWidget, maxval = maxDistance)
+        distanceBar.start()
+
+        distance = minDistance
+        while(distance < maxDistance):
+            if DEBUG: print "running test", distance
+
+            try:
+                points_epsilon_tests(numPoints, distance, csv, eqn)
+                
+            except StandardError as inst:
+                pass
+
+            updateDistanceBar(distanceBar, distance)
+            distance += incDistance
+
+
+        distanceBar.finish()
+        up() # to cancel the '\n' of subBar
+        up() # to be at position of pBar
+        updatePointBar(pointBar, numPoints)
+
+    pointBar.finish()
+    down()
+
+    print "all tests have run"
+
+def stratified((minPoints, maxPoints, incPoints),
+        repeat = 1):
     """
     We let distance be a function of the number of points. We then step
     through a range of points count the number of connected
     components
     """
     eqn = False
-    testName = "plane"
+    testName = "plane":w
+
     csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
 
     iteration = 0
@@ -149,6 +222,7 @@ def monte_carlo(testName, eqn = False):
 
     minDistance = 0.01
     maxDistance = 1
+
     minPoints = 1
     maxPoints = 1500
 
@@ -218,10 +292,19 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
     csv.writerow(row)
     return cp
 
+def repeat():
+    """
+    repeats the test
+    """
+    prompt = input("How many times to run the test?")
+    for _ in range(prompt):
+        double_stratified(
+                (10, 1500, 10), 
+                (0.01, .3, 0.01))
 
 def main():
+    repeat()
 
-    stratified(10, 1500, 10, 20)
 
 if __name__ == "__main__": main()
     
