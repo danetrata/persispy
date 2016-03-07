@@ -1,3 +1,4 @@
+DEBUG = False
 
 # import sys
 # sys.setrecursionlimit(1000)
@@ -13,13 +14,10 @@ pDict = {
 }
 
 
-from sympy import symbols
-from sympy.parsing.sympy_parser import parse_expr
-from numpy.random import uniform
+from random import choice
 import os
 from datetime import datetime
-from numpy.random import random_integers
-from random import choice
+from csv import writer
 
 def make_csv(testName, columnNames):
     today = datetime.today()
@@ -30,109 +28,169 @@ def make_csv(testName, columnNames):
     while True:
         filepath = dirpath+testName+"-"+str(today.month)+"-"+str(today.day)+'-'+str(i)+'.csv'
         if not os.path.isfile(filepath): # if the file doesn't exist
-            csv = open(filepath, 'w')
-            csv.write(columnNames+"\n")
+            fileObject = open(filepath, 'w')
+            csv = writer(fileObject)
+            csv.writerow(columnNames)
             return csv
         else:
             i += 1
 
+import sys, time
+
+
+def up():
+    # My terminal breaks if we don't flush after the escape-code
+    sys.stdout.write('\x1b[1A')
+    sys.stdout.flush()
+
+def down():
+    # I could use '\x1b[1B' here, but newline is faster and easier
+    sys.stdout.write('\n')
+    sys.stdout.flush()
+
+
 def radius(num_points):
-    return (np.log(np.log(num_points))/num_points)**(1/2)
+    return (np.log(np.log(num_points))/num_points)**(1.0/2.0)
 
-def points_setup(testName, eqn = False):
+from sympy import symbols
+from sympy.parsing.sympy_parser import parse_expr
+from numpy.random import uniform, random_integers
+from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker, ET
 
-    import sys, time
+defaultWidget = ['Iter:0',
+        ' ',
+        'Skip:0', 
+        ' ',
+        Percentage(), 
+        ' ',
+        Bar(marker= RotatingMarker(),
+                left='[',
+                right=']'),
+        ' ',
+        ET(),
+        ' ',
+        ETA(), 
+        ' '
+]
 
-    def up():
-        # My terminal breaks if we don't flush after the escape-code
-        sys.stdout.write('\x1b[1A')
-        sys.stdout.flush()
-
-    def down():
-        # I could use '\x1b[1B' here, but newline is faster and easier
-        sys.stdout.write('\n')
-        sys.stdout.flush()
-
-    try: # runs if shapely if installed
-        import shapely
-        from persispy.tests.area import shapely_area
-        csv = make_csv("Number of points, Distance, Connected components, Area")
-    except:
-        csv = make_csv(testName, "Number of points, Distance, Connected components")
-
-    from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker, ET
-
-    widgetsOverall = ['Iter:0',
-            ' ',
-            'Skip:0', 
-            ' ',
-            Percentage(), 
-            ' ',
-            Bar(marker= RotatingMarker(),
-                    left='[',
-                    right=']'),
-            ' ',
-            ET(),
-            ' ',
-            ETA(), 
-            ' '
-    ]
+subWidget =     ['Point:', 
+        Percentage(), 
+        ' ',
+        Bar(marker = RotatingMarker(),
+                left='[(',
+                right=')]'),
+        ' ', 
+        ETA(), 
+        ' '
+]
 
 
-    import numpy.random as npr
-    distance = 0.001
-    minDistance = 0.05
-    maxDistance = .2
-    incDistance = 0.05 # increment
+def stratified(minPoints, maxPoints, incPoints, repeat = 1):
+    """
+    We let distance be a function of the number of points. We then step
+    through a range of points count the number of connected
+    components
+    """
+    eqn = False
+    testName = "plane"
+    csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
+
+    iteration = 0
+    iterations = repeat
+
+    pBar = ProgressBar(widgets = defaultWidget, maxval = iterations)
+    pBar.start()
+
+    skip = 0
+    while(iteration < iterations):
+        down() # To prepare for subBar
+        subBar = ProgressBar(widgets = subWidget, maxval = maxPoints)
+        subBar.start()
+        for numPoints in range(minPoints, maxPoints, incPoints):
+
+
+            distance = radius(numPoints)
+            if DEBUG: print "running test", distance
+
+            try:
+                points_epsilon_tests(numPoints, distance, csv, eqn)
+                
+            except StandardError as inst:
+                skip += 1
+                defaultWidget[2] = "Skip:"+str(skip)
+                if DEBUG: print inst
+                if DEBUG: print "skip"
+                pass
+            subBar.widgets[0] = "Points %i:" % numPoints
+            subBar.update(numPoints)
+
+        subBar.finish()
+        up() # to cancel the '\n' of subBar
+        up() # to be at position of pBar
+        defaultWidget[0] = "Iter:"+str(iteration)
+        pBar.update(iteration)
+        if DEBUG: print iteration
+        iteration += 1
+
+    pBar.finish()
+    down()
+
+    print "all tests have run"
+
+import numpy.random as npr
+
+def monte_carlo(testName, eqn = False):
+    """
+    We run a Monte Carlo test, choosing number of points and a distance at 
+    random uniformly and count the number of connected components.
+    """
+
+    csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
+
+    minDistance = 0.01
+    maxDistance = 1
     minPoints = 1
-    maxPoints = 1000
-    incPoints = 25
+    maxPoints = 1500
 
     iteration = 0
     iterations = 10000
-    pbar = ProgressBar(widgets = widgetsOverall, maxval = iterations)
-    pbar.start()
+    pBar = ProgressBar(widgets = defaultWidget, maxval = iterations)
+    pBar.start()
 
 
     skip = 0
     while(iteration < iterations):
 
-#         distance = npr.uniform(minDistance, maxDistance)
+        distance = npr.uniform(minDistance, maxDistance)
 
         if DEBUG: print "running test", distance
 
-        for num_points in range(10, 500, 10):
-            distance = radius(num_points)
+        try:
+            num_points = npr.random_integers(minPoints, maxPoints)
+            points_epsilon_tests(num_points, distance, csv, eqn)
+            widgetsOverall[0] = "Iter:"+str(iteration)
+        except StandardError as inst:
+            skip += 1
+            widgetsOverall[2] = "Skip:"+str(skip)
+            if DEBUG: print inst
+            if DEBUG: print "skip"
+            pass
 
-
-            try:
-#             num_points = npr.random_integers(minPoints, maxPoints)
-                
-                points_epsilon_tests(num_points, distance, csv, eqn)
-                widgetsOverall[0] = "Iter:"+str(iteration)
-            except StandardError as inst:
-                skip += 1
-                widgetsOverall[2] = "Skip:"+str(skip)
-                if DEBUG: print inst
-                if DEBUG: print "skip"
-                pass
-
-        pbar.update(iteration)
+        pBar.update(iteration)
         if DEBUG: print iteration
         iteration += 1
 
-    pbar.finish()
+    pBar.finish()
     down()
 
     print "all tests have run"
     csv.close()
 
-
 import numpy as np
 from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
-from persispy.samples.points import plane
+from persispy.points import plane
 
 def points_epsilon_tests(num_points, distance, csv, eqn = False):
 
@@ -143,15 +201,9 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         if eqn:
             pc = phc(eqn, num_points = num_points, return_complex = True)
         else:
-            pc = points.plane(num_points)
+            pc = plane(num_points)
         row.append(str(num_points))
         row.append(str(distance))
-    except StandardError as inst:
-        if DEBUG: print inst
-        failures.append(inst.args[0])
-        return failures
-
-    try:
         ng = pc.neighborhood_graph(distance, method = "subdivision")
         cp = len(ng.connected_components())
         if DEBUG: print "connected components", cp
@@ -161,24 +213,15 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         failures.append(inst.args[0])
         return failures
     
-    try: # runs if shapely is installed
-        diskArea = shapely_area(pc, distance)
-        if DEBUG: print "area:", diskArea
-        row.append(str(diskArea))
-    except:
-        pass
 
     if DEBUG: print ','.join(row)
-    row[-1] = row[-1]+"\n"
-    csv.write(','.join(row))
+    csv.writerow(row)
     return cp
 
 
-DEBUG = False
 def main():
 
-#     points_setup("sphere", "x^2 + y^2 + z^2 - 1")
-    points_setup("plane")
+    stratified(10, 1500, 10, 20)
 
 if __name__ == "__main__": main()
     
