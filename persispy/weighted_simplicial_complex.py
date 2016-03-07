@@ -33,6 +33,7 @@ class wSimplex:
             return True
         else:
             return False
+
     def __cmp__(self,other):
         if self._weight!=other._weight:
             return self._weight - other._weight
@@ -68,7 +69,7 @@ class wGraph:
         self.epsilon = epsilon
 
 # place holder for more efficient recursive coding
-# .connnected_components() has issues without
+# .connnected_components() has issues without the following line
         if len(adjacencies) > 1000:
             sys.setrecursionlimit(len(adjacencies))
 
@@ -94,13 +95,14 @@ class wGraph:
     """
     start magic methods
     """
+
     def __repr__(self):
         return 'Weighted graph with '+repr(self.num_points())+' points and '+repr(self.num_edges())+' edges'
 
     def __len__(self):
         """
-        also see order
-        returns the number of edges
+        We return the number of edges.
+        also see .order() and .num_edges()
         """
         return self.num_edges()
 
@@ -108,7 +110,23 @@ class wGraph:
     """
     end magic methods
     """
-    def degree(self,p):
+
+    def num_points(self):
+        return len(self._adj.keys())
+
+    def order(self):
+        return self.num_edges()
+
+    def num_edges(self):
+        count=0
+        for v in self._adj.keys():
+            count=count+len(self._adj[v])
+        return count/2
+
+    def degree(self, p):
+        """
+        returns the degree of the point
+        """
         return len(self._adj[p])
 
     def metric(self,p,q):
@@ -123,7 +141,9 @@ class wGraph:
     def connected_component(self, point, visited, time, DEBUG = False):
         """
         RECURSIVE
-        notes the time in which a node was visited on the visited dict
+        We note the time passed by the input when a node was visited in the 
+        'visited' dict. We then call itself on any adjacent nodes that have
+        not been visted.
         """
         if DEBUG: print time
         visited[point]=time
@@ -133,8 +153,9 @@ class wGraph:
 
     def connected_components(self):
         '''
-        Returns a list wGraphs giving the connected components of the wGraph.
-        NOTICE: Gives only a depth first search tree.
+        We returns a list giving the connected components of the wGraph.
+        NOTICE: Gives only a depth first search tree. This is to save operations
+        if our only goal is to count the number of connected components.
         Call .connected_edges() for the connected component with edges.
         '''
         visited = {d:0 for d in self._adj}
@@ -162,7 +183,8 @@ class wGraph:
 
     def connected_edges(self, size = False, DEBUG = False):
         """
-        Returns a list of edges that make up a connected component
+        Returns a list of edges that make up a connected component. We assume
+        no multiple edges.
         """
         import hash_edge
         from numpy import array
@@ -199,7 +221,8 @@ class wGraph:
 
     def cloud_dist(self,pointlist):
         '''
-        Returns the maximum of the distances of all pairs of points in pointlist.
+        Returns the maximum of the distances of all pairs of points in 
+        pointlist.
         '''
         dist=0
         if len(pointlist)==1:
@@ -212,17 +235,6 @@ class wGraph:
                 return -1
         return dist
 
-    def num_points(self):
-        return len(self._adj.keys())
-
-    def order(self):
-        return self.num_edges()
-
-    def num_edges(self):
-        count=0
-        for v in self._adj.keys():
-            count=count+len(self._adj[v])
-        return count/2
 
     def neighborhood_graph(self, epsilon):
         '''
