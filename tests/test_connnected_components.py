@@ -105,7 +105,7 @@ distanceWidget =     ['Distance:',
 ]
 
 def updateDistanceBar(bar, distance):
-    bar.widgets[0] = "Distance %i:" % distance
+    bar.widgets[0] = "Distance %.2f:" % distance
     bar.update(distance)
 
 
@@ -119,7 +119,7 @@ def double_stratified(
     """
     eqn = False
     testName = "plane"
-    csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
+    csv = make_csv(testName+"_double_stratified", ["Number of points", "Distance", "Connected components"])
 
 
     pointBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
