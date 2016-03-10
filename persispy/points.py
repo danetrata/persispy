@@ -79,6 +79,40 @@ def flat_torus(num_points):
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
     return PointCloud([HashPoint(np.array([np.cos(angles[n][0]),np.sin(angles[n][0]),np.cos(angles[n][1]),np.sin(angles[n][1])]),index=n) for n in range(num_points)],space='affine')
 
+def box(
+        number_of_points, 
+        dimension = 2, 
+        side_length = 1, 
+        seed = False, 
+        return_seed = False):
+    """
+    We return a set of points in a dimensional box. On default, returns a unit
+    plane. We can specify a str or int seed. We can also ask to return the seed
+    used to generate a run. Note, the returned seed is a ndarray of 624 uints.
+    """
+
+    if seed:
+        npr.seed(seed)
+
+    result = PointCloud(
+                [HashPoint(
+                    npr.uniform(-side_length/2, 
+                        side_length/2, 
+                        size = dimension), 
+                    index=n) 
+                    for n in range(number_of_points)], 
+                space='affine')
+
+    if return_seed:
+        return_seed = npr.get_state()
+        result = (result, return_seed)
+
+
+    return result
+
+
+
+
 def cube(dim,num_points):
     '''
     EXAMPLES:
@@ -99,47 +133,18 @@ def plane(num_points, side_length = 1, seed = False, return_seed = False):
     if seed:
         npr.seed(seed)
 
-    if return_seed:
-        return_seed = npr.get_state()
-        return (PointCloud(
-                [HashPoint(
-                    npr.uniform(-side_length, side_length, size=2), 
-                    index=n) 
-                    for n in range(num_points)], 
-                space='affine'),
-                return_seed
-                )
-
-    else:
-        return PointCloud(
+    result = PointCloud(
                 [HashPoint(
                     npr.uniform(-side_length, side_length, size=2), 
                     index=n) 
                     for n in range(num_points)], 
                 space='affine')
 
+    if return_seed:
+        return_seed = npr.get_state()
+        result = (result, return_seed)
 
-def wrapper():
-    npr.seed(1991)
-    pc = plane(1500, 3)
-    ng = pc.neighborhood_graph(0.2)
-    return ng.connected_components()
-
-def wrapper1():
-    npr.seed(1991)
-    pc = plane(1500, 3)
-    ng = pc.neighborhood_graph(0.2)
-    return ng.connected_components_1()
-
-def time_cp():
-    import timeit as t
-    print ".connected_components(): %f" % t.timeit(wrapper, number = 10)
-    print ".connected_components_1(): %f" % t.timeit(wrapper1, number = 10)
-
-
-def main():
-    
-    pass
+    return result
 
 
 
@@ -152,6 +157,13 @@ def save_to_file(data):
     datafile = open(name, 'w')
     datafile.write(str(data))
     datafile.close()
+
+def main():
+    
+    pass
+
+
+
 
 
 if __name__ == "__main__": main()

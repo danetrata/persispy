@@ -57,16 +57,18 @@ class wGraph:
 
         Variables:
             ._adj: the adjacency dictionary.
-            .epsilon: the distance between points
-            .connected_components - Depth first search tree of components
+            ._epsilon: the distance between points
+            ._connected_components - Depth first search tree of components
                 created after .connected_components()
-            .edges: List of a edges of type set(vertex, endPoint),
+            ._edges: List of a edges of type set(vertex, endPoint),
                 created after .connected_edges() . Because we assume an 
                 unordered graph, the edges are unordered through the use
                 of hash_edge.HashEdge() .
         '''
         self._adj = adjacencies
-        self.epsilon = epsilon
+        self._epsilon = epsilon
+        self._connected_components = None
+        self._edges = None
 
 # place holder for more efficient recursive coding
 # .connnected_components() has issues without the following line
@@ -176,7 +178,7 @@ class wGraph:
                 components.append(component)
 
 
-        self.connected_components = components
+        self._connected_components = components
 
         return components
 
@@ -189,7 +191,7 @@ class wGraph:
         import hash_edge
         from numpy import array
 
-        cp = self.connected_components
+        cp = self._connected_components
 
         componentIndex = 0
         components = []
@@ -216,7 +218,7 @@ class wGraph:
                 edges = set(edges)
                 components.append(edges)
 
-        self.edges = components
+        self._edges = components
         return components
 
     def cloud_dist(self,pointlist):
@@ -249,7 +251,7 @@ class wGraph:
                     adj[k].append(v)
         return wGraph(adj)
 
-    def VRComplex(self,epsilon,dimension,method='incremental'):
+    def VRComplex(self, epsilon, dimension, method='incremental'):
         def lowerNBRS(vtx):
             vtxs = []
             for i in range(vtx + 1, len(self._adj.keys())):
@@ -396,7 +398,7 @@ class wSimplicialComplex:
             self._simplices[d].sort(simplex_cmp_lex)
         return None
 
-    def VRComplex(self,epsilon):
+    def VRComplex(self, epsilon):
         vertices=self._wgraph._adj.keys()
         edges=dict()
         for v in vertices:
