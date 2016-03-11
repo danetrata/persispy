@@ -33,6 +33,7 @@ class wSimplex:
             return True
         else:
             return False
+
     def __cmp__(self,other):
         if self._weight!=other._weight:
             return self._weight - other._weight
@@ -56,19 +57,21 @@ class wGraph:
 
         Variables:
             ._adj: the adjacency dictionary.
-            .epsilon: the distance between points
-            .connected_components - Depth first search tree of components
+            ._epsilon: the distance between points
+            ._connected_components - Depth first search tree of components
                 created after .connected_components()
-            .edges: List of a edges of type set(vertex, endPoint),
+            ._edges: List of a edges of type set(vertex, endPoint),
                 created after .connected_edges() . Because we assume an 
                 unordered graph, the edges are unordered through the use
                 of hash_edge.HashEdge() .
         '''
         self._adj = adjacencies
-        self.epsilon = epsilon
+        self._epsilon = epsilon
+        self._connected_components = None
+        self._edges = None
 
 # place holder for more efficient recursive coding
-# .connnected_components() has issues without
+# .connnected_components() has issues without the following line
         if len(adjacencies) > 1000:
             sys.setrecursionlimit(len(adjacencies))
 
@@ -94,13 +97,14 @@ class wGraph:
     """
     start magic methods
     """
+
     def __repr__(self):
         return 'Weighted graph with '+repr(self.num_points())+' points and '+repr(self.num_edges())+' edges'
 
     def __len__(self):
         """
-        also see order
-        returns the number of edges
+        We return the number of edges.
+        also see .order() and .num_edges()
         """
         return self.num_edges()
 
@@ -108,7 +112,23 @@ class wGraph:
     """
     end magic methods
     """
-    def degree(self,p):
+
+    def num_points(self):
+        return len(self._adj.keys())
+
+    def order(self):
+        return self.num_edges()
+
+    def num_edges(self):
+        count=0
+        for v in self._adj.keys():
+            count=count+len(self._adj[v])
+        return count/2
+
+    def degree(self, p):
+        """
+        returns the degree of the point
+        """
         return len(self._adj[p])
 
     def metric(self,p,q):
@@ -123,7 +143,9 @@ class wGraph:
     def connected_component(self, point, visited, time, DEBUG = False):
         """
         RECURSIVE
-        notes the time in which a node was visited on the visited dict
+        We note the time passed by the input when a node was visited in the 
+        'visited' dict. We then call itself on any adjacent nodes that have
+        not been visted.
         """
         if DEBUG: print time
         visited[point]=time
@@ -133,8 +155,9 @@ class wGraph:
 
     def connected_components(self):
         '''
-        Returns a list wGraphs giving the connected components of the wGraph.
-        NOTICE: Gives only a depth first search tree.
+        We returns a list giving the connected components of the wGraph.
+        NOTICE: Gives only a depth first search tree. This is to save operations
+        if our only goal is to count the number of connected components.
         Call .connected_edges() for the connected component with edges.
         '''
         visited = {d:0 for d in self._adj}
@@ -155,19 +178,20 @@ class wGraph:
                 components.append(component)
 
 
-        self.connected_components = components
+        self._connected_components = components
 
         return components
 
 
     def connected_edges(self, size = False, DEBUG = False):
         """
-        Returns a list of edges that make up a connected component
+        Returns a list of edges that make up a connected component. We assume
+        no multiple edges.
         """
         import hash_edge
         from numpy import array
 
-        cp = self.connected_components
+        cp = self._connected_components
 
         componentIndex = 0
         components = []
@@ -194,12 +218,13 @@ class wGraph:
                 edges = set(edges)
                 components.append(edges)
 
-        self.edges = components
+        self._edges = components
         return components
 
     def cloud_dist(self,pointlist):
         '''
-        Returns the maximum of the distances of all pairs of points in pointlist.
+        Returns the maximum of the distances of all pairs of points in 
+        pointlist.
         '''
         dist=0
         if len(pointlist)==1:
@@ -212,17 +237,6 @@ class wGraph:
                 return -1
         return dist
 
-    def num_points(self):
-        return len(self._adj.keys())
-
-    def order(self):
-        return self.num_edges()
-
-    def num_edges(self):
-        count=0
-        for v in self._adj.keys():
-            count=count+len(self._adj[v])
-        return count/2
 
     def neighborhood_graph(self, epsilon):
         '''
@@ -237,7 +251,7 @@ class wGraph:
                     adj[k].append(v)
         return wGraph(adj)
 
-    def VRComplex(self,epsilon,dimension,method='incremental'):
+    def VRComplex(self, epsilon, dimension, method='incremental'):
         def lowerNBRS(vtx):
             vtxs = []
             for i in range(vtx + 1, len(self._adj.keys())):
@@ -384,7 +398,7 @@ class wSimplicialComplex:
             self._simplices[d].sort(simplex_cmp_lex)
         return None
 
-    def VRComplex(self,epsilon):
+    def VRComplex(self, epsilon):
         vertices=self._wgraph._adj.keys()
         edges=dict()
         for v in vertices:
