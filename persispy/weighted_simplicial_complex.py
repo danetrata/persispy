@@ -18,7 +18,7 @@ class wSimplex:
             _vertices: a list of points.
             _weight: the weight.
         '''
-        self._vertices=list(vertices)
+        self._vertices=sorted(list(vertices), key=lambda v:v._index)
         self._weight=weight
         self._index=-1 #the index of this simplex in the compatible total ordering
 
@@ -39,7 +39,7 @@ class wSimplex:
         if len(self._vertices)!=len(other._vertices):
             return len(self._vertices)-len(other._vertices)
         if self._vertices!=other._vertices:
-            for i in range(len(_vertices)):
+            for i in range(len(self._vertices)):
                 if self._vertices[i]!=other._vertices[i]:
                     if self._vertices[i]<other._vertices[i]:
                         return -1
@@ -441,7 +441,7 @@ class sorted_clique_list:
     @staticmethod
     def _BronKerbosch(r,p,x,adj,c):
         if len(p)==0 and len(x)==0:
-            c.append(sorted(list(r)))
+            c.append(sorted(tuple(r)))
         else:
             for v in set(p):
                 nbh = {x[0] for x in adj[v]}
@@ -452,7 +452,7 @@ class sorted_clique_list:
     @staticmethod
     def _BronKerboschPivot(r,p,x,adj,c):
         if len(p)==0 and len(x)==0:
-            c.append(sorted(list(r)))
+            c.append(sorted(tuple(r)))
         else:
             u = iter(p | x).next()
             for v in p - adj[u]:
