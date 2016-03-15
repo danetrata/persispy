@@ -72,6 +72,9 @@ class PointCloud:
     def __len__(self):
         return len(self._points)
 
+    def size(self):
+        return len(self._points)
+
     def __getitem__(self, key):
         return tuple(self._points[key]._coords)
 

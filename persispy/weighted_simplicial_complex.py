@@ -60,7 +60,8 @@ class wGraph:
             ._epsilon: the distance between points
             ._connected_components - Depth first search tree of components
                 created after .connected_components()
-            ._edges: List of a edges of type set(vertex, endPoint),
+            ._edges: List of a edges of type HashEdge with the form 
+                set(vertex, endPoint),
                 created after .connected_edges() . Because we assume an 
                 unordered graph, the edges are unordered through the use
                 of hash_edge.HashEdge() .
@@ -74,6 +75,7 @@ class wGraph:
 # .connnected_components() has issues without the following line
         if len(adjacencies) > 1000:
             sys.setrecursionlimit(len(adjacencies))
+
 
 
     @classmethod
@@ -112,6 +114,9 @@ class wGraph:
     """
     end magic methods
     """
+
+    def vertices(self):
+        return self._adj.keys()
 
     def num_points(self):
         return len(self._adj.keys())
@@ -182,8 +187,25 @@ class wGraph:
 
         return components
 
+    def singletons(self, padding = False):
+        if not self._connected_components:
+            self.connected_components()
+        cp = self._connected_components
+        for item in cp:
+            print item
 
-    def connected_edges(self, size = False, DEBUG = False):
+        singles = []
+        for component in cp:
+            if len(component) == 1: # if the component is a point
+                component = list(component[0])
+                print component
+                while len(component) < padding:
+                    component.append(0)
+                print component
+                singles.append(component)
+        return singles
+
+    def connected_edges(self, padding = False, DEBUG = False):
         """
         Returns a list of edges that make up a connected component. We assume
         no multiple edges.
@@ -191,6 +213,8 @@ class wGraph:
         import hash_edge
         from numpy import array
 
+        if not self._connected_components:
+            self.connected_components()
         cp = self._connected_components
 
         componentIndex = 0
@@ -201,11 +225,11 @@ class wGraph:
                 edgeIndex = 0
                 for vertex in component:
                     vertexList = list(vertex)
-                    while len(vertexList) < size:
+                    while len(vertexList) < padding:
                         vertexList.append(0)
                     for endPoint in self._adj[vertex]:
                         endPointList = list(list(endPoint)[0])
-                        while len(endPointList) < size:
+                        while len(endPointList) < padding:
                             endPointList.append(0)
                         edges[edgeIndex] = hash_edge.HashEdge(
                                 array([ vertexList, endPointList]),
