@@ -37,7 +37,6 @@ class phc(object):
         self.total_coeff = sum(self.coeffList)
 #         self._bounds = self.total_coeff
 
-        self.degree = self._degree()
         self.points = []
 
 
@@ -105,13 +104,15 @@ class phc(object):
 
         return varList, coeffList
 
-    def _degree(self):
+    def degree(self):
         return total_degree(self._system())
 
-    #  The for loop ensures the system is "square", where number of
-    #  variables = number of equations. The resulting points are regular,
-    #  bounded by the variety.
     def _system(self):
+        """
+        We construct a square system, where the number of variables is equal 
+        to the number of eqations. The resulting points are regular and bounded
+        by the variety.
+        """
         phcEqn = self.eqn+";"
         p = [phcEqn]
         for x in range(len(self.varList)-1): p.append(self._intersect())
@@ -196,8 +197,8 @@ class phc(object):
     # underdetermined systems.
     def _intersect(self):
         bounds = self._bounds
-        rand_list = np.random.uniform(-bounds, bounds, size=len(self.varList))
-#         rand_list = np.random.normal(0, bounds, size=len(self.varList))
+#         location = np.random.uniform(-bounds, bounds)
+        rand_list = np.random.normal(scale = bounds, size=len(self.varList))
         i = 0
         intersect = [] 
         for x in rand_list:
@@ -286,27 +287,31 @@ def main():
         print "invalid input"
         return
 
-    pc = phc(eqn = selection, num_points = 5000, bounds = 30)
-
-    global ng
-#     ng = pc.neighborhood_graph(0.2)
+    pc = phc(eqn = selection, num_points = 750, bounds = 3)
+    
     print pc
-    pc.find_more_points(10)
+#     pc.find_more_points(10)
     print pc
     print pc[0]
     print pc.points[0]
-    print pc.degree
+    print pc.degree()
     print pc.total_coeff
-    print pc.plot3d()
+    pc.plot3d()
+    ng = pc.neighborhood_graph(0.15)
+    from persispy.plot import plot3d, plot2d
+    plot2d(ng)
+    for color in range(5):
+        plot3d(ng, cmap = color)
 
-    saveUser = raw_input("save file? ")
-    if saveUser == "yes":
-        fileUser = raw_input("file name? ")
-        f = open(fileUser, "wa")
-        f.write(str(pc.points))
-        f.close()
-    else:
-        print "exiting"
+    
+#     saveUser = raw_input("save file? ")
+#     if saveUser == "yes":
+#         fileUser = raw_input("file name? ")
+#         f = open(fileUser, "wa")
+#         f.write(str(pc.points))
+#         f.close()
+#     else:
+#         print "exiting"
 
 
 

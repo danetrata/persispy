@@ -40,6 +40,11 @@ def average_trials(dataSet):
         
         npd[point].connected.append(trial)
 
+    for key, value in npd.iteritems():
+        print key
+        print value.connected
+        print value.standard_deviation()
+
     sheet = []
     for key, value in npd.iteritems():
         sheet.append([key[0], key[1], value.mean()])
@@ -256,6 +261,7 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
     fig = plt.figure()
     ax = Axes3D(fig)
 
+    surf = ax.plot_trisurf(x, y, z, cmap=plt.cm.Dark2, linewidth = 0)
 #     image = np.array(zip(x, y, z))
 #     hull = scipy.spatial.ConvexHull(image)
 #     for simplex in hull.simplices:
@@ -266,7 +272,7 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
     ax.scatter(connected[0], 
             connected[1], 
             connected[2], 
-            marker = '.', 
+            marker = 'o', 
             color = '#3399ff',
             label = textstr)
 
@@ -275,7 +281,7 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
     ax.scatter(totallyConnected[0], 
             totallyConnected[1], 
             totallyConnected[2],
-            marker = '.', 
+            marker = 'o', 
             color = '#ff33ff',
             label = textstr)
 
