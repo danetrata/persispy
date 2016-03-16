@@ -52,12 +52,6 @@ def plot2d(*args, **kwargs):
         if isinstance(object, wGraph):
             return plot2d_ng(*args, **kwargs)
 
-# def plot3d(graph, gui = False):
-#     if isinstance(graph, PointCloud):
-#         return plot3d_pc(graph, gui)
-#     if isinstance(graph, wGraph):
-#         return plot3d_ng(graph, gui, kwargs)
-
 
 def plot3d(*args, **kwargs):
     for object in args:
@@ -85,6 +79,7 @@ def plot2d_pc(pointCloud, gui = False):
     ax.set_aspect('equal')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
+
 #     ax.set_xlim(-3,3)
 #     ax.set_ylim(-3,3)
 # what do?
@@ -224,6 +219,7 @@ def plot3d_pc(self, axes=(0,1,2), save = False, title = False):
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d as a3
 from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.patches as mpatches
 
 def plot3d_ng(wGraph, 
         cmap = 0,
@@ -298,17 +294,23 @@ def plot3d_ng(wGraph,
     
     if wGraph.singletons():
         x, y, z = zip(*wGraph.singletons(padding = 3))
-        ax.scatter(x, y, z, marker = '.', s = 15, color = '#ff6666')
+        ax.scatter(x, y, z, 
+                marker = '.', 
+                s = 15, 
+                color = '#ff6666', 
+                label = "Singletons")
 
 
-    textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
-    
+    textstr = '\\makebox[25]{%d\\hfill}number of points $=$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
+
     
     # place a text box in upper left in axes coords
     props = dict(boxstyle='round', facecolor='white', alpha=0.5)
     ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
             verticalalignment='top', bbox = props)
 
+    properties = mpatches.Patch(color = 'white', label = 'Number of vertices')
+    ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
 
 
     ax.set_xlabel('x')

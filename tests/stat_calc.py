@@ -253,68 +253,37 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
             totallyConnected.append((x[i], y[i], z[i]))
         else:
             connected.append((x[i], y[i], z[i]))
-    connected = zip(*connected)
-    totallyConnected = zip(*totallyConnected)
-
-
 
     fig = plt.figure()
     ax = Axes3D(fig)
 
+    if connected:
+        connected = zip(*connected)
+        textstr = "not a completely connected graph: %d"\
+                % (len(z) - len(totallyConnected))
+        ax.scatter(connected[0], 
+                connected[1], 
+                connected[2], 
+                marker = 'o', 
+                color = '#3399ff',
+                label = textstr)
+
+    if totallyConnected:
+        totallyConnected = zip(*totallyConnected)
+        textstr = "a completely connected graph: %d"\
+                % len(totallyConnected[0])
+        ax.scatter(totallyConnected[0], 
+                totallyConnected[1], 
+                totallyConnected[2],
+                marker = 'o', 
+                color = '#ff33ff',
+                label = textstr)
+
     surf = ax.plot_trisurf(x, y, z, cmap=plt.cm.Dark2, linewidth = 0)
-#     image = np.array(zip(x, y, z))
-#     hull = scipy.spatial.ConvexHull(image)
-#     for simplex in hull.simplices:
-#         ax.plot(image[simplex, 0], image[simplex, 1], image[simplex, 2], 'k-')
 
-    textstr = "not a completely connected graph: %d"\
-            % (len(z) - len(totallyConnected[0]))
-    ax.scatter(connected[0], 
-            connected[1], 
-            connected[2], 
-            marker = 'o', 
-            color = '#3399ff',
-            label = textstr)
 
-    textstr = "a completely connected graph: %d"\
-            % len(totallyConnected[0])
-    ax.scatter(totallyConnected[0], 
-            totallyConnected[1], 
-            totallyConnected[2],
-            marker = 'o', 
-            color = '#ff33ff',
-            label = textstr)
 
     ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
-
-#     padding = len(str(len(x)))
-#     leftText = \
-#             ""\
-#             "completely connected graph"
-#     rightText = \
-#             "$%d$\n"\
-#             "$%d$"
-#     rightText = rightText % (len(x), len(totallyConnected[0]))
-#     # place a text box in upper left in axes coords
-#     props = dict(boxstyle='square, pad=0.5', 
-#             facecolor='white',
-#             alpha=0.5)
-#     ax.text2D(0.20, 0.85, 
-#             leftText, 
-#             transform=ax.transAxes, 
-#             fontsize=14,
-#             verticalalignment='top', 
-#             horizontalalignment = 'right', 
-#             multialignment = 'left',
-#             bbox = props)
-#     ax.text2D(0.22, 0.85, 
-#             rightText, 
-#             transform=ax.transAxes, 
-#             fontsize=14,
-#             verticalalignment='top', 
-#             horizontalalignment = 'left', 
-#             multialignment = 'right',
-#             bbox = props)
 
     plt.title(title+'\n'+subtitle)
     ax.set_xlabel(xtitle)
