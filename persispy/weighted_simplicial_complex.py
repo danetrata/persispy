@@ -191,17 +191,13 @@ class wGraph:
         if not self._connected_components:
             self.connected_components()
         cp = self._connected_components
-        for item in cp:
-            print item
 
         singles = []
         for component in cp:
             if len(component) == 1: # if the component is a point
                 component = list(component[0])
-                print component
                 while len(component) < padding:
                     component.append(0)
-                print component
                 singles.append(component)
         return singles
 
