@@ -330,7 +330,7 @@ class PointCloud:
                     edgeIndex = 0
                     for vertex in component:
                         for endPoint in adj[vertex]:
-                            if len(self._points[0]) >= 3:
+                            if len(self._points[0]._coords) >= 3:
                                 edges[edgeIndex] = hash_edge.HashEdge(
                                         array([
                                             [vertex[axes[0]],
