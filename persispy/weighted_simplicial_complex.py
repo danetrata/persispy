@@ -18,7 +18,7 @@ class wSimplex:
             _vertices: a list of points.
             _weight: the weight.
         '''
-        self._vertices=sorted(list(vertices), key=lambda v:v._index)
+        self._vertices=tuple(sorted(list(vertices), key=lambda v:v._index))
         self._weight=weight
         self._index=-1 #the index of this simplex in the compatible total ordering
 
@@ -35,17 +35,26 @@ class wSimplex:
             return False
 
     def __cmp__(self,other):
-        if self._weight!=other._weight:
-            return self._weight - other._weight
-        if len(self._vertices)!=len(other._vertices):
-            return len(self._vertices)-len(other._vertices)
-        if self._vertices!=other._vertices:
-            for i in range(len(self._vertices)):
-                if self._vertices[i]!=other._vertices[i]:
-                    if self._vertices[i]<other._vertices[i]:
-                        return -1
-                    if self._vertices[i]>other._vertices[i]:
-                        return 1
+        value = 0.0;
+        set = False;
+        if (self._weight!=other._weight) and not set:
+            value = self._weight - other._weight
+            set = True
+        if (len(self._vertices)!=len(other._vertices)) and not set:
+            walue = len(self._vertices)-len(other._vertices)
+            set = True
+        if not set:
+            if self._vertices!=other._vertices:
+                for i in range(len(self._vertices)):
+                    if self._vertices[i]!=other._vertices[i]:
+                        if self._vertices[i]<other._vertices[i]:
+                            return -1
+                        if self._vertices[i]>other._vertices[i]:
+                            return 1
+        if value<0:
+            return -1
+        if value>0:
+            return 1
         return 0
 
 class wGraph:
