@@ -2,7 +2,7 @@ import numpy as np
 import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
-from utils import tuples
+from persispy.utils import tuples
 import itertools
 import sys
 
@@ -49,7 +49,7 @@ class wSimplex:
         return 0
 
 class wGraph:
-
+    # Why does this return a floating point number of edges?
     def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
@@ -71,12 +71,10 @@ class wGraph:
         self._connected_components = None
         self._edges = None
 
-# place holder for more efficient recursive coding
-# .connnected_components() has issues without the following line
+        # place holder for more efficient recursive coding
+        # .connnected_components() has issues without the following line
         if len(adjacencies) > 1000:
             sys.setrecursionlimit(len(adjacencies))
-
-
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
@@ -152,7 +150,7 @@ class wGraph:
         'visited' dict. We then call itself on any adjacent nodes that have
         not been visted.
         """
-        if DEBUG: print time
+        if DEBUG: print(time)
         visited[point]=time
         for neighbor in self._adj[point]:
             if not visited[neighbor[0]]: # uses the fact that 0 evals to False
@@ -192,16 +190,16 @@ class wGraph:
             self.connected_components()
         cp = self._connected_components
         for item in cp:
-            print item
+            print(item)
 
         singles = []
         for component in cp:
             if len(component) == 1: # if the component is a point
                 component = list(component[0])
-                print component
+                print(component)
                 while len(component) < padding:
                     component.append(0)
-                print component
+                print(component)
                 singles.append(component)
         return singles
 
@@ -276,6 +274,7 @@ class wGraph:
         return wGraph(adj)
 
     def VRComplex(self, epsilon, dimension, method='incremental'):
+        # Do we even need this any more?
         def lowerNBRS(vtx):
             vtxs = []
             for i in range(vtx + 1, len(self._adj.keys())):
@@ -474,8 +473,7 @@ class sorted_clique_list:
             if len(c)<n+1:
                 j.append(c)
         return _clique_iterator(itertools.chain(iter(j),i))
-        
-        
+
     @staticmethod
     def _BronKerbosch(r,p,x,adj,c):
         if len(p)==0 and len(x)==0:
@@ -489,11 +487,18 @@ class sorted_clique_list:
     
     @staticmethod
     def _BronKerboschPivot(r,p,x,adj,c):
+        # This completely fails in python3.
+        print(type(r))
+        print(type(x))
+        print(type(p))
         if len(p)==0 and len(x)==0:
             c.append(sorted(tuple(r)))
         else:
-            u = iter(p | x).next()
-            for v in p - adj[u]:
+            # The next line looks a little fishy.--Ben
+            for u in p|x:
+                break
+            # u = iter(p | x).next()
+            for v in iter(set(p) - adj[u]):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerboschPivot(r | {v}, p & nbh, x & nbh,adj,c)
                 p.remove(v)

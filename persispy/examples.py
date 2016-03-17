@@ -17,9 +17,9 @@ function.
 import numpy as np
 import numpy.random as npr
 import scipy.constants as scic
-import point_cloud as point_cloud
+import persispy.point_cloud as point_cloud
 import hashlib as hashlib
-import hash_point as hp
+import persispy.hash_point as hp
 
 def points_2sphere(num_points,radius=1,method='normalized'):
     '''
