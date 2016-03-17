@@ -12,9 +12,8 @@ class PersistentHomology:
         self.VertexDict = dict() #look up simplex container from tuple of vertices
         _wSimplices = [] 
         for dimension in simplicial_complex._simplices:
-            if dimension>n:
-                break
-            _wSimplices.extend(simplicial_complex._simplices[dimension])
+            if dimension<=n+1:
+                _wSimplices.extend(simplicial_complex._simplices[dimension])
         self.Simplices = sorted([SimplexContainer(s) for s in sorted(_wSimplices)])
         self.PersistencePairs = dict()
         for i,s in enumerate(self.Simplices):
@@ -25,19 +24,16 @@ class PersistentHomology:
             #print [v._index for v in s.simplex._vertices]
             if len(s.simplex._vertices)!=1:
                 rowiszero = False
-                x=len(s.entries)
-                while s.entries[-1] in self.PersistencePairs:
-                    assert len(s.entries)==len(self.PersistencePairs[s.entries[-1]].entries)
-                    s.entries = s.entries ^ (self.PersistencePairs[s.entries[-1]].entries)
-                    
+                while s.entries[0] in self.PersistencePairs:
+                    s.entries = s.entries ^ (self.PersistencePairs[s.entries[0]].entries)
+                    #print 'xor'
                     if len(s.entries)==0:
-                        print 'zero'
                         rowiszero=True
                         break
                     #print [x.index for x in s.entries]
                 if not rowiszero:
                     #print 'pair: '+ str(s.index)+' '+str(s.entries[-1].index)+' '+str(-s.entries[-1].simplex._weight+s.simplex._weight)
-                    self.PersistencePairs[s.entries[-1]]=s
+                    self.PersistencePairs[s.entries[0]]=s
             
     def plotBarCode(self):
         for s in self.Simplices:
