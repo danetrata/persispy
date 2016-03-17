@@ -2,7 +2,7 @@ import numpy as np
 import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
-from utils import tuples
+from persispy.utils import tuples
 import itertools
 import sys
 
@@ -18,7 +18,7 @@ class wSimplex:
             _vertices: a list of points.
             _weight: the weight.
         '''
-        self._vertices=list(vertices)
+        self._vertices=tuple(sorted(list(vertices), key=lambda v:v._index))
         self._weight=weight
         self._index=-1 #the index of this simplex in the compatible total ordering
 
@@ -35,21 +35,30 @@ class wSimplex:
             return False
 
     def __cmp__(self,other):
-        if self._weight!=other._weight:
-            return self._weight - other._weight
-        if len(self._vertices)!=len(other._vertices):
-            return len(self._vertices)-len(other._vertices)
-        if self._vertices!=other._vertices:
-            for i in range(len(_vertices)):
-                if self._vertices[i]!=other._vertices[i]:
-                    if self._vertices[i]<other._vertices[i]:
-                        return -1
-                    if self._vertices[i]>other._vertices[i]:
-                        return 1
+        value = 0.0;
+        set = False;
+        if (self._weight!=other._weight) and not set:
+            value = self._weight - other._weight
+            set = True
+        if (len(self._vertices)!=len(other._vertices)) and not set:
+            walue = len(self._vertices)-len(other._vertices)
+            set = True
+        if not set:
+            if self._vertices!=other._vertices:
+                for i in range(len(self._vertices)):
+                    if self._vertices[i]!=other._vertices[i]:
+                        if self._vertices[i]<other._vertices[i]:
+                            return -1
+                        if self._vertices[i]>other._vertices[i]:
+                            return 1
+        if value<0:
+            return -1
+        if value>0:
+            return 1
         return 0
 
 class wGraph:
-
+    # Why does this return a floating point number of edges?
     def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
@@ -60,7 +69,8 @@ class wGraph:
             ._epsilon: the distance between points
             ._connected_components - Depth first search tree of components
                 created after .connected_components()
-            ._edges: List of a edges of type set(vertex, endPoint),
+            ._edges: List of a edges of type HashEdge with the form 
+                set(vertex, endPoint),
                 created after .connected_edges() . Because we assume an 
                 unordered graph, the edges are unordered through the use
                 of hash_edge.HashEdge() .
@@ -70,11 +80,10 @@ class wGraph:
         self._connected_components = None
         self._edges = None
 
-# place holder for more efficient recursive coding
-# .connnected_components() has issues without the following line
+        # place holder for more efficient recursive coding
+        # .connnected_components() has issues without the following line
         if len(adjacencies) > 1000:
             sys.setrecursionlimit(len(adjacencies))
-
 
     @classmethod
     def from_edge_list(cls,vertices,edges,validate=False):
@@ -113,6 +122,9 @@ class wGraph:
     end magic methods
     """
 
+    def vertices(self):
+        return self._adj.keys()
+
     def num_points(self):
         return len(self._adj.keys())
 
@@ -147,7 +159,7 @@ class wGraph:
         'visited' dict. We then call itself on any adjacent nodes that have
         not been visted.
         """
-        if DEBUG: print time
+        if DEBUG: print(time)
         visited[point]=time
         for neighbor in self._adj[point]:
             if not visited[neighbor[0]]: # uses the fact that 0 evals to False
@@ -182,8 +194,25 @@ class wGraph:
 
         return components
 
+    def singletons(self, padding = False):
+        if not self._connected_components:
+            self.connected_components()
+        cp = self._connected_components
+        for item in cp:
+            print(item)
 
-    def connected_edges(self, size = False, DEBUG = False):
+        singles = []
+        for component in cp:
+            if len(component) == 1: # if the component is a point
+                component = list(component[0])
+                print(component)
+                while len(component) < padding:
+                    component.append(0)
+                print(component)
+                singles.append(component)
+        return singles
+
+    def connected_edges(self, padding = False, DEBUG = False):
         """
         Returns a list of edges that make up a connected component. We assume
         no multiple edges.
@@ -191,6 +220,8 @@ class wGraph:
         import hash_edge
         from numpy import array
 
+        if not self._connected_components:
+            self.connected_components()
         cp = self._connected_components
 
         componentIndex = 0
@@ -201,11 +232,11 @@ class wGraph:
                 edgeIndex = 0
                 for vertex in component:
                     vertexList = list(vertex)
-                    while len(vertexList) < size:
+                    while len(vertexList) < padding:
                         vertexList.append(0)
                     for endPoint in self._adj[vertex]:
                         endPointList = list(list(endPoint)[0])
-                        while len(endPointList) < size:
+                        while len(endPointList) < padding:
                             endPointList.append(0)
                         edges[edgeIndex] = hash_edge.HashEdge(
                                 array([ vertexList, endPointList]),
@@ -252,6 +283,7 @@ class wGraph:
         return wGraph(adj)
 
     def VRComplex(self, epsilon, dimension, method='incremental'):
+        # Do we even need this any more?
         def lowerNBRS(vtx):
             vtxs = []
             for i in range(vtx + 1, len(self._adj.keys())):
@@ -450,12 +482,11 @@ class sorted_clique_list:
             if len(c)<n+1:
                 j.append(c)
         return _clique_iterator(itertools.chain(iter(j),i))
-        
-        
+
     @staticmethod
     def _BronKerbosch(r,p,x,adj,c):
         if len(p)==0 and len(x)==0:
-            c.append(sorted(list(r)))
+            c.append(sorted(tuple(r)))
         else:
             for v in set(p):
                 nbh = {x[0] for x in adj[v]}
@@ -465,11 +496,18 @@ class sorted_clique_list:
     
     @staticmethod
     def _BronKerboschPivot(r,p,x,adj,c):
+        # This completely fails in python3.
+        print(type(r))
+        print(type(x))
+        print(type(p))
         if len(p)==0 and len(x)==0:
-            c.append(sorted(list(r)))
+            c.append(sorted(tuple(r)))
         else:
-            u = iter(p | x).next()
-            for v in p - adj[u]:
+            # The next line looks a little fishy.--Ben
+            for u in p|x:
+                break
+            # u = iter(p | x).next()
+            for v in iter(set(p) - adj[u]):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerboschPivot(r | {v}, p & nbh, x & nbh,adj,c)
                 p.remove(v)

@@ -20,14 +20,14 @@ class HashEdge:
 
         self.index = index
         if DEBUG:
-            print edge
+            print(edge)
 
 # assumes an undirected graph, where point and endPoints are unordered
 # allows cmp to compare the edge
 # "(0, 1)" assumes an a vertex and an endPoint
 
-        for axis in (0, 1):
-            edge = sorted( edge, key = lambda component: component[axis])
+        for point in (0, 1):
+            edge = sorted( edge, key = lambda component: component[point])
 
         if isinstance(edge, np.float64):
             self.edge = edge
@@ -66,10 +66,24 @@ class HashEdge:
         if self.edge.all() == other.edge.all():
             return 0
 
+    def __mul__(self, other):
+        if type(other) is not float \
+                and type(other) is not int:
+            raise NotImplementedError("Cannot multiply type %s" % type(other))
+        newedge = []
+        for point in self.edge:
+            newedge.append([component * other for component in point])
+
+        return HashEdge(np.array(newedge), self.index)
+
+
+            
+    
 
 def test():
-    print HashEdge(np.array(([0,0,0],[1,1,1])), index = 0)
-    print HashEdge(np.array(([0,0,0],[1,1,1])), index = 1)
-    print HashEdge([[0,0,0],[1,1,1]])
+    print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 0))
+    print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 1))
+    edge = HashEdge([[0,0,0],[1,1,1]])
+    print(edge*2)
 
 if __name__ == "__main__": test()
