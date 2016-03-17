@@ -16,7 +16,7 @@ class HashPoint:
         self._index=index
 	
     def __len__(self):
-	return len(self._coords)
+	    return len(self._coords)
 
 
     def __getitem__(self, key):
@@ -32,7 +32,6 @@ class HashPoint:
 
     def __repr__(self):
         return "point "+str(self._index)+": "+str(self._coords.__repr__())[6:-1]
-
 
     def keys(self):
         return self._index

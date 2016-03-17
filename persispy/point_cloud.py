@@ -7,8 +7,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
 import mpl_toolkits.mplot3d as a3
-import weighted_simplicial_complex as wsc
-from utils import tuples
+import persispy.weighted_simplicial_complex as wsc
+from persispy.utils import tuples
 from numpy import array
 import math
 import os as os
@@ -16,7 +16,7 @@ import os as os
 import sys
 
 
-import hash_edge, hash_point
+import persispy.hash_edge, persispy.hash_point
 
 
 
@@ -38,7 +38,7 @@ class PointCloud:
         try:
             hash(self._points[0])
         except TypeError:
-            print "Detected points are not HashPoint. Attempting to convert."
+            print("Detected points are not HashPoint. Attempting to convert.")
             points = [hash_point.HashPoint(
                     points[n], 
                     index=n) 
@@ -70,6 +70,9 @@ class PointCloud:
 
 
     def __len__(self):
+        return len(self._points)
+
+    def size(self):
         return len(self._points)
 
     def __getitem__(self, key):
@@ -219,7 +222,7 @@ class PointCloud:
             maxx=max(p._coords[axes[0]] for p in self._points)
             miny=min(p._coords[axes[1]] for p in self._points)
             maxy=max(p._coords[axes[1]] for p in self._points)
-            print maxx,minx
+            print(maxx,minx)
 
             # For the shading direction
             minz=min(p._coords[shading_axis] for p in self._points)
@@ -359,14 +362,14 @@ class PointCloud:
                     totalEdges += 1
 
                 if DEBUG:
-                    print edges
+                    print(edges)
 
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[componentIndex])
                 ax.add_collection(lines)
                 componentIndex += 1
             
-            if DEBUG: print totalEdges
+            if DEBUG: print(totalEdges)
 
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
             # place a text box in upper left in axes coords
@@ -389,10 +392,10 @@ class PointCloud:
 
             if self.gui:
                 return fig
-            print self._fig
+            print(self._fig)
             self._display_plot(plt, "plot3d_ng", save)
 
-            print self._fig
+            print(self._fig)
             plt.close()
 
             return True

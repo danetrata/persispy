@@ -7,7 +7,7 @@ from matplotlib.figure import Figure
 import Tkinter as tk
 
 from persispy.points import plane
-from persispy.plot import plot2d
+from persispy.plot import plot2d, plot3d
 
 
 class PersispyWindow:
@@ -94,7 +94,7 @@ class PersispyWindow:
 
         pc = plane(100)
         ng = pc.neighborhood_graph(0.2)
-        fig = plot2d(ng, gui = True)
+        fig = plot3d(ng, gui = True)
 
         self.canvas = FigureCanvasTkAgg(fig, self._root)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)

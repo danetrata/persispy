@@ -21,7 +21,7 @@ from csv import writer
 
 def make_csv(testName, columnNames):
     today = datetime.today()
-    dirpath = "data/"
+    dirpath = os.path.expanduser('~')+"/persispy data/"
     if not os.path.isdir(dirpath):
         os.mkdir(dirpath)
     i = 1
@@ -50,7 +50,13 @@ def down():
 
 
 def radius(num_points):
-    return (np.log(np.log(num_points))/num_points)**(1.0/2.0)
+#    return (np.log(num_points))**(1.0/4.0)/(num_points**(1.0/2.0))
+#     return (np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
+    print (np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
+    print (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
+    print (np.log(np.log(num_points))/num_points)**(1.0/2.0)
+    return (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
+
 
 from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
@@ -90,7 +96,6 @@ def updatePointBar(bar, numPoints):
     bar.widgets[0] = "Points %i:" % numPoints
     bar.update(numPoints)
 
-
 distanceWidget =     ['Distance:', 
         Percentage(), 
         ' ',
@@ -128,7 +133,7 @@ def double_stratified(
 
     for numPoints in range(minPoints, maxPoints, incPoints):
 
-        down() # To prepare for subBar
+        down() # To prepare for )subBar
         distanceBar = ProgressBar(widgets = distanceWidget, maxval = maxDistance)
         distanceBar.start()
 
@@ -164,7 +169,7 @@ def stratified((minPoints, maxPoints, incPoints),
     components
     """
     eqn = False
-    testName = "plane":w
+    testName = "plane"
 
     csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
 
@@ -177,8 +182,9 @@ def stratified((minPoints, maxPoints, incPoints),
     skip = 0
     while(iteration < iterations):
         down() # To prepare for subBar
-        subBar = ProgressBar(widgets = subWidget, maxval = maxPoints)
+        subBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
         subBar.start()
+
         for numPoints in range(minPoints, maxPoints, incPoints):
 
 
@@ -261,7 +267,7 @@ def monte_carlo(testName, eqn = False):
     csv.close()
 
 import numpy as np
-from persispy.phc.points import phc
+# from persispy.phc.points import phc
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
 from persispy.points import plane
@@ -298,9 +304,12 @@ def repeat():
     """
     prompt = input("How many times to run the test?")
     for _ in range(prompt):
+        stratified(
+                (10, 1500, 10)) 
+
         double_stratified(
-                (10, 1500, 10), 
-                (0.01, .3, 0.01))
+                (10, 1500, 10),
+                (0.01, 0.3, 0.01)) 
 
 def main():
     repeat()
