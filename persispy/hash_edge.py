@@ -20,7 +20,7 @@ class HashEdge:
 
         self.index = index
         if DEBUG:
-            print edge
+            print(edge)
 
 # assumes an undirected graph, where point and endPoints are unordered
 # allows cmp to compare the edge
@@ -81,9 +81,9 @@ class HashEdge:
     
 
 def test():
-    print HashEdge(np.array(([0,0,0],[1,1,1])), index = 0)
-    print HashEdge(np.array(([0,0,0],[1,1,1])), index = 1)
+    print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 0))
+    print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 1))
     edge = HashEdge([[0,0,0],[1,1,1]])
-    print edge*2
+    print(edge*2)
 
 if __name__ == "__main__": test()

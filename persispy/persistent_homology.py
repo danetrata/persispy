@@ -56,6 +56,7 @@ class SimplexContainer:
         if len(self.simplex._vertices)<2:
             return
         for x in range(len(self.simplex._vertices)):
+            # Make more pythonic!
             self.entries.add(ph.VertexDict[tuple(self.simplex._vertices[:x]+self.simplex._vertices[x+1:])])
             
     def __hash__(self):
