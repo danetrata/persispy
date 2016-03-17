@@ -25,7 +25,6 @@ import numpy as np
 from point_cloud import PointCloud
 from hash_point import HashPoint
 
-
 # 3d examples
 def sphere(num_points,radius=1,method='rejection'):
     '''
