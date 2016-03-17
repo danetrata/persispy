@@ -20,8 +20,8 @@ def read(object):
         columns.append(np.array([float_or_int(item) for item in column]))
     print "number of trials:", len(columns[0])
 
-    if os.path.isdir(object):
-        columns = average_trials(columns)
+#    if os.path.isdir(object):
+#        columns = average_trials(columns)
 
     return columns
 
@@ -386,10 +386,10 @@ def main():
 
 
     if True:
-        plot3d(numPoints, distance, connectedComponents,
-                "All Data in One Graph",
-                prompt,
-                dataSetName[0], dataSetName[1], dataSetName[2])
+#        plot3d(numPoints, distance, connectedComponents,
+#                "All Data in One Graph",
+#                prompt,
+#                dataSetName[0], dataSetName[1], dataSetName[2])
 
         plot_data(numPoints,
                 connectedComponents,
