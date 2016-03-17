@@ -35,12 +35,27 @@ class PersistentHomology:
                     #print 'pair: '+ str(s.index)+' '+str(s.entries[-1].index)+' '+str(-s.entries[-1].simplex._weight+s.simplex._weight)
                     self.PersistencePairs[s.entries[0]]=s
             
-    def plotBarCode(self):
-        for s in self.Simplices:
-            if s in self.PersistencePairs:
-                plt.axhline(y=s.index,xmin=s.simplex._weight,xmax=self.PersistencePairs[s].simplex.weight)
-                print 'here'
-        plt.axis([0,2,0,len(self.Simplices)])
+    def plotBarCode(self,d,e):
+        i=1
+        j=1;
+        moreElements=True
+        #WeightOrderedSimplices=sorted(self.Simplices,key=lambda sim: -sim.simplex._weight)
+        while moreElements:
+            moreElements=False
+            for s in self.Simplices:
+                if s in self.PersistencePairs:
+                    if len(s.simplex._vertices)>j:
+                        moreElements=True
+                    if len(s.simplex._vertices)==j:
+                        if s.simplex._weight!=self.PersistencePairs[s].simplex._weight:
+                            y=i
+                            c = 1-(self.PersistencePairs[s].simplex._weight-s.simplex._weight)/e
+                            i=i+1
+                            plt.plot([s.simplex._weight,self.PersistencePairs[s].simplex._weight],[y,y],color=(c,c,c,1-c),linestyle='-', linewidth=1)
+            j=j+1
+            i=i+100
+            
+        plt.axis([0,e,0,i])
         plt.show()
         
 class SimplexContainer:
