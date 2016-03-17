@@ -28,14 +28,43 @@ class TestPersispy(unittest.TestCase):
 
 
 from persispy.phc.points import phc
+from persispy.points import sphere 
 
 class TestPHCPack(unittest.TestCase):
+
+    def setUp(self):
+        self.points = 500
 
 
     def test_sampling_points_2sphere(self):
 
         selection = "x^2 + y^2 + z^2 - 1"
-        pc = phc(eqn = selection, num_points = 1000, bounds = 30)
+        pc = phc(eqn = selection, num_points = self.points, bounds = 30)
+
+    def test_time_sampling_points(self):
+
+        def wrapper():
+            pc = sphere(self.points)
+
+        def wrapper1():
+            selection = "x^2 + y^2 + z^2 - 1"
+            pc = phc(eqn = selection, num_points = self.points)
+
+        print ""
+        print "sphere(): %f" % t.timeit(wrapper, number = 10)
+        print "phc():    %f" % t.timeit(wrapper1, number = 10)
+
+    def test_time_sampling_points_complex(self):
+
+#         def wrapper():
+
+        def wrapper1():
+            selection = "x^2 + y^2 + z^2 - 1"
+            pc = phc(eqn = selection, num_points = self.points, return_complex = True)
+
+        print ""
+#         print "sphere(): %f" % t.timeit(wrapper, number = 10)
+        print "phc():    %f" % t.timeit(wrapper1, number = 10)
 
 import numpy.random as npr
 from persispy.points import plane
