@@ -26,7 +26,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import Tkinter as tk
 
-
 def create_fig():
     def destroy():
         plt.clf()

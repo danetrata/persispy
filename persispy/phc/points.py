@@ -14,8 +14,8 @@ try:
     from persispy.point_cloud import PointCloud
     from persispy.hash_point import HashPoint
 except ImportError:
-    from point_cloud import PointCloud
-    from hash_point import HashPoint
+    from ..point_cloud import PointCloud
+    from ..hash_point import HashPoint
 
 
 from string import ascii_letters, digits

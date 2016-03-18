@@ -2,7 +2,7 @@ import numpy as np
 #import numpy.random as npr
 #import scipy.sparse.csgraph as csgraph
 #import scipy.sparse as sparse
-from utils import tuples
+from .utils import tuples
 
 class Factorial:
     def __init__(self):

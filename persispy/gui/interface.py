@@ -6,8 +6,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import Tkinter as tk
 
-from persispy.points import plane
-from persispy.plot import plot2d, plot3d
+from ..points import plane
+from ..plot import plot2d, plot3d
 
 
 class PersispyWindow:

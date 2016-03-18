@@ -1,6 +1,6 @@
 import phcpy
-from persispy.phc import interface, interface_solve
-from persispy.samples import points
+from .. import interface, interface_solve
+from ... import points
 import timeit
 
 def wrapper(func, *args, **kwargs):

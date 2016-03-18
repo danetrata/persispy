@@ -2,21 +2,21 @@
 # and the methods that act on those points.
 # Left alone for now because many modules rely on this.
 
+#import .weighted_simplicial_complex as wsc
+from .weighted_simplicial_complex import wGraph
+from .utils import tuples
+from . import hash_edge
+from . import hash_point
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
 import mpl_toolkits.mplot3d as a3
-import persispy.weighted_simplicial_complex as wsc
-from persispy.utils import tuples
 from numpy import array
 import math
 import os as os
-
 import sys
-
-
-import persispy.hash_edge, persispy.hash_point
 
 
 
@@ -505,20 +505,20 @@ class PointCloud:
                                 dictionary, 
                                 pointarray, 
                                 depth=d)
-                        return wsc.wGraph(dictionary, epsilon)
+                        return wGraph(dictionary, epsilon)
                     else:
                         self._subdivide_neighbors(epsilon, 
                                 dictionary, 
                                 pointarray, 
                                 coordinate = m, 
                                 depth=d)
-                        return wsc.wGraph(dictionary, epsilon)
+                        return wGraph(dictionary, epsilon)
                 else: #  most calls end up here
                       #  also starts the recursion
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
                     # mystery dictionary assignments..?
                     # {point: {adj points:distance}}
-                    return wsc.wGraph(dictionary, epsilon)
+                    return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
             '''
@@ -534,12 +534,12 @@ class PointCloud:
                             dictionary[self._points[j]].add((self._points[i],dist))
                     elif self._space=='projective':
                         return None
-            return wsc.wGraph(dictionary, epsilon)
+            return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'nonrecursive_subdivision':
             if self._space == 'affine':
                 self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
-                return wsc.wGraph(dictionary,epsilon)
+                return wGraph(dictionary,epsilon)
             return None
         elif methodarray[0]=='approximate':
             return None
