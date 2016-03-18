@@ -1,5 +1,6 @@
-from persispy.phc.interface import phc_cloud
-from persispy.point_cloud import PointCloud
+# What is interface? I'm not sure if this is the correct path.
+from .interface import phc_cloud
+from ...point_cloud import PointCloud
 
 def test_1():
 #     phc_cloud(eqn = "x^2 - y", DEBUG=True)

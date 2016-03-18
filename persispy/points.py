@@ -22,8 +22,8 @@ import numpy.random as npr
 import scipy.constants as scic
 import numpy as np
 
-from persispy.point_cloud import PointCloud
-from persispy.hash_point import HashPoint
+from .point_cloud import PointCloud
+from .hash_point import HashPoint
 
 # 3d examples
 def sphere(num_points,radius=1,method='rejection'):

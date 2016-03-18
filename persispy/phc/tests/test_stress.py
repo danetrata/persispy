@@ -1,5 +1,5 @@
-from persispy.phc.points import phc
-from persispy.point_cloud import PointCloud
+from ..points import phc
+from ...point_cloud import PointCloud
 
 import gc
 from guppy import hpy
