@@ -2,7 +2,6 @@
 # and the methods that act on those points.
 # Left alone for now because many modules rely on this.
 
-#import .weighted_simplicial_complex as wsc
 from .weighted_simplicial_complex import wGraph
 from .utils import tuples
 from . import hash_edge
@@ -38,7 +37,7 @@ class PointCloud:
         try:
             hash(self._points[0])
         except TypeError:
-            print("Detected points are not HashPoint. Attempting to convert.")
+            print("Detected points are not HashPoints. Attempting to convert.")
             points = [hash_point.HashPoint(
                     points[n], 
                     index=n) 
@@ -52,8 +51,6 @@ class PointCloud:
         self._fig = None
         self.gui = gui
 
-
-
     def __str__(self):
 
         try:
@@ -63,7 +60,6 @@ class PointCloud:
         return 'Point cloud with ' + repr(self.num_points()) + \
             ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
-
 
     def __repr__(self):
         return self._points.__repr__()
@@ -83,7 +79,6 @@ class PointCloud:
 
 
     def dimension(self):
-
         if self._space=='affine':
             return len(self._points[0]._coords)
         elif self._space=='projective':
@@ -91,7 +86,6 @@ class PointCloud:
 
 
     def plot2d(self, axes=(0,1), save = False, title = False):
-
         if self._space=='affine':
 
             if self._fig is None:
@@ -108,12 +102,20 @@ class PointCloud:
             ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
             ax.grid(True)
-            ax.axis([1.1*min(xcoords),1.1*max(xcoords),1.1*min(ycoords),1.1*max(ycoords)])
+            # TEST: the following code fixes a problem in the automatic window
+            # sizing when there are negative coordinates. I'm sure there is a
+            # smarter way to do this. It should be changed in the other
+            # plotting functions as well. To be really smart, we should also
+            # make the border scale with the total size of the plot.
+            maxx=max(xcoords)
+            minx=min(xcoords)
+            maxy=max(ycoords)
+            miny=min(ycoords)
+            ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+
             ax.set_aspect('equal')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
-#             ax.set_xlim(-3,3)
-#             ax.set_ylim(-3,3)
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
             self._display_plot(plt, "plot2d", save)
@@ -179,6 +181,9 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+
+            # TODO: I would prefer we do an automatic window sizing function here
+            # too.
             ax.set_xlim(-3,3)
             ax.set_ylim(-3,3)
             ax.set_zlim(-3,3)
@@ -222,7 +227,6 @@ class PointCloud:
             maxx=max(p._coords[axes[0]] for p in self._points)
             miny=min(p._coords[axes[1]] for p in self._points)
             maxy=max(p._coords[axes[1]] for p in self._points)
-            print(maxx,minx)
 
             # For the shading direction
             minz=min(p._coords[shading_axis] for p in self._points)
@@ -264,10 +268,6 @@ class PointCloud:
             ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
-            # Commented these out as they resulted in a lot of empty space for
-            # me. --Ben A.
-#             ax.set_xlim(-3,3)
-#             ax.set_ylim(-3,3)
             ax.set_aspect('equal')
             ax.add_collection(lines)
 #             xcoords=[p._coords[axes[0]] for p in self._points]
@@ -363,6 +363,15 @@ class PointCloud:
 
                 if DEBUG:
                     print(edges)
+
+                # TODO: this code for some reason causes python to hang. Not
+                # sure what the problem is. It is there to plot all of the
+                # points so that it captures the points not connected to
+                # anything else.
+#                 xcoords=[p._coords[axes[0]] for p in self._points]
+#                 ycoords=[p._coords[axes[1]] for p in self._points]
+#                 zcoords=[p._coords[axes[2]] for p in self._points]
+#                 ax.scatter(xcoords,ycoords,zcoords, marker = 'o', color = "#ff6666")
 
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[componentIndex])

@@ -22,8 +22,6 @@ class Factorial:
     def nCr(self,n,k):
         return self.factorial(n)/(self.factorial(n-k)*self.factorial(k))
 
-    
-        
 def _SimplexIndex(simplex,n,f=Factorial()): #simplex is a wSimplex
     k=len(simplex)
     value = f.nCr(n+1,k-1)
