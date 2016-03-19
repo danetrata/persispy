@@ -1,6 +1,7 @@
 import numpy as np
 import hashlib as hashlib
 
+# Should we merge this with hash_point?
 
 '''
 Acts like a dict
@@ -76,10 +77,7 @@ class HashEdge:
 
         return HashEdge(np.array(newedge), self.index)
 
-
-            
-    
-
+# This should be made part of a doctest in the HashEdge file itself.
 def test():
     print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 0))
     print(HashEdge(np.array(([0,0,0],[1,1,1])), index = 1))

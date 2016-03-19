@@ -85,11 +85,10 @@ def box(
         seed = False, 
         return_seed = False):
     """
-    We return a set of points in a dimensional box. On default, returns a unit
-    plane. We can specify a str or int seed. We can also ask to return the seed
+    We return a set of points in a box of given dimension. On default, returns
+    a unit box in the plane. We can specify a str or int seed. We can also ask to return the seed
     used to generate a run. Note, the returned seed is a ndarray of 624 uints.
     """
-
     if seed:
         npr.seed(seed)
 
@@ -106,12 +105,9 @@ def box(
         return_seed = npr.get_state()
         result = (result, return_seed)
 
-
     return result
 
-
-
-
+# How is this different from box?
 def cube(dim,num_points):
     '''
     EXAMPLES:
@@ -120,6 +116,7 @@ def cube(dim,num_points):
     '''
     return PointCloud([HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
 
+# How is this different from box?
 def plane(num_points, side_length = 1, seed = False, return_seed = False):
     """
     takes the number of points and returns a list of 
@@ -144,8 +141,6 @@ def plane(num_points, side_length = 1, seed = False, return_seed = False):
         result = (result, return_seed)
 
     return result
-
-
 
 def save_to_file(data):
     """

@@ -390,8 +390,16 @@ class wSimplicialComplex:
                         raise ValueError('All cliques must have 1-skeleton included in wgraph.')
             for d in range(3,len(v)+1):
                 for vlist in tuples(d,v):
-                    if not simplices.has_key(d-1):
-                        simplices[d-1]=[]
+                    # The next crudge is to make this bit backwards compatible
+                    # with python2. Note that has_key() is no longer an
+                    # attribute of dictionaries in python3.
+                    # TEST: I have not tested it on python2 as of 19 March 2016.
+                    try:
+                        if not simplices.has_key(d-1):
+                            simplices[d-1]=[]
+                    except AttributeError:
+                        if not d-1 in simplices:
+                            simplices[d-1]=[]
                     weight=0
                     for i in range(d-1):
                         inbrs=wgraph._adj[vlist[i]]
@@ -496,10 +504,6 @@ class sorted_clique_list:
     
     @staticmethod
     def _BronKerboschPivot(r,p,x,adj,c):
-        # This completely fails in python3.
-        print(type(r))
-        print(type(x))
-        print(type(p))
         if len(p)==0 and len(x)==0:
             c.append(sorted(tuple(r)))
         else:
