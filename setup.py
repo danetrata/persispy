@@ -45,6 +45,7 @@ setup(
     version='0.0.1',
     description="A python package for persistent homology.",
     long_description=readme + '\n\n' + history,
+    packages=['persispy'],
     author="Benjamin Antieau",
     author_email='benjamin.antieau@gmail.com',
     url='https://github.com/benjaminantieau/persispy',

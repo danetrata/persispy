@@ -2,10 +2,10 @@
 # and the methods that act on those points.
 # Left alone for now because many modules rely on this.
 
-from .weighted_simplicial_complex import wGraph
-from .utils import tuples
-from . import hash_edge
-from . import hash_point
+from persispy.weighted_simplicial_complex import wGraph
+from persispy.utils import tuples
+import persispy.hash_edge
+import persispy.hash_point
 
 import numpy as np
 import matplotlib as mpl

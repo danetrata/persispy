@@ -49,9 +49,25 @@ PHCpy
 
 First, we ensure the system has the tools to compile the shared libraries. The system will need the following packages:
 
-* python2.7
-* python-dev
-* gnat-4.8
+* python3.4
+* python3-dev
+* gnat (4.9.3)
+* openmpi*
+
+
+
+::
+
+    python3 --version &&
+    locate Python.h &&
+    gnat &&
+    find /usr/lib/openmpi &&
+    echo "======================" &&
+    echo "all dependencies found"
+
+    sudo apt-get install python3-dev gnat openmpi*
+
+
 
 Clone from the remote PHCpack git repo.
 
@@ -60,7 +76,19 @@ Clone from the remote PHCpack git repo.
   git clone https://github.com/callmetaste/PHCpack
 
 
-Next, the shared library "phcpy2c.so" needs to be compiled on each and every system.
+Quick install
+=============
+
+Run the installation script. This should take care of all dependencies to compile phcpy on a standard system.
+
+::
+
+    ./PHCpack/setup
+
+Full installation procedure
+===========================
+
+The shared library "phcpy2c3.so" needs to be compiled on each and every system.
 This fork is a stable release with of PHCpack a few changes to the setup so out-of-the-box installation on Unix is relatively easy.
 For other systems, a line in makefile has to be commented correctly.
 Also, the system makefile has absolute references, and any differences in system paths can cause an error.
@@ -69,7 +97,7 @@ Check your respective makefile matches system variables if any errors occur.
 ::
 
   cd PHCpack/src/Objects/
-  make phcpy2c.so
+  make phcpy2c3.so
 
 If all goes well, the very end of the compilation output will read that 
 "phcpy2c.so" was successfully linked and copied. 
@@ -78,12 +106,13 @@ Finally, setup the "phcpy" module with
 
 ::
 
-  pip install PHCpack/src/Python/PHCpy
+  pip install ../Python/PHCpy3
 
 or alternatively, we can again call the setup.py file with
 
 ::
 
-  sudo python PHCpack/src/Python/PHCpy/setup.py install
+  sudo python ../Python/PHCpy/setup.py install
+
 
 
