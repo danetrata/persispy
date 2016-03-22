@@ -10,12 +10,8 @@ from phcpy.solver import total_degree_start_system, total_degree
 from phcpy.trackers import track
 from phcpy.solutions import strsol2dict # points
 
-try:
-    from persispy.point_cloud import PointCloud
-    from persispy.hash_point import HashPoint
-except ImportError:
-    from ..point_cloud import PointCloud
-    from ..hash_point import HashPoint
+from persispy.point_cloud import PointCloud
+from persispy.hash_point import HashPoint
 
 
 from string import ascii_letters, digits
@@ -23,7 +19,7 @@ from string import ascii_letters, digits
 
 
 # TODO: Implement poisson sampling
-class phc(object):
+class Intersect(object):
 
 
     def __init__(self, eqn, num_points = 1, bounds = 1, return_complex = False, verbose = False):
@@ -65,9 +61,9 @@ class phc(object):
     def _parse(self, eqn):
 
         if self._DEBUG:
-            print "====="
-            print "input eqn: ", eqn+";"
-            print "====="
+            print ("=====")
+            print ("input eqn: ", eqn+";")
+            print ("=====")
 
         terms = eqn
         # Extracting terms from the target
@@ -81,7 +77,7 @@ class phc(object):
             if not x.isdigit() and x.isalnum() and x not in varList:
                 varList.append(x)
         varList.sort()
-        if self._DEBUG: print "list of variables: ", varList
+        if self._DEBUG: print ("list of variables: ", varList)
 
         coeffs = eqn
         coeffs = coeffs.replace("-", "+")
@@ -134,15 +130,15 @@ class phc(object):
         p = self._system()
         startSystem, startSol = total_degree_start_system(p)
         if self._DEBUG:
-            print "system of equations"
-            print "--"
-            for x in p: print x
-            print "--"
-            print "start solutions: ", len(startSol)
-            for x in startSystem: print x
-            for x in startSol: print x
+            print ("system of equations")
+            print ("--")
+            for x in p: print (x)
+            print ("--")
+            print ("start solutions: ", len(startSol))
+            for x in startSystem: print (x)
+            for x in startSol: print (x)
             self.attempt = self.attempt + 1
-            print "self.attempt #"+str(self.attempt)
+            print ("self.attempt #"+str(self.attempt))
         return startSystem, startSol
 
 
@@ -161,17 +157,17 @@ class phc(object):
                     gamma=complex(0.824,0.5664))
 
             if self._DEBUG:
-                print "system of equations"
-                print "--"
-                for x in p: print x
-                print "--"
-                print "number of solutions: ", len(phcSol)
+                print ("system of equations")
+                print ("--")
+                for x in p: print (x)
+                print ("--")
+                print ("number of solutions: ", len(phcSol))
                 self.attempt = self.attempt + 1
-                print "attempt #"+str(self.attempt)
+                print ("attempt #"+str(self.attempt))
 
             #  Parsing the output of phcSol
             for i in phcSol:
-                if self._DEBUG: print "phc solution: \n", i 
+                if self._DEBUG: print ("phc solution: \n", i)
                 d = strsol2dict(i)
                 
                 point = [d[x] for x in self.varList]
@@ -189,7 +185,7 @@ class phc(object):
                                     and closeness == True \
                                     and len(points) < num_points: 
                                 points.append(tuple([component.real for component in point]))
-                                if self._DEBUG: print "appended point:",[component.real for component in point]
+                                if self._DEBUG: print ("appended point:",[component.real for component in point])
                                 failure = 0
                         else:
                             closeness = False
@@ -197,7 +193,7 @@ class phc(object):
             if self._failure <= failure:
                 raise RuntimeError("equation has too many complex solutions in a row")
 
-        if self._DEBUG: print "points: ", points
+        if self._DEBUG: print ("points: ", points)
 
         self.points = points + self.points
 
@@ -232,7 +228,7 @@ class phc(object):
         """
         epsilon = self.complex_threshold
         if self._DEBUG \
-                and abs(a - b) <= epsilon: print "Selected component is close" 
+                and abs(a - b) <= epsilon: print ("Selected component is close")
         return abs(a - b) <= epsilon
 
     def _in_bounds(self, a):
@@ -246,7 +242,7 @@ class phc(object):
         if bounds != 0 and \
                 min <= a and \
                 a <= max:
-            if self._DEBUG: print "Selected component is in bounds"
+            if self._DEBUG: print ("Selected component is in bounds")
             return True
         else:
             return False
@@ -294,32 +290,32 @@ class phc(object):
 
 
 
+from persispy.plot import plot3d, plot2d
 
 def main():
     global pc
-    user = raw_input("torus or sphere? ")
+    user = input("torus or sphere? ")
     if user == "torus":
         selection = "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2"
     elif user == "sphere":
         selection = "x^2 + y^2 + z^2 - 1"
     else:
-        print "invalid input"
+        print ("invalid input")
         return
 
-    pc = phc(eqn = selection, num_points = 750, 
-            verbose = True, 
+    pc = Intersect(eqn = selection, num_points = 750, 
+#             verbose = True, 
             return_complex = True)
     
-    print pc
+    print (pc)
 #     pc.find_more_points(10)
-    print pc
-    print pc[0]
-    print pc.points[0]
-    print pc.degree()
+    print (pc)
+    print (pc[0])
+    print (pc.points[0])
+    print (pc.degree())
 #     print pc.total_coeff
     pc.plot3d()
     ng = pc.neighborhood_graph(0.15)
-    from persispy.plot import plot3d, plot2d
     plot2d(ng, shading_axis = 2)
     pc.plot2d_neighborhood_graph(0.15)
     plot3d(ng)
@@ -327,7 +323,7 @@ def main():
 #         plot3d(ng, cmap = color)
 
     
-#     saveUser = raw_input("save file? ")
+#     saveUser = aaw_input("save file? ")
 #     if saveUser == "yes":
 #         fileUser = raw_input("file name? ")
 #         f = open(fileUser, "wa")

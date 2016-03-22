@@ -7,24 +7,12 @@ input: pointCloud OR
 import numpy as np
 import time
 
-"""
-http://bastibe.de/2013-05-30-speeding-up-matplotlib.html
-speed up matplotlib.
-have a return value that is usuable in the gui
->>>    fig, ax = plt.subplots()
->>>    line, = ax.plot(np.random.randn(100))
->>>    plt.show(block = False)
->>>    line.set_ydata(np.random.randn(100))
->>>    ax.draw_artist(ax.patch)
->>>    ax.draw_artist(line)
->>>    fig.canvas.update()
->>>    fig.canvas.flush_events()
-"""
 import matplotlib
-matplotlib.use('GTKAgg') 
+matplotlib.use('GTK3Agg') 
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import Tkinter as tk
+from matplotlib.backends.backend_tkagg \
+        import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import tkinter as tk
 
 def create_fig():
     def destroy():
@@ -34,6 +22,7 @@ def create_fig():
     def onsize(event):
         root.winfo_width(), root.winfo_height()
 # only time to call pyplot
+    plt.clf()
     fig = plt.figure()
 #     fig.set_size_inches(8, 8)
     root = tk.Tk()
@@ -72,15 +61,13 @@ def show(root):
     root.mainloop()
 
 from matplotlib.figure import Figure
-
-
-from point_cloud import PointCloud
-from weighted_simplicial_complex import wGraph
+from persispy.point_cloud import PointCloud
+from persispy.weighted_simplicial_complex import wGraph
 
 
 def plot2d(*args, **kwargs):
     for object in args:
-        if isinstance(object, PointCloud) or isinstance(object, phc):
+        if isinstance(object, PointCloud) or isinstance(object, Intersect):
             fig = plot2d_pc(*args, **kwargs)
             return fig
         if isinstance(object, wGraph):
@@ -89,12 +76,13 @@ def plot2d(*args, **kwargs):
 
 def plot3d(*args, **kwargs):
     for object in args:
-        if isinstance(object, PointCloud) or isinstance(object, phc):
+        if isinstance(object, PointCloud) or isinstance(object, Intersect):
             return plot3d_pc(*args, **kwargs)
         if isinstance(object, wGraph):
             return plot3d_ng(*args, **kwargs)
 
 import matplotlib.pyplot as plt
+
 def plot2d_pc(pointCloud, gui = False):
     """
     """
@@ -124,6 +112,7 @@ def plot2d_pc(pointCloud, gui = False):
         plt.show(fig)
 
 import matplotlib as mpl
+
 def plot2d_ng(wGraph,
         axes=(0,1),
         shading_axis=1,
@@ -335,7 +324,7 @@ def plot3d_ng(wGraph,
 
 
         if DEBUG:
-            print edges
+            print (edges)
 
         lines = a3.art3d.Poly3DCollection(component)
 
@@ -345,7 +334,7 @@ def plot3d_ng(wGraph,
         lines.set_edgecolor(line_colors[componentIndex])
         ax.add_collection(lines)
     
-    if DEBUG: print totalEdges
+    if DEBUG: print (totalEdges)
     
     if wGraph.singletons():
         x, y, z = zip(*wGraph.singletons(padding = 3))
@@ -401,17 +390,14 @@ def plot3d_ng(wGraph,
         show(window)
 
 
+from persispy.phc import Intersect
+from persispy.points import plane, sphere
 
-from phc.points import phc
+
+
 if __name__ == "__main__": 
-    from points import plane, sphere
 
-#     pc = plane(150, seed = 1991)
-#     plot2d(pc)
-#     plot3d(pc)
-#     ng = pc.neighborhood_graph(0.2)
-#     plot2d(ng)
-#     plot3d(ng)
+
 
     pc = sphere(1000)
     plot2d(pc)
@@ -422,7 +408,7 @@ if __name__ == "__main__":
 
 
 
-    pc = phc('x^2 + y^2 + z^2 -1', 1000)
+    pc = Intersect('x^2 + y^2 + z^2 -1', 1000)
     plot2d(pc)
     plot3d(pc)
     ng = pc.neighborhood_graph(0.2)

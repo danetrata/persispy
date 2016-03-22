@@ -2,9 +2,13 @@ import numpy as np
 import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
-from .utils import tuples
+from persispy.utils import tuples
+from persispy.hash_edge import HashEdge
+from numpy import array
 import itertools
 import sys
+
+DEBUG = False
 
 class wSimplex:
     '''
@@ -152,7 +156,7 @@ class wGraph:
                     return e[1]
             return -1    
 
-    def connected_component(self, point, visited, time, DEBUG = False):
+    def connected_component(self, point, visited, time):
         """
         RECURSIVE
         We note the time passed by the input when a node was visited in the 
@@ -198,27 +202,26 @@ class wGraph:
         if not self._connected_components:
             self.connected_components()
         cp = self._connected_components
-        for item in cp:
-            print(item)
+        if DEBUG:
+            for item in cp:
+                print(item)
 
         singles = []
         for component in cp:
             if len(component) == 1: # if the component is a point
                 component = list(component[0])
-                print(component)
+                if DEBUG: print(component)
                 while len(component) < padding:
                     component.append(0)
-                print(component)
+                if DEBUG: print(component)
                 singles.append(component)
         return singles
 
-    def connected_edges(self, padding = False, DEBUG = False):
+    def connected_edges(self, padding = False):
         """
         Returns a list of edges that make up a connected component. We assume
         no multiple edges.
         """
-        import hash_edge
-        from numpy import array
 
         if not self._connected_components:
             self.connected_components()
@@ -238,7 +241,7 @@ class wGraph:
                         endPointList = list(list(endPoint)[0])
                         while len(endPointList) < padding:
                             endPointList.append(0)
-                        edges[edgeIndex] = hash_edge.HashEdge(
+                        edges[edgeIndex] = HashEdge(
                                 array([ vertexList, endPointList]),
                                 index = edgeIndex
                                 )
