@@ -3,7 +3,8 @@ import numpy.random as npr
 import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from persispy.utils import tuples
-from persispy.hash_edge import HashEdge
+# from persispy.hash_edge import HashEdge
+from persispy.hash import HashEdge
 from numpy import array
 import itertools
 import sys
@@ -62,7 +63,6 @@ class wSimplex:
         return 0
 
 class wGraph:
-    # Why does this return a floating point number of edges?
     def __init__(self, adjacencies, epsilon):
         '''
         Input: a dictionary of edges indexed by vertices.
@@ -328,7 +328,7 @@ class wGraph:
         '''
         Output: a scipy.sparse.csr_matrix.
         '''
-        keys=self._adj.keys()
+        keys=list(self._adj.keys())
         N=len(keys)
         ctr=0
         indptr=[ctr]

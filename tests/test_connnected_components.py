@@ -52,9 +52,9 @@ def down():
 def radius(num_points):
 #    return (np.log(num_points))**(1.0/4.0)/(num_points**(1.0/2.0))
 #     return (np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
-    print (np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
-    print (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
-    print (np.log(np.log(num_points))/num_points)**(1.0/2.0)
+    print(np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
+    print(np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
+    print(np.log(np.log(num_points))/num_points)**(1.0/2.0)
     return (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
 
 
@@ -139,7 +139,7 @@ def double_stratified(
 
         distance = minDistance
         while(distance < maxDistance):
-            if DEBUG: print "running test", distance
+            if DEBUG: print("running test", distance)
 
             try:
                 points_epsilon_tests(numPoints, distance, csv, eqn)
@@ -159,7 +159,7 @@ def double_stratified(
     pointBar.finish()
     down()
 
-    print "all tests have run"
+    print("all tests have run")
 
 def stratified((minPoints, maxPoints, incPoints),
         repeat = 1):
@@ -189,7 +189,7 @@ def stratified((minPoints, maxPoints, incPoints),
 
 
             distance = radius(numPoints)
-            if DEBUG: print "running test", distance
+            if DEBUG: print("running test", distance)
 
             try:
                 points_epsilon_tests(numPoints, distance, csv, eqn)
@@ -197,8 +197,8 @@ def stratified((minPoints, maxPoints, incPoints),
             except StandardError as inst:
                 skip += 1
                 defaultWidget[2] = "Skip:"+str(skip)
-                if DEBUG: print inst
-                if DEBUG: print "skip"
+                if DEBUG: print(inst)
+                if DEBUG: print("skip")
                 pass
             subBar.widgets[0] = "Points %i:" % numPoints
             subBar.update(numPoints)
@@ -208,13 +208,13 @@ def stratified((minPoints, maxPoints, incPoints),
         up() # to be at position of pBar
         defaultWidget[0] = "Iter:"+str(iteration)
         pBar.update(iteration)
-        if DEBUG: print iteration
+        if DEBUG: print(iteration)
         iteration += 1
 
     pBar.finish()
     down()
 
-    print "all tests have run"
+    print("all tests have run")
 
 import numpy.random as npr
 
@@ -243,7 +243,7 @@ def monte_carlo(testName, eqn = False):
 
         distance = npr.uniform(minDistance, maxDistance)
 
-        if DEBUG: print "running test", distance
+        if DEBUG: print("running test", distance)
 
         try:
             num_points = npr.random_integers(minPoints, maxPoints)
@@ -252,18 +252,18 @@ def monte_carlo(testName, eqn = False):
         except StandardError as inst:
             skip += 1
             widgetsOverall[2] = "Skip:"+str(skip)
-            if DEBUG: print inst
-            if DEBUG: print "skip"
+            if DEBUG: print(inst)
+            if DEBUG: print("skip")
             pass
 
         pBar.update(iteration)
-        if DEBUG: print iteration
+        if DEBUG: print(iteration)
         iteration += 1
 
     pBar.finish()
     down()
 
-    print "all tests have run"
+    print("all tests have run")
     csv.close()
 
 import numpy as np
@@ -286,15 +286,15 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         row.append(str(distance))
         ng = pc.neighborhood_graph(distance, method = "subdivision")
         cp = len(ng.connected_components())
-        if DEBUG: print "connected components", cp
+        if DEBUG: print("connected components", cp)
         row.append(str(cp))
     except StandardError as inst:
-        if DEBUG: print inst
+        if DEBUG: print(inst)
         failures.append(inst.args[0])
         return failures
     
 
-    if DEBUG: print ','.join(row)
+    if DEBUG: print(','.join(row))
     csv.writerow(row)
     return cp
 
