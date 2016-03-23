@@ -18,7 +18,7 @@ def read(object):
     columns = []
     for column in zip(*sheet):
         columns.append(np.array([float_or_int(item) for item in column]))
-    print "number of trials:", len(columns[0])
+    print("number of trials:", len(columns[0]))
 
 #    if os.path.isdir(object):
 #        columns = average_trials(columns)
@@ -37,13 +37,13 @@ def average_trials(dataSet):
         if point not in npd:
             property = NPDProperty()
             npd[point] = property
-        
+
         npd[point].connected.append(trial)
 
     for key, value in npd.iteritems():
-        print key
-        print value.connected
-        print value.standard_deviation()
+        print(key)
+        print(value.connected)
+        print(value.standard_deviation())
 
     sheet = []
     for key, value in npd.iteritems():
@@ -95,7 +95,7 @@ def add_title(ax, title, subtitle, trials):
     string = title+"\n"\
             "Number of Trials: "+trials+"\n"\
             r"\verb|"+subtitle+"|"
-    print string
+    print(string)
     ax.set_title(string, fontdict = {'fontsize':20})
 
 import matplotlib.pyplot as plt
@@ -173,7 +173,7 @@ def process_totally_connected((numPoints, distance, connectedComponents), dataSe
     (cOptimized, omegaOptimized), pcov = curve_fit(func, 
             totallyConnectedEdge[0], 
             totallyConnectedEdge[1])
-    print cOptimized, omegaOptimized
+    print(cOptimized, omegaOptimized)
     
 
     c, omega = cOptimized, omegaOptimized

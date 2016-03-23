@@ -1,5 +1,5 @@
 
-""" 
+"""
 input: pointCloud OR
     wGraph
 """
@@ -8,21 +8,20 @@ import numpy as np
 import time
 
 import matplotlib
-matplotlib.use('GTK3Agg') 
+matplotlib.use('GTK3Agg')
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg \
+from matplotlib.backends.backend_tkagg\
         import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import tkinter as tk
 
 def create_fig():
     def destroy():
-        plt.clf()
         root.destroy()
         root.quit()
+        plt.close('all')
     def onsize(event):
         root.winfo_width(), root.winfo_height()
 # only time to call pyplot
-    plt.clf()
     fig = plt.figure()
 #     fig.set_size_inches(8, 8)
     root = tk.Tk()
@@ -294,6 +293,7 @@ def plot3d_ng(wGraph,
 
 #     fig = plt.figure()
     fig, window = create_fig()
+    window.wm_title("3D Neighborhood Graph")
     ax = Axes3D(fig)
 
 
@@ -350,6 +350,7 @@ def plot3d_ng(wGraph,
             r'\makebox[90pt]{%d\hfill}Edges\\ \\'\
             r'\makebox[90pt]{%d\hfill}Connected Components' \
     % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
+
 
     
     # place a text box in upper left in axes coords

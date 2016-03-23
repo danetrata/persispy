@@ -51,8 +51,8 @@ class TestPHCPack(unittest.TestCase):
             pc = Intersect(eqn = selection, num_points = self.points)
 
         print("")
-        print("sphere(): %f" % t.timeit(wrapper, number = 10))
-        print("phc():    %f" % t.timeit(wrapper1, number = 10))
+        print("sphere(): %f" % t.timeit(wrapper, number = 3))
+        print("phc():    %f" % t.timeit(wrapper1, number = 3))
 
     def test_time_sampling_points_complex(self):
 
@@ -61,11 +61,11 @@ class TestPHCPack(unittest.TestCase):
             selection = "x^2 + y^2 + z^2 - 1"
             pc = Intersect(eqn = selection, 
                     num_points = self.points, 
-                    return_complex = True, DEBUG = True)
+                    return_complex = True)
 
         print("")
 #         print "sphere(): %f" % t.timeit(wrapper, number = 10)
-        print("phc():    %f" % t.timeit(wrapper1, number = 10))
+        print("phc():    %f" % t.timeit(wrapper1, number = 3))
 
 import numpy.random as npr
 from persispy.points import plane
