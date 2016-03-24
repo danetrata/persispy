@@ -1,4 +1,6 @@
 DEBUG = False
+PROGRESS = True
+
 
 # import sys
 # sys.setrecursionlimit(1000)
@@ -49,19 +51,13 @@ def down():
     sys.stdout.flush()
 
 
-def radius(num_points):
-#    return (np.log(num_points))**(1.0/4.0)/(num_points**(1.0/2.0))
-#     return (np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
-    print(np.log(np.log(num_points)))**(1.0/2.0)/(num_points**(1.0/2.0))
-    print(np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
-    print(np.log(np.log(num_points))/num_points)**(1.0/2.0)
-    return (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
 
 
 from sympy import symbols
 from sympy.parsing.sympy_parser import parse_expr
 from numpy.random import uniform, random_integers
-from persispy.gui.loading_bar import ProgressBar, Percentage, Bar, ETA, RotatingMarker, ET
+from persispy.gui.loading_bar import \
+        ProgressBar, Percentage, Bar, ETA, RotatingMarker, ET
 
 defaultWidget = ['Iter:0',
         ' ',
@@ -77,7 +73,15 @@ defaultWidget = ['Iter:0',
         ' ',
         ETA(), 
         ' '
-]
+        ]
+
+def updateDefaultIterBar(bar, iteration):
+    bar.widgets[0] = "Iter:%i" % iteration
+    bar.update(iteration)
+
+def updateDefaultSkipBar(bar, skip):
+    bar.widgets[2] = "Skip:%i" % skip
+    bar.update(skip)
 
 pointWidget =     ['Point:', 
         Percentage(), 
@@ -90,11 +94,7 @@ pointWidget =     ['Point:',
         ' ',
         ETA(), 
         ' '
-]
-
-def updatePointBar(bar, numPoints):
-    bar.widgets[0] = "Points %i:" % numPoints
-    bar.update(numPoints)
+        ]
 
 distanceWidget =     ['Distance:', 
         Percentage(), 
@@ -107,35 +107,50 @@ distanceWidget =     ['Distance:',
         ' ',
         ETA(), 
         ' '
-]
+        ]
+
+def updatePointBar(bar, numPoints):
+    bar.widgets[0] = "Points %i:" % numPoints
+    bar.update(numPoints)
+
 
 def updateDistanceBar(bar, distance):
     bar.widgets[0] = "Distance %.2f:" % distance
     bar.update(distance)
 
 
-def double_stratified(
-        (minPoints, maxPoints, incPoints),
-        (minDistance, maxDistance, incDistance)):
+def double_stratified(point_options=(10,1500,10),
+        distance_options=(0.01, 0.3, 0.01),
+        testName = "test"):
     """
     We then step through through a range of points, and then for these points,
     step through a range of distances, and count the number of connected
     components
+    >>> PROGRESS = False
+    >>> double_stratified((10, 30, 10), (0.1, 0.3, 0.1))
+    all tests have run
+    True
     """
+    minPoints, maxPoints, incPoints = point_options
+    minDistance, maxDistance, incDistance = distance_options
     eqn = False
-    testName = "plane"
-    csv = make_csv(testName+"_double_stratified", ["Number of points", "Distance", "Connected components"])
+    testName = testName
+    csv = make_csv(testName+"_double_stratified",
+            ["Number of points", "Distance", "Connected components"])
 
 
-    pointBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
-    pointBar.start()
+    if PROGRESS: 
+        pointBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
+        pointBar.start()
 
 
     for numPoints in range(minPoints, maxPoints, incPoints):
 
-        down() # To prepare for )subBar
-        distanceBar = ProgressBar(widgets = distanceWidget, maxval = maxDistance)
-        distanceBar.start()
+        if PROGRESS:
+            down() # To prepare for subBar
+            distanceBar = ProgressBar(widgets = distanceWidget, 
+                    maxval = maxDistance)
+            distanceBar.start()
 
         distance = minDistance
         while(distance < maxDistance):
@@ -144,32 +159,44 @@ def double_stratified(
             try:
                 points_epsilon_tests(numPoints, distance, csv, eqn)
                 
-            except StandardError as inst:
+            except Exception as inst:
                 pass
 
-            updateDistanceBar(distanceBar, distance)
+            if PROGRESS: updateDistanceBar(distanceBar, distance)
             distance += incDistance
 
 
-        distanceBar.finish()
-        up() # to cancel the '\n' of subBar
-        up() # to be at position of pBar
-        updatePointBar(pointBar, numPoints)
+        if PROGRESS:
+            distanceBar.finish()
+            up() # to cancel the '\n' of subBar
+            up() # to be at position of pBar
+            updatePointBar(pointBar, numPoints)
 
-    pointBar.finish()
-    down()
+    if PROGRESS:
+        pointBar.finish()
+        down()
 
     print("all tests have run")
+    return True
 
-def stratified((minPoints, maxPoints, incPoints),
+def radius(num_points):
+    return (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
+
+def stratified(point_options=(10, 1500, 10),
+        radius = radius,
+        test_name = "test",
         repeat = 1):
     """
     We let distance be a function of the number of points. We then step
     through a range of points count the number of connected
     components
+    >>> stratified((10, 100, 10))
+    all tests have run
+    True
     """
+    minPoints, maxPoints, incPoints = point_options
     eqn = False
-    testName = "plane"
+    testName = test_name
 
     csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
 
@@ -194,7 +221,7 @@ def stratified((minPoints, maxPoints, incPoints),
             try:
                 points_epsilon_tests(numPoints, distance, csv, eqn)
                 
-            except StandardError as inst:
+            except Exception as inst:
                 skip += 1
                 defaultWidget[2] = "Skip:"+str(skip)
                 if DEBUG: print(inst)
@@ -215,25 +242,31 @@ def stratified((minPoints, maxPoints, incPoints),
     down()
 
     print("all tests have run")
+    return True
 
 import numpy.random as npr
 
-def monte_carlo(testName, eqn = False):
+def monte_carlo(distance_bounds=(0.01,1),
+        point_bounds=(1, 1500),
+        iterations=10000,
+        testName = 'test',
+        eqn = False):
     """
     We run a Monte Carlo test, choosing number of points and a distance at 
     random uniformly and count the number of connected components.
+    >>> monte_carlo((0.01, 1), (1, 1500), 10)
+    all tests have run
+    True
     """
 
     csv = make_csv(testName, ["Number of points", "Distance", "Connected components"])
 
-    minDistance = 0.01
-    maxDistance = 1
+    minDistance, maxDistance = distance_bounds
 
-    minPoints = 1
-    maxPoints = 1500
+    minPoints, maxPoints = point_bounds
 
     iteration = 0
-    iterations = 10000
+    iterations = iterations
     pBar = ProgressBar(widgets = defaultWidget, maxval = iterations)
     pBar.start()
 
@@ -248,10 +281,10 @@ def monte_carlo(testName, eqn = False):
         try:
             num_points = npr.random_integers(minPoints, maxPoints)
             points_epsilon_tests(num_points, distance, csv, eqn)
-            widgetsOverall[0] = "Iter:"+str(iteration)
-        except StandardError as inst:
+            updateDefaultIterBar(pBar, iteration)
+        except Exception as inst:
             skip += 1
-            widgetsOverall[2] = "Skip:"+str(skip)
+            updateDefaultSkipBar(pBar, skip)
             if DEBUG: print(inst)
             if DEBUG: print("skip")
             pass
@@ -264,10 +297,10 @@ def monte_carlo(testName, eqn = False):
     down()
 
     print("all tests have run")
-    csv.close()
+    return True
 
 import numpy as np
-# from persispy.phc.points import phc
+from persispy.phc import Intersect
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wSimplex, wGraph, wSimplicialComplex
 from persispy.points import plane
@@ -279,7 +312,7 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
 
     try:
         if eqn:
-            pc = phc(eqn, num_points = num_points, return_complex = True)
+            pc = Intersect(eqn, num_points = num_points, return_complex = True)
         else:
             pc = plane(num_points)
         row.append(str(num_points))
@@ -288,7 +321,7 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
         cp = len(ng.connected_components())
         if DEBUG: print("connected components", cp)
         row.append(str(cp))
-    except StandardError as inst:
+    except Exception as inst:
         if DEBUG: print(inst)
         failures.append(inst.args[0])
         return failures
@@ -298,22 +331,35 @@ def points_epsilon_tests(num_points, distance, csv, eqn = False):
     csv.writerow(row)
     return cp
 
+def sample_function(num_points):
+    return (np.log(np.log(num_points))**(1.0/2.0))/num_points**(1.0/2.0)
+
 def repeat():
     """
     repeats the test
     """
     prompt = input("How many times to run the test?")
-    for _ in range(prompt):
+    for _ in range(int(prompt)):
         stratified(
-                (10, 1500, 10)) 
+                (10, 1500, 10),
+                radius = sample_function) 
 
         double_stratified(
                 (10, 1500, 10),
                 (0.01, 0.3, 0.01)) 
 
+#         monte_carlo(
+#                 (1,100),
+#                 (0.01, 0.3),
+#                 10)
+
+
 def main():
     repeat()
 
+def test():
+    import doctest
+    doctest.testmod(extraglobs = {PROGRESS:False})
 
-if __name__ == "__main__": main()
+if __name__ == "__main__": test()
     
