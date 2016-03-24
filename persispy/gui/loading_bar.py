@@ -165,7 +165,7 @@ class Bar(ProgressBarWidgetHFill):
         self.left = left
         self.right = right
     def _format_marker(self, pbar):
-        if isinstance(self.marker, (str, unicode)):
+        if isinstance(self.marker, (str, str)):
             return self.marker
         else:
             return self.marker.update(pbar)
@@ -262,7 +262,7 @@ class ProgressBar(object):
                 r.append(w)
                 hfill_inds.append(i)
                 num_hfill += 1
-            elif isinstance(w, (str, unicode)):
+            elif isinstance(w, str):
                 r.append(w)
                 currwidth += len(w)
             else:
@@ -270,7 +270,7 @@ class ProgressBar(object):
                 currwidth += len(weval)
                 r.append(weval)
         for iw in hfill_inds:
-            r[iw] = r[iw].update(self, (self.term_width-currwidth)/num_hfill)
+            r[iw] = r[iw].update(self, (self.term_width-currwidth)//num_hfill)
         return r
 
     def _format_line(self):
@@ -334,7 +334,7 @@ if __name__=='__main__':
             # do something
             pbar.update(10*i+1)
         pbar.finish()
-        print
+        print()
 
     def example2():
         class CrazyFileTransferSpeed(FileTransferSpeed):
@@ -353,7 +353,7 @@ if __name__=='__main__':
             # do something
             pbar.update(5*i+1)
         pbar.finish()
-        print
+        print()
 
     def example3():
         widgets = [Bar('>'), ' ', ETA(), ' ', ReverseBar('<')]
@@ -362,7 +362,7 @@ if __name__=='__main__':
             # do something
             pbar.update(10*i+1)
         pbar.finish()
-        print
+        print()
 
     def example4():
         widgets = ['Test: ', 
@@ -380,12 +380,12 @@ if __name__=='__main__':
             time.sleep(0.5)
             pbar.update(i)
         pbar.finish()
-        print
+        print()
 
 
-#     example1()
-#     example2()
-#     example3()
+    example1()
+    example2()
+    example3()
     example4()
 
 
