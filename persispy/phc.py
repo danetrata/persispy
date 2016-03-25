@@ -11,7 +11,7 @@ from phcpy.trackers import track
 from phcpy.solutions import strsol2dict # points
 
 from persispy.point_cloud import PointCloud
-from persispy.hash_point import HashPoint
+from persispy.hashing import HashPoint
 
 
 from string import ascii_letters, digits

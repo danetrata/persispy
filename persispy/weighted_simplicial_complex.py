@@ -4,7 +4,7 @@ import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from persispy.utils import tuples
 # from persispy.hash_edge import HashEdge
-from persispy.hash import HashEdge
+from persispy.hashing import HashEdge
 from numpy import array
 import itertools
 import sys
