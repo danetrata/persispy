@@ -72,6 +72,25 @@ class SimplexContainer:
             
     def __hash__(self):
         return hash(tuple(self.simplex._vertices))
+
+    def __lt__(self,other):
+        return self.simplex < other.simplex
+
+    def __gt__(self,other):
+        return other < self
+
+    def __le__(self,other):
+        return self.simplex <= other.simplex
+
+    def __ge__(self,other):
+        return other <= self
+
+    def __eq__(self,other):
+        return self.simplex==other.simplex
+
+    def __ne__(self,other):
+        return not self==other
+
     def __cmp__(self, other):
         return self.simplex.__cmp__(other.simplex)
-   
+

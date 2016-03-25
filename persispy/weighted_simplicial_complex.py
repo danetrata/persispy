@@ -39,8 +39,29 @@ class wSimplex:
         else:
             return False
 
+    def __lt__(self,other):
+        return self._weight < other._weight
+
+    def __gt__(self,other):
+        return other < self
+
+    def __le__(self,other):
+        return self._weight <= other._weight
+
+    def __ge__(self,other):
+        return other <= self
+
+    def __eq__(self,other):
+        return self._weight==other._weight and self._vertices==other._vertices
+
+    def __ne__(self,other):
+        return not self==other
+
+    # DEPRECIATED in python3
     def __cmp__(self,other):
         value = 0.0;
+        # This is extremely dangerous as set is a standard library class in
+        # Python. In any case, __cmp__ is depreciated in python3.
         set = False;
         if (self._weight!=other._weight) and not set:
             value = self._weight - other._weight
