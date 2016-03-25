@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 from matplotlib import pyplot as plt
 import persispy.weighted_simplicial_complex as wsc
-DEBUG = True
+DEBUG = False
 
 class PersistentHomology:
     def __init__(self, simplicial_complex, n):
