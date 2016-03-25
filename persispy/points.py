@@ -12,7 +12,7 @@ AUTHORS:
     - Benjamin Antieau (2015-04)
 
 This module contains several functions that produce PointClouds, and it
-contains the definition of the hash_point.HashPoint class. This provids a wrapping up a
+contains the definition of the hashing.HashPoint class. This provides a wrapping up a
 numpy.array that is suitable for hashing. A hashable 'point' is necessary for
 certain subroutines of the PointCloud class, especially the neighborhood_graph
 function.
@@ -23,7 +23,7 @@ import scipy.constants as scic
 import numpy as np
 
 from persispy.point_cloud import PointCloud
-from persispy.hash_point import HashPoint
+from persispy.hashing import HashPoint
 
 # 3d examples
 def sphere(num_points,radius=1,method='rejection'):

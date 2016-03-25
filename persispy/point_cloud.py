@@ -4,8 +4,7 @@
 
 from persispy.weighted_simplicial_complex import wGraph
 from persispy.utils import tuples
-import persispy.hash_edge
-import persispy.hash_point
+from persispy.hashing import HashPoint,HashEdge
 
 import numpy as np
 import matplotlib as mpl
@@ -33,20 +32,16 @@ class PointCloud:
         try:
             self._points=list(points)
         except TypeError:
-            raise TypeError('Input points should be of iterable points.')
+            raise TypeError('Input points should be a list of points.')
         try:
             hash(self._points[0])
         except TypeError:
-            print("Detected points are not HashPoints. Attempting to convert.")
-            points = [hash_point.HashPoint(
-                    points[n], 
-                    index=n) 
-                    for n in range(len(points))] 
+            print("Detected points are not hashable. Attempting to convert to HashPoints.")
+            self._points = [HashPoint(points[n],index=n) for n in range(len(points))] 
 #             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
 
-        self._points = points
         self._space = space
         self._fig = None
         self.gui = gui
@@ -181,6 +176,20 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+
+            # For the two plotting directions
+#            minx=min(p._coords[axes[0]] for p in self._points)
+#            maxx=max(p._coords[axes[0]] for p in self._points)
+#            miny=min(p._coords[axes[1]] for p in self._points)
+#            maxy=max(p._coords[axes[1]] for p in self._points)
+#            minz=min(p._coords[axes[2]] for p in self._points)
+#            maxz=max(p._coords[axes[2]] for p in self._points)
+
+#            ax.set_xlim(minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx))
+#            ax.set_ylim(miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny))
+#            ax.set_xlim(minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz))
+
+#             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny),minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz)])
 
             # TODO: I would prefer we do an automatic window sizing function here
             # too.
@@ -334,7 +343,7 @@ class PointCloud:
                     for vertex in component:
                         for endPoint in adj[vertex]:
                             if len(self._points[0]._coords) >= 3:
-                                edges[edgeIndex] = hash_edge.HashEdge(
+                                edges[edgeIndex] = HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]],
@@ -345,7 +354,7 @@ class PointCloud:
                                             ), index = edgeIndex
                                         )
                             elif len(self._points[0]) == 2:
-                                edges[edgeIndex] = hash_edge.HashEdge(
+                                edges[edgeIndex] = HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]], 
@@ -392,6 +401,8 @@ class PointCloud:
             ax.set_ylabel('y')
             ax.set_zlabel('z')
 
+            # TODO: do automatic-window sizing as we implement it in
+            # self.plot3d().
             ax.set_xlim(-3,3)
             ax.set_ylim(-3,3)
             ax.set_zlim(-3,3)
