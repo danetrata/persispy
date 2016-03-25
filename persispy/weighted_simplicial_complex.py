@@ -4,7 +4,7 @@ import scipy.sparse.csgraph as csgraph
 import scipy.sparse as sparse
 from persispy.utils import tuples
 # from persispy.hash_edge import HashEdge
-from persispy.hash import HashEdge
+from persispy.hash import HashPoint, HashEdge
 from numpy import array
 import itertools
 import sys
@@ -21,9 +21,16 @@ class wSimplex:
 
         Variables:
             _vertices: a list of points.
-            _weight: the weight.
+            _weight: the weight. The maximum edge of a simplex.
+
+        >>> wSimplex(vertices = [HashPoint(coords = (0,0,0), index = 0), \
+                            HashPoint((1,0,0), index = 1)], \
+                    weight = 1)
+        Weighted simplex (point 0: [0, 0, 0], point 1: [1, 0, 0]) with weight 1
         '''
+
         self._vertices=tuple(sorted(list(vertices), key=lambda v:v._index))
+        self._size=len(vertices)
         self._weight=weight
         self._index=-1 #the index of this simplex in the compatible total ordering
 
@@ -34,33 +41,50 @@ class wSimplex:
         return 'Weighted simplex '+ str(self._vertices)+' with weight '+str(self._weight)
 
     def __eq__(self,right):
-        if set(self._vertices)==set(right._vertices) and self._weight==right._weight:
+        if set(self._vertices)==set(right._vertices) and \
+                self._weight==right._weight:
             return True
-        else:
-            return False
 
-    def __cmp__(self,other):
-        value = 0.0;
-        set = False;
-        if (self._weight!=other._weight) and not set:
-            value = self._weight - other._weight
-            set = True
-        if (len(self._vertices)!=len(other._vertices)) and not set:
-            walue = len(self._vertices)-len(other._vertices)
-            set = True
-        if not set:
-            if self._vertices!=other._vertices:
-                for i in range(len(self._vertices)):
-                    if self._vertices[i]!=other._vertices[i]:
-                        if self._vertices[i]<other._vertices[i]:
-                            return -1
-                        if self._vertices[i]>other._vertices[i]:
-                            return 1
-        if value<0:
-            return -1
-        if value>0:
-            return 1
-        return 0
+
+    def __lt__(self, other):
+        if self._weight < other._weight:
+            return True
+        if self._size < other._size:
+            return True
+        for i in range(len(other._vertices)):
+            if self._vertices[i]<other._vertices[i]:
+                return True
+
+
+
+    
+
+#     def __cmp__(self,other):
+#         value = 0.0;
+#         set = False;
+#         if (self._weight!=other._weight) and not set:
+#             value = self._weight - other._weight
+#             set = True
+#         if (len(self._vertices)!=len(other._vertices)) and not set:
+#             value = len(self._vertices)-len(other._vertices)
+#             set = True
+#         if not set:
+#             if self._vertices!=other._vertices:
+#                 for i in range(len(self._vertices)):
+#                     if self._vertices[i]!=other._vertices[i]:
+#                         if self._vertices[i]<other._vertices[i]:
+#                             value = -1
+#                             break
+#                         elif self._vertices[i]>other._vertices[i]:
+#                             value = 1
+#                             break
+#         if value<0:
+#             return -1
+#         if value>0:
+#             return 1 
+#         return 0
+
+
 
 class wGraph:
     def __init__(self, adjacencies, epsilon):
@@ -433,12 +457,14 @@ class wSimplicialComplex:
         ordering of the vertices implicit in the list self._simplices[0].
         '''
         dictionary=[x._vertices[0] for x in self._simplices[0]]
+
         def simplex_cmp_lex(s,t):
             sindices=tuple([dictionary.index(x) for x in s._vertices])
             tindices=tuple([dictionary.index(x) for x in t._vertices])
             return cmp(sindices,tindices)
         for d in range(1,self.dimension()+1):
             self._simplices[d].sort(simplex_cmp_lex)
+
         return None
 
     def VRComplex(self, epsilon):
@@ -530,3 +556,10 @@ class _clique_iterator:
     def next(self):
         return tuple(self.iterator.next())
     
+def test():
+    import doctest
+    doctest.testmod()
+
+
+if __name__ == "__main__":
+    test()

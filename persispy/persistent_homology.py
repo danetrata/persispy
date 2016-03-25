@@ -3,8 +3,8 @@ from collections import defaultdict
 import numpy as np
 import itertools as it
 from matplotlib import pyplot as plt
-from . import weighted_simplicial_complex as wsc
-
+import persispy.weighted_simplicial_complex as wsc
+DEBUG = True
 
 class PersistentHomology:
     def __init__(self, simplicial_complex, n):
@@ -14,7 +14,14 @@ class PersistentHomology:
         for dimension in simplicial_complex._simplices:
             if dimension<=n+1:
                 _wSimplices.extend(simplicial_complex._simplices[dimension])
-        self.Simplices = sorted([SimplexContainer(s) for s in sorted(_wSimplices)])
+        if DEBUG:
+            for item in _wSimplices:
+                print(item)
+
+        simContainer = [SimplexContainer(s) for s in sorted(_wSimplices)]
+        if DEBUG: print(simContainer)
+
+        self.Simplices = sorted(simContainer)
         self.PersistencePairs = dict()
         for i,s in enumerate(self.Simplices):
             self.VertexDict[tuple(s.simplex._vertices)] = s
@@ -36,6 +43,7 @@ class PersistentHomology:
                     self.PersistencePairs[s.entries[0]]=s
             
     def plotBarCode(self,d,e):
+        if DEBUG: print(d,e)
         i=1
         j=1;
         moreElements=True
@@ -63,15 +71,21 @@ class SimplexContainer:
         self.simplex = sim
         self.entries = sortedcontainers.SortedSet()
         self.index = -1
+
     def compute_entries(self, ph):
         if len(self.simplex._vertices)<2:
             return
         for x in range(len(self.simplex._vertices)):
             # Make more pythonic!
-            self.entries.add(ph.VertexDict[tuple(self.simplex._vertices[:x]+self.simplex._vertices[x+1:])])
+            self.entries.add(ph.VertexDict[tuple(self.simplex._vertices[:x]+self.simplex._vertices[x:])])
             
     def __hash__(self):
         return hash(tuple(self.simplex._vertices))
-    def __cmp__(self, other):
-        return self.simplex.__cmp__(other.simplex)
+#     def __cmp__(self, other):
+#         return self.simplex.__cmp__(other.simplex)
+    def __lt__(self, other):
+        return self.simplex < other.simplex
+
+    def __eq__(self, other):
+        return self.simplex == other.simplex
    
