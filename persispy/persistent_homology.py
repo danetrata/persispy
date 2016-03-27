@@ -4,7 +4,7 @@ import numpy as np
 import itertools as it
 from matplotlib import pyplot as plt
 import persispy.weighted_simplicial_complex as wsc
-DEBUG = True
+DEBUG = False
 
 class PersistentHomology:
     def __init__(self, simplicial_complex, n):
@@ -83,11 +83,25 @@ class SimplexContainer:
             
     def __hash__(self):
         return hash(tuple(self.simplex._vertices))
-#     def __cmp__(self, other):
-#         return self.simplex.__cmp__(other.simplex)
-    def __lt__(self, other):
+
+    def __lt__(self,other):
         return self.simplex < other.simplex
 
-    def __eq__(self, other):
-        return self.simplex == other.simplex
-   
+    def __gt__(self,other):
+        return other < self
+
+    def __le__(self,other):
+        return self.simplex <= other.simplex
+
+    def __ge__(self,other):
+        return other <= self
+
+    def __eq__(self,other):
+        return self.simplex==other.simplex
+
+    def __ne__(self,other):
+        return not self==other
+
+    def __cmp__(self, other):
+        return self.simplex.__cmp__(other.simplex)
+

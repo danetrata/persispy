@@ -43,45 +43,52 @@ class wSimplex:
         if set(self._vertices)==set(right._vertices) and \
                 self._weight==right._weight:
             return True
+        else:
+            return False
 
+    def __lt__(self,other):
+        return self._weight < other._weight
 
-    def __lt__(self, other):
-        if self._weight < other._weight:
-            return True
-        if self._size < other._size:
-            return True
-        for i in range(len(other._vertices)):
-            if self._vertices[i]<other._vertices[i]:
-                return True
+    def __gt__(self,other):
+        return other < self
 
+    def __le__(self,other):
+        return self._weight <= other._weight
 
+    def __ge__(self,other):
+        return other <= self
 
-#     def __cmp__(self,other):
-#         value = 0.0;
-#         set = False;
-#         if (self._weight!=other._weight) and not set:
-#             value = self._weight - other._weight
-#             set = True
-#         if (len(self._vertices)!=len(other._vertices)) and not set:
-#             value = len(self._vertices)-len(other._vertices)
-#             set = True
-#         if not set:
-#             if self._vertices!=other._vertices:
-#                 for i in range(len(self._vertices)):
-#                     if self._vertices[i]!=other._vertices[i]:
-#                         if self._vertices[i]<other._vertices[i]:
-#                             value = -1
-#                             break
-#                         elif self._vertices[i]>other._vertices[i]:
-#                             value = 1
-#                             break
-#         if value<0:
-#             return -1
-#         if value>0:
-#             return 1 
-#         return 0
+    def __eq__(self,other):
+        return self._weight==other._weight and self._vertices==other._vertices
 
+    def __ne__(self,other):
+        return not self==other
 
+    # DEPRECIATED in python3
+    def __cmp__(self,other):
+        value = 0.0;
+        # This is extremely dangerous as set is a standard library class in
+        # Python. In any case, __cmp__ is depreciated in python3.
+        set = False;
+        if (self._weight!=other._weight) and not set:
+            value = self._weight - other._weight
+            set = True
+        if (len(self._vertices)!=len(other._vertices)) and not set:
+            walue = len(self._vertices)-len(other._vertices)
+            set = True
+        if not set:
+            if self._vertices!=other._vertices:
+                for i in range(len(self._vertices)):
+                    if self._vertices[i]!=other._vertices[i]:
+                        if self._vertices[i]<other._vertices[i]:
+                            return -1
+                        if self._vertices[i]>other._vertices[i]:
+                            return 1
+        if value<0:
+            return -1
+        if value>0:
+            return 1
+        return 0
 
 class wGraph:
     def __init__(self, adjacencies, epsilon):
