@@ -56,8 +56,6 @@ class wSimplex:
 
 
 
-    
-
 #     def __cmp__(self,other):
 #         value = 0.0;
 #         set = False;
