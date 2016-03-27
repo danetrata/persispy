@@ -46,6 +46,24 @@ An alternative to pip is to call the setup file directly. For a local installati
 PHCpy
 -----
 
+Clone from the remote PHCpack git repo.
+
+::
+
+  git clone https://github.com/callmetaste/PHCpack
+
+
+Quick install
+=============
+
+Run the installation script. This should take care of all dependencies to compile phcpy on a standard system.
+
+::
+
+    ./PHCpack/setup
+
+Full installation procedure
+===========================
 
 First, we ensure the system has the tools to compile the shared libraries. The system will need the following packages:
 
@@ -66,27 +84,6 @@ First, we ensure the system has the tools to compile the shared libraries. The s
     echo "all dependencies found"
 
     sudo apt-get install python3-dev gnat openmpi*
-
-
-
-Clone from the remote PHCpack git repo.
-
-::
-
-  git clone https://github.com/callmetaste/PHCpack
-
-
-Quick install
-=============
-
-Run the installation script. This should take care of all dependencies to compile phcpy on a standard system.
-
-::
-
-    ./PHCpack/setup
-
-Full installation procedure
-===========================
 
 The shared library "phcpy2c3.so" needs to be compiled on each and every system.
 This fork is a stable release with of PHCpack a few changes to the setup so out-of-the-box installation on Unix is relatively easy.

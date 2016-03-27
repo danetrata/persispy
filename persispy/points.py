@@ -78,8 +78,7 @@ def flat_torus(num_points):
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
     return PointCloud([HashPoint(np.array([np.cos(angles[n][0]),np.sin(angles[n][0]),np.cos(angles[n][1]),np.sin(angles[n][1])]),index=n) for n in range(num_points)],space='affine')
 
-def box(
-        number_of_points, 
+def box(number_of_points, 
         dimension = 2, 
         side_length = 1, 
         seed = False, 
