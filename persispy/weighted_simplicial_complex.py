@@ -39,44 +39,43 @@ class wSimplex:
     def __repr__(self):
         return 'Weighted simplex '+ str(self._vertices)+' with weight '+str(self._weight)
 
-    def __eq__(self,right):
-        if set(self._vertices)==set(right._vertices) and \
-                self._weight==right._weight:
-            return True
-        else:
-            return False
-
     def __lt__(self,other):
-        return self._weight < other._weight
+        print '<'
+        return self.compare(other) < 0
 
     def __gt__(self,other):
-        return other < self
+        print '>'
+        return self.compare(other) > 0
 
     def __le__(self,other):
-        return self._weight <= other._weight
+        print '<='
+        return self.compare(other) <= 0
 
     def __ge__(self,other):
-        return other <= self
+        print '>='
+        return self.compare(other) >= 0
 
     def __eq__(self,other):
-        return self._weight==other._weight and self._vertices==other._vertices
+        print '=='
+        return self.compare(other) == 0
 
     def __ne__(self,other):
+        print '!='
         return not self==other
 
     # DEPRECIATED in python3
-    def __cmp__(self,other):
+    def compare(self,other):
         value = 0.0;
         # This is extremely dangerous as set is a standard library class in
         # Python. In any case, __cmp__ is depreciated in python3.
-        set = False;
-        if (self._weight!=other._weight) and not set:
+        finished = False;
+        if (self._weight!=other._weight) and not finished:
             value = self._weight - other._weight
-            set = True
-        if (len(self._vertices)!=len(other._vertices)) and not set:
-            walue = len(self._vertices)-len(other._vertices)
-            set = True
-        if not set:
+            finished = True
+        if (len(self._vertices)!=len(other._vertices)) and not finished:
+            value = len(self._vertices)-len(other._vertices)
+            finished = True
+        if not finished:
             if self._vertices!=other._vertices:
                 for i in range(len(self._vertices)):
                     if self._vertices[i]!=other._vertices[i]:
