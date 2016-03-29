@@ -37,7 +37,7 @@ class HashPoint:
         try:
             out = self._hash
             return out
-        except NameError:
+        except AttributeError:
             self._hash = int(hashlib.sha1(self._coords.view()).hexdigest(), 16)
             return self._hash
 
@@ -156,7 +156,7 @@ class HashEdge:
         try:
             out = self._hash
             return out
-        except NameError:
+        except AttributeError:
             self._hash = int(hashlib.sha1(self.edge.view()).hexdigest(), 16)
             return self._hash
 
