@@ -2,7 +2,7 @@ import sortedcontainers
 from collections import defaultdict
 import numpy as np
 import itertools as it
-import weighted_simplicial_complex as wsc
+import persispy.weighted_simplicial_complex as wsc
 import matplotlib.pyplot as plt
 import colorsys
 
