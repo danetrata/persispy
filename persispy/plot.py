@@ -1,4 +1,3 @@
-
 """
 input: pointCloud OR
     wGraph
@@ -8,6 +7,8 @@ import numpy as np
 import time
 
 import matplotlib
+# TODO: Marginpar does this actually do anything? In py.test-ing I found out that it
+# seems to not.--Ben
 matplotlib.use('GTK3Agg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg\

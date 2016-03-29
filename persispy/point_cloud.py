@@ -46,8 +46,7 @@ class PointCloud:
         self._fig = None
         self.gui = gui
 
-    def __str__(self):
-
+    def __repr__(self):
         try:
             repr(self.dimension())
         except AttributeError:
@@ -55,10 +54,6 @@ class PointCloud:
         return 'Point cloud with ' + repr(self.num_points()) + \
             ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
-
-    def __repr__(self):
-        return self._points.__repr__()
-
 
     def __len__(self):
         return len(self._points)
