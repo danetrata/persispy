@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 from distutils.core import setup
 
 def is_package(path): # find packages helper function
