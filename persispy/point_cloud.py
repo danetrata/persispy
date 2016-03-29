@@ -1,26 +1,34 @@
-# TODO: We should look to seperate the methods that generate points
-# and the methods that act on those points.
-# Left alone for now because many modules rely on this.
+'''
+File: point_cloud.py
 
-from persispy.weighted_simplicial_complex import wGraph
-from persispy.utils import tuples
-from persispy.hashing import HashPoint,HashEdge
+The PointCloud data structure and related functions.
+
+AUTHORS:
+
+    - Daniel Etrata (2015-11)
+    - Benjamin Antieau (2015-04)
+
+TODO: We should look to seperate the methods that generate points
+and the methods that act on those points.
+Left alone for now because many modules rely on this.
+
+'''
+
+import math
+import os as os
 
 import numpy as np
+from numpy import array
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
 import mpl_toolkits.mplot3d as a3
-from numpy import array
-import math
-import os as os
-import sys
 
-
+from persispy.weighted_simplicial_complex import wGraph
+from persispy.hashing import HashPoint, HashEdge
 
 class PointCloud:
-    
-    def __init__(self, points, space='affine', gui = False):
+    def __init__(self, points, space='affine', gui=False):
 
         '''
         Points should be a list of hashable objects.
@@ -30,17 +38,18 @@ class PointCloud:
             _space  : either 'affine' or 'projective'.
         '''
         try:
-            self._points=list(points)
+            self._points = list(points)
         except TypeError:
             raise TypeError('Input points should be a list of points.')
         try:
             hash(self._points[0])
         except TypeError:
             print("Detected points are not hashable. Attempting to convert to HashPoints.")
-            self._points = [HashPoint(points[n],index=n) for n in range(len(points))] 
+            self._points = [HashPoint(points[n], index=n) for n in range(len(points))]
 #             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
-            raise TypeError('The argument "space" should be set to either "affine" or "projective".')
+            raise TypeError('The argument "space" should be set to'
+                            +'either "affine" or "projective".')
 
         self._space = space
         self._fig = None
@@ -67,29 +76,27 @@ class PointCloud:
     def num_points(self):
         return len(self._points)
 
-
     def dimension(self):
-        if self._space=='affine':
+        if self._space == 'affine':
             return len(self._points[0]._coords)
-        elif self._space=='projective':
+        elif self._space == 'projective':
             return len(self._points[0]._coords)-1
 
-
-    def plot2d(self, axes=(0,1), save = False, title = False):
-        if self._space=='affine':
+    def plot2d(self, axes=(0, 1), save=False, title=False):
+        if self._space == 'affine':
 
             if self._fig is None:
-                fig=plt.figure()
+                fig = plt.figure()
             plt.clf()
 
             ax = fig.add_subplot(111)
-            fig.set_size_inches(10.0,10.0)
+            fig.set_size_inches(10.0, 10.0)
             if title is not False:
                 fig.suptitle(title)
-            xcoords=[p._coords[axes[0]] for p in self._points]
-            ycoords=[p._coords[axes[1]] for p in self._points]
+            xcoords = [p._coords[axes[0]] for p in self._points]
+            ycoords = [p._coords[axes[1]] for p in self._points]
 
-            ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
+            ax.scatter(xcoords, ycoords, marker='o', color="#ff6666")
 
             ax.grid(True)
             # TEST: the following code fixes a problem in the automatic window
@@ -97,11 +104,12 @@ class PointCloud:
             # smarter way to do this. It should be changed in the other
             # plotting functions as well. To be really smart, we should also
             # make the border scale with the total size of the plot.
-            maxx=max(xcoords)
-            minx=min(xcoords)
-            maxy=max(ycoords)
-            miny=min(ycoords)
-            ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+            maxx = max(xcoords)
+            minx = min(xcoords)
+            maxy = max(ycoords)
+            miny = min(ycoords)
+            ax.axis([minx-.1*abs(maxx-minx), maxx+.1*abs(maxx-minx),
+                     miny-.1*abs(maxy-miny), maxy+.1*abs(maxy-miny)])
 
             ax.set_aspect('equal')
             ax.set_xlabel('x')
@@ -116,7 +124,7 @@ class PointCloud:
             return None
 
 
-    def _display_plot(self, plt, method, save, DEBUG = True):
+    def _display_plot(self, plt, method, save):
         """
         We display a plot.
         Additionally, we can instead save a plot automatically.
@@ -126,7 +134,7 @@ class PointCloud:
             plt.show()
         elif save is not False:
 
-            def save_file(name): 
+            def save_file(name):
                 """
                 Saves the current plot. Has overwrite safeguards.
                 """
@@ -135,10 +143,9 @@ class PointCloud:
                     plt.savefig(name)
                 else:
                     attempt = 2
-                    while(os.path.isfile(name+'_'+str(attempt)+'.png')):
+                    while os.path.isfile(name+'_'+str(attempt)+'.png'):
                         attempt = attempt + 1
                     plt.savefig(name+'_'+str(attempt))
-
 
             if type(save) is bool: # default
                 save_file(method)
@@ -146,58 +153,40 @@ class PointCloud:
                 save_file(save)
         return True
 
-
-    def plot3d(self, axes=(0,1,2), save = False, title = False):
-        
-
-        if self._space=='affine':
-
+    def plot3d(self, axes=(0, 1, 2), save=False, title=False):
+        if self._space == 'affine':
             if self._fig is None: # faster to clear than to close and open
                 fig = plt.figure()
             plt.clf() # clears the figure
 
             ax = fig.add_subplot(111)
-            fig.set_size_inches(10.0,10.0)
+            fig.set_size_inches(10.0, 10.0)
             if title is not False:
                 fig.suptitle(title)
             ax = plt3.Axes3D(fig)
-            xcoords=[p._coords[axes[0]] for p in self._points]
-            ycoords=[p._coords[axes[1]] for p in self._points]
+            xcoords = [p._coords[axes[0]] for p in self._points]
+            ycoords = [p._coords[axes[1]] for p in self._points]
             if len(self._points[0]) == 3:
-                zcoords=[p._coords[axes[2]] for p in self._points]
+                zcoords = [p._coords[axes[2]] for p in self._points]
             else:
-                zcoords=[0 for _ in self._points]
-            ax.scatter(xcoords, ycoords, zcoords, marker = '.', color = '#ff6666')
+                zcoords = [0 for _ in self._points]
+            ax.scatter(xcoords, ycoords, zcoords, marker='.', color='#ff6666')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
 
-            # For the two plotting directions
-#            minx=min(p._coords[axes[0]] for p in self._points)
-#            maxx=max(p._coords[axes[0]] for p in self._points)
-#            miny=min(p._coords[axes[1]] for p in self._points)
-#            maxy=max(p._coords[axes[1]] for p in self._points)
-#            minz=min(p._coords[axes[2]] for p in self._points)
-#            maxz=max(p._coords[axes[2]] for p in self._points)
-
-#            ax.set_xlim(minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx))
-#            ax.set_ylim(miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny))
-#            ax.set_xlim(minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz))
-
-#             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny),minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz)])
-
             # TODO: I would prefer we do an automatic window sizing function here
             # too.
-            ax.set_xlim(-3,3)
-            ax.set_ylim(-3,3)
-            ax.set_zlim(-3,3)
+            ax.set_xlim(-3, 3)
+            ax.set_ylim(-3, 3)
+            ax.set_zlim(-3, 3)
             # Set camera viewpoint
             # Elevation of camera (default is 30)
-            ax.elev=30
+            ax.elev = 30
             # Azimuthal angle of camera (default is 30)
-            ax.azim=30
+            ax.azim = 30
             # Camera distance (default is 10)
-            ax.dist=10
+            ax.dist = 10
             fig.add_axes(ax)
 
             # whether to display plot or save it
@@ -207,58 +196,51 @@ class PointCloud:
         else:
             return None
 
-
     def plot2d_neighborhood_graph(self,
-            epsilon,
-            axes=(0,1),
-            # Changed default shading_axis to 1 from 2. This is to fix an index
-            # error when plotting 2-dimensional point clouds. --Ben A.
-            shading_axis=1,
-            method='subdivision', 
-            save = False, 
-            title = False):
+                                  epsilon, axes=(0, 1), shading_axis=1,
+                                  method='subdivision', save=False,
+                                  title=False):
         """
         Plots the 2d neighborhood graph
         """
 
-        if self._space=='affine':
-            g=self.neighborhood_graph(epsilon,method)
-            edges=[]
-            c=[]
+        if self._space == 'affine':
+            g = self.neighborhood_graph(epsilon, method)
+            edges = []
+            c = []
 
             # For the two plotting directions
-            minx=min(p._coords[axes[0]] for p in self._points)
-            maxx=max(p._coords[axes[0]] for p in self._points)
-            miny=min(p._coords[axes[1]] for p in self._points)
-            maxy=max(p._coords[axes[1]] for p in self._points)
+            minx = min(p._coords[axes[0]] for p in self._points)
+            maxx = max(p._coords[axes[0]] for p in self._points)
+            miny = min(p._coords[axes[1]] for p in self._points)
+            maxy = max(p._coords[axes[1]] for p in self._points)
 
             # For the shading direction
-            minz=min(p._coords[shading_axis] for p in self._points)
-            maxz=max(p._coords[shading_axis] for p in self._points)
+            minz = min(p._coords[shading_axis] for p in self._points)
+            maxz = max(p._coords[shading_axis] for p in self._points)
 
             for p in self._points:
-                if p._coords[shading_axis]<=minz+(maxz-minz)/2:
-                    pc=p._coords
+                if p._coords[shading_axis] <= minz+(maxz-minz)/2:
+                    pc = p._coords
                     for e in g._adj[p]:
-                        qc=e[0]._coords
-                        edges.append([[qc[axes[0]],qc[axes[1]]],[pc[axes[0]],pc[axes[1]]]])
-                        c.append(((p._coords[shading_axis]-minz)/(maxz-minz),.5,.5,.5))
+                        qc = e[0]._coords
+                        edges.append([[qc[axes[0]], qc[axes[1]]], [pc[axes[0]], pc[axes[1]]]])
+                        c.append(((p._coords[shading_axis]-minz)/(maxz-minz), .5, .5, .5))
             for p in self._points:
-                if p._coords[shading_axis]>=minz+(maxz-minz)/2:
-                    pc=p._coords
+                if p._coords[shading_axis] >= minz+(maxz-minz)/2:
+                    pc = p._coords
                     for e in g._adj[p]:
-                        qc=e[0]._coords
-                        edges.append([[qc[axes[0]],qc[axes[1]]],[pc[axes[0]],pc[axes[1]]]])
-                        c.append(((p._coords[shading_axis]-minz)/(maxz-minz),.5,.5,.5))
-            lines=mpl.collections.LineCollection(edges,color=c)
+                        qc = e[0]._coords
+                        edges.append([[qc[axes[0]], qc[axes[1]]], [pc[axes[0]], pc[axes[1]]]])
+                        c.append(((p._coords[shading_axis]-minz)/(maxz-minz), .5, .5, .5))
+            lines = mpl.collections.LineCollection(edges, color=c)
 
             if self._fig is None: # faster to clear than to close and open
                 fig = plt.figure()
             plt.clf()
 
-
             ax = fig.add_subplot(111)
-            fig.set_size_inches(10.0,10.0)
+            fig.set_size_inches(10.0, 10.0)
             if title is not False:
                 fig.suptitle(title)
             ax.grid(True)
@@ -267,11 +249,12 @@ class PointCloud:
             # be connected to any others. Previously, these were not visible in
             # the graph. This particular choice of coloring might not be ideal
             # in all circumstances.
-            xcoords=[p._coords[axes[0]] for p in self._points]
-            ycoords=[p._coords[axes[1]] for p in self._points]
-            ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
+            xcoords = [p._coords[axes[0]] for p in self._points]
+            ycoords = [p._coords[axes[1]] for p in self._points]
+            ax.scatter(xcoords, ycoords, marker='o', color="#ff6666")
 
-            ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+            ax.axis([minx-.1*abs(maxx-minx), maxx+.1*abs(maxx-minx),
+                miny-.1*abs(maxy-miny), maxy+.1*abs(maxy-miny)])
             ax.set_aspect('equal')
             ax.add_collection(lines)
 #             xcoords=[p._coords[axes[0]] for p in self._points]
@@ -287,17 +270,17 @@ class PointCloud:
 
 
 
-    def plot3d_neighborhood_graph(self, 
-            epsilon, 
-            axes=(0,1,2), 
-            cmap = 0,
-            method='subdivision', 
-            save = False, 
-            title = False,
-            DEBUG = False):
+    def plot3d_neighborhood_graph(self,
+                                  epsilon,
+                                  axes=(0, 1, 2),
+                                  cmap=0,
+                                  method='subdivision',
+                                  save=False,
+                                  title=False,
+                                  DEBUG=False):
 
-        """ 
-        For a given epsilon, makes a 3-dimensional plot of a neighborhood 
+        """
+        For a given epsilon, makes a 3-dimensional plot of a neighborhood
         graph.
         Currently, there are the following cmap options which are selected
         by index:
@@ -305,11 +288,11 @@ class PointCloud:
             1 - Accent
             2 - Paired
             3 - rainbow
-        Also, the function can also take a different method, and 
+        Also, the function can also take a different method, and
         automatically save a plot with or without a title
         """
 
-        if self._space=='affine':
+        if self._space == 'affine':
 
             if self._fig is None: # faster to clear than to close and open
                 fig = plt.figure()
@@ -321,13 +304,13 @@ class PointCloud:
             ax = plt3.Axes3D(fig)
 
 
-            g=self.neighborhood_graph(epsilon, method)
+            g = self.neighborhood_graph(epsilon, method)
             adj = g._adj
             cp = g.connected_components()
             cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
-                    plt.cm.rainbow]
-            cmap = cmaps[cmap] # color mappings 
-            line_colors = cmap(np.linspace(0,1, len(cp)))
+                     plt.cm.rainbow]
+            cmap = cmaps[cmap] # color mappings
+            line_colors = cmap(np.linspace(0, 1, len(cp)))
 
             componentIndex = 0
             totalEdges = 0
@@ -339,10 +322,10 @@ class PointCloud:
                         for endPoint in adj[vertex]:
                             if len(self._points[0]._coords) >= 3:
                                 edges[edgeIndex] = HashEdge(
-                                        array([
-                                            [vertex[axes[0]],
-                                                vertex[axes[1]],
-                                                vertex[axes[2]]],
+                                    array([
+                                        [vertex[axes[0]],
+                                             vertex[axes[1]],
+                                             vertex[axes[2]]],
                                             [endPoint[0][axes[0]],
                                                 endPoint[0][axes[1]],
                                                 endPoint[0][axes[2]]]]
@@ -362,7 +345,7 @@ class PointCloud:
                             edgeIndex += 1
                 edges = edges.values()
                 edges = set(edges)
-                for _edge in edges:
+                for _ in edges:
                     totalEdges += 1
 
                 if DEBUG:
@@ -381,7 +364,7 @@ class PointCloud:
                 lines.set_edgecolor(line_colors[componentIndex])
                 ax.add_collection(lines)
                 componentIndex += 1
-            
+
             if DEBUG: print(totalEdges)
 
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
@@ -390,7 +373,7 @@ class PointCloud:
             ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
                     verticalalignment='top', bbox = props)
 
-            fig.set_size_inches(10.0,10.0)
+            fig.set_size_inches(10.0, 10.0)
 
             ax.set_xlabel('x')
             ax.set_ylabel('y')
@@ -398,9 +381,9 @@ class PointCloud:
 
             # TODO: do automatic-window sizing as we implement it in
             # self.plot3d().
-            ax.set_xlim(-3,3)
-            ax.set_ylim(-3,3)
-            ax.set_zlim(-3,3)
+            ax.set_xlim(-3, 3)
+            ax.set_ylim(-3, 3)
+            ax.set_zlim(-3, 3)
 
             ax.grid(True)
             ax.set_aspect('equal')
@@ -417,7 +400,7 @@ class PointCloud:
 
 
     # Makes movie of 2-dimensional plots
-    def film_neighborhood_graph(self,step,num_steps,fps=24,method='subdivision',file_name='movie.mp4'):
+    def film_neighborhood_graph(self, step, num_steps, fps=24, method='subdivision', file_name='movie.mp4'):
 
         '''
         WARNING: do not run this in a Dropbox folder.
@@ -429,35 +412,35 @@ class PointCloud:
         WARNING: this function is currently very slow for large data sets,
         thanks it seems to the slowness in plotting so many points.
         '''
-        if self._space=='affine':
-            epsilon=0
-            h=self.neighborhood_graph(step*num_steps,method)
+        if self._space == 'affine':
+            epsilon = 0
+            h = self.neighborhood_graph(step*num_steps, method)
             os.system("rm _tmp*.png")
-            fig,(ax)=plt.subplots(1,1)
+            fig,(ax) = plt.subplots(1, 1)
             # Resolution of video
             # Example: (10,10) gives a 1000x1000 pixel resolution video
-            fig.set_size_inches(10.0,10.0)
+            fig.set_size_inches(10.0, 10.0)
             for i in range(num_steps):
-                epsilon=epsilon+step
-                g=h.neighborhood_graph(epsilon)
+                epsilon = epsilon+step
+                g = h.neighborhood_graph(epsilon)
                 for p in self._points:
-                    if p._coords[2]<=0:
+                    if p._coords[2] <= 0:
                         for e in g._adj[p]:
-                            ax.plot([e[0]._coords[0],p._coords[0]],
-                                     [e[0]._coords[1],p._coords[1]],color=(.5*p._coords[2]+.5,.5,.5,.5))
+                            ax.plot([e[0]._coords[0], p._coords[0]],
+                                     [e[0]._coords[1], p._coords[1]], color=(.5*p._coords[2]+.5, .5, .5, .5))
                 for p in self._points:
-                    if p._coords[2]>0:
+                    if p._coords[2] > 0:
                         for e in g._adj[p]:
-                            ax.plot([e[0]._coords[0],p._coords[0]],
-                                     [e[0]._coords[1],p._coords[1]],color=(.5*p._coords[2]+.5,.5,.5,.5))
+                            ax.plot([e[0]._coords[0], p._coords[0]],
+                                     [e[0]._coords[1], p._coords[1]], color=(.5*p._coords[2]+.5, .5, .5, .5))
 
                 ax.grid(True)
                 ax.set_aspect('equal')
                 plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
                 # Graph bounds
                 # Depends on point cloud used, values (-3,3) and (-3,3) work for torus
-                ax.set_xlim(-3,3)
-                ax.set_ylim(-3,3)
+                ax.set_xlim(-3, 3)
+                ax.set_ylim(-3, 3)
                 fname = '_tmp%05d.png'%i
                 plt.savefig(fname)
                 plt.cla()
@@ -471,10 +454,9 @@ class PointCloud:
         else:
             return None
 
-
     def neighborhood_graph(self,
             epsilon,
-            method = "subdivision"):
+            method="subdivision"):
         """
         calls the recursive function ._neighborhood_graph(...)
         """
@@ -483,7 +465,6 @@ class PointCloud:
                 method,
                 self._points,
                 {v:set() for v in self._points})
-
 
     def _neighborhood_graph(self,
             epsilon,
@@ -499,31 +480,31 @@ class PointCloud:
         "subdivision 7 approximate" does "subdivision" to depth 7, then "approximate"
 
         '''
-        methodarray=method.split(' ')
+        methodarray = method.split(' ')
 
-        if methodarray[0]=='subdivision':
+        if methodarray[0] == 'subdivision':
 
-            if self._space=='projective':
-                return self.neighborhood_graph(epsilon,method='exact')
-            elif self._space=='affine':
-                if len(methodarray)>1:
-                    d=int(methodarray[1])
-                    m=''
+            if self._space == 'projective':
+                return self.neighborhood_graph(epsilon, method='exact')
+            elif self._space == 'affine':
+                if len(methodarray) > 1:
+                    d = int(methodarray[1])
+                    m = ''
                     for i in range(len(methodarray)-2):
-                        m=m+methodarray[i+2]
-                        m=m+' '
+                        m = m+methodarray[i+2]
+                        m = m+' '
 
-                    if m=='':
-                        self._subdivide_neighbors(epsilon, 
-                                dictionary, 
-                                pointarray, 
+                    if m == '':
+                        self._subdivide_neighbors(epsilon,
+                                dictionary,
+                                pointarray,
                                 depth=d)
                         return wGraph(dictionary, epsilon)
                     else:
-                        self._subdivide_neighbors(epsilon, 
-                                dictionary, 
-                                pointarray, 
-                                coordinate = m, 
+                        self._subdivide_neighbors(epsilon,
+                                dictionary,
+                                pointarray,
+                                coordinate=m,
                                 depth=d)
                         return wGraph(dictionary, epsilon)
                 else: #  most calls end up here
@@ -538,35 +519,29 @@ class PointCloud:
             Issue: this doesn't work because lists and numpy arrays are not hashable.
             '''
             for i in range(len(self._points)):
-                for j in range(i+1,len(self._points)):
-                    if self._space=='affine':
+                for j in range(i+1, len(self._points)):
+                    if self._space == 'affine':
 #                         dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords) *(self._points[i]._coords-self._points[j]._coords)))
-                        dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords)**2))
-                        if dist<epsilon:
-                            dictionary[self._points[i]].add((self._points[j],dist))
-                            dictionary[self._points[j]].add((self._points[i],dist))
-                    elif self._space=='projective':
+                        dist = np.sqrt(sum((self._points[i]._coords-self._points[j]._coords)**2))
+                        if dist < epsilon:
+                            dictionary[self._points[i]].add((self._points[j], dist))
+                            dictionary[self._points[j]].add((self._points[i], dist))
+                    elif self._space == 'projective':
                         return None
             return wGraph(dictionary, epsilon)
 
-        elif methodarray[0] == 'nonrecursive_subdivision':
-            if self._space == 'affine':
-                self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
-                return wGraph(dictionary,epsilon)
+        elif methodarray[0] == 'approximate':
             return None
-        elif methodarray[0]=='approximate':
+        elif methodarray[0] == 'randomized':
             return None
-        elif methodarray[0]=='randomized':
-            return None
-        elif methodarray[0]=='landmarking':
+        elif methodarray[0] == 'landmarking':
             return None
 
         else:
             raise TypeError('Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
 
 
-    def _selectpoint(self,pointarray, k, n):
-
+    def _selectpoint(self, pointarray, k, n):
         """
         gives the kth smallest point of "self._points", according to the nth coordinate
         we use this to give the median, but a general solution for k is needed for the recursive algorithm
@@ -577,7 +552,7 @@ class PointCloud:
         c = []
         while(len(a)>5):
             for x in range(int(math.floor(len(a)/5))):
-                b=pointarray[5*x:5*x+5]
+                b = pointarray[5*x:5*x+5]
                 b.sort(key = lambda x: x._coords[n])
                 c.append(b[int(math.floor(len(b)/2))])
             a = c
@@ -600,21 +575,21 @@ class PointCloud:
 
     def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
         """
+        @Mason: document 'e' please.
+
         method and depth are accumulators for the recursive calls
         divides the space into two regions about the median point relative to "coordinate"
         glues the two regions, then recursively calls itself on the two regions.
         """
-        if len(pointarray)>1:
+        if len(pointarray) > 1:
             median = self._selectpoint(pointarray, len(pointarray)/2, coordinate)
-
-            
             smaller     = []
             bigger      = []
             gluesmaller = []
             gluebigger  = []
 
             #split into two regions
-            for i in range(len(pointarray)):
+            for i, _ in enumerate(pointarray):
                 if pointarray[i]._coords[coordinate] <  median._coords[coordinate]:
                     smaller.append(pointarray[i])
                     if pointarray[i]._coords[coordinate] > median._coords[coordinate]-e:
@@ -626,17 +601,14 @@ class PointCloud:
                         gluebigger.append(pointarray[i])
 
             #glue together the two regions
-            for i in range(len(gluesmaller)):
-                for j in range(len(gluebigger)):
+            for i, _ in enumerate(gluesmaller):
+                for j, _ in enumerate(gluebigger):
                     dist = np.sqrt(sum(((gluesmaller[i])._coords-gluebigger[j]._coords)*(gluesmaller[i]._coords-gluebigger[j]._coords)))
-                    if dist<e:
-                        
-                        dictionary[gluesmaller[i]].add((gluebigger[j],dist))
-                        dictionary[gluebigger[j]].add((gluesmaller[i],dist))
+                    if dist < e:
+                        dictionary[gluesmaller[i]].add((gluebigger[j], dist))
+                        dictionary[gluebigger[j]].add((gluesmaller[i], dist))
 
-
-
-    # def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
+#    def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
             #recursively compute for the two regions, now using a different reference coordinate, to reduce gluing area
             if depth == -1: #depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate+1)%self.dimension()
@@ -648,6 +620,5 @@ class PointCloud:
                 self._subdivide_neighbors(e, depth-1, coordinate, bigger)
     # def _selectpoint(self, pointarray, k, n):
             if depth == 0:
-                self._neighborhood_graph(e,method,smaller,dictionary) 
-                self._neighborhood_graph(e,method,bigger,dictionary)
-
+                self._neighborhood_graph(e, method, smaller, dictionary) 
+                self._neighborhood_graph(e, method, bigger, dictionary)
