@@ -1,96 +1,142 @@
-import sortedcontainers
-from collections import defaultdict
-import numpy as np
-import itertools as it
-import weighted_simplicial_complex as wsc
-import matplotlib.pyplot as plt
-import colorsys
+'''
+File: persistent_homology.py
 
-class PersistentHomology:
+Persistent Homology algorithm implementation
+
+AUTHORS:
+
+    - Mason Boeman (2016-04)
+'''
+import colorsys
+import matplotlib.pyplot as plt
+import sortedcontainers
+
+
+
+class PersistentHomology(object):
+    '''
+    A Container for persistent homology information
+
+    Vars: _coords (a numpy array).
+
+    EXAMPLES:
+    >>> HashPoint([1,2,3])
+    point 0: [1, 2, 3]
+    '''
     def __init__(self, simplicial_complex, n):
-        self.Currentindex=0
-        self.VertexDict = dict() #look up simplex container from tuple of vertices
-        _wSimplices = [] 
+        self.vertex_dict = dict() #look up simplex container from tuple of vertices
+        weighted_simplices = []
         for dimension in simplicial_complex._simplices:
-            if dimension<=n+1:
-                _wSimplices.extend(simplicial_complex._simplices[dimension])
-        self.Simplices = sorted([SimplexContainer(s) for s in sorted(_wSimplices)])
-        self.PersistencePairs = dict()
-        for i,s in enumerate(self.Simplices):
-            self.VertexDict[tuple(s.simplex._vertices)] = s
-            s.index=i
-            s.compute_entries(self)
-        for s in self.Simplices:
+            if dimension <= n+1:
+                weighted_simplices.extend(simplicial_complex._simplices[dimension])
+        self.simplex_containers = sorted([SimplexContainer(s) for s in sorted(weighted_simplices)])
+        self.persistence_pairs = dict()
+        for i, container in enumerate(self.simplex_containers):
+            self.vertex_dict[tuple(container.simplex._vertices)] = container
+            container.index = i
+            container.compute_entries(self)
+        for container in self.simplex_containers:
             #print [v._index for v in s.simplex._vertices]
-            if len(s.simplex._vertices)!=1:
+            if len(container.simplex._vertices) != 1:
                 rowiszero = False
-                while s.entries[0] in self.PersistencePairs:
-                    s.entries = s.entries ^ (self.PersistencePairs[s.entries[0]].entries)
+                while container.entries[0] in self.persistence_pairs:
+                    container.entries = container.entries ^ (self.persistence_pairs[container.entries[0]].entries)
                     #print 'xor'
-                    if len(s.entries)==0:
-                        rowiszero=True
+                    if len(container.entries) == 0:
+                        rowiszero = True
                         break
                     #print [x.index for x in s.entries]
                 if not rowiszero:
-                    #print 'pair: '+ str(s.index)+' '+str(s.entries[-1].index)+' '+str(-s.entries[-1].simplex._weight+s.simplex._weight)
-                    self.PersistencePairs[s.entries[0]]=s
-            
-    def plotBarCode(self,d,e,hue = 0,saturation = .5,lightness=.5):
-        i=1
-        j=1;
-        moreElements=True
+                    self.persistence_pairs[container.entries[0]] = container
+
+    def plot_bar_code(self, epsilon, hue=0, saturation=.5, lightness=.5):
+        '''
+        EXAMPLES:
+        >>> persistent_homology.plot_bar_code(epsilon)
+
+        >>> persistent_homology.plot_bar_code(epsilon, hue=.1, saturation=.4, lightness=.4)
+        '''
+        current_height = 1
+        current_dimension = 1
+        more_elements = True
         #WeightOrderedSimplices=sorted(self.Simplices,key=lambda sim: -sim.simplex._weight)
-        while moreElements:
-            moreElements=False
-            for s in self.Simplices:
-                if s in self.PersistencePairs:
-                    if len(s.simplex._vertices)>j:
-                        moreElements=True
-                    if len(s.simplex._vertices)==j:
-                        if s.simplex._weight!=self.PersistencePairs[s].simplex._weight:
-                            y=i
-                            a = 1-(self.PersistencePairs[s].simplex._weight-s.simplex._weight)/e
-                            rgb = colorsys.hls_to_rgb((hue+len(s.simplex._vertices)*(3-5**.5)*.5)%1.0,saturation,lightness)
-                            i=i+1
-                            plt.plot([s.simplex._weight,self.PersistencePairs[s].simplex._weight],[y,y],color=(rgb[0],rgb[1],rgb[2],1-a),linestyle='-', linewidth=1)
-            j=j+1
-            i=i+30
-            
-        plt.axis([0,e,0,i])
+        while more_elements:
+            more_elements = False
+            for container in self.simplex_containers:
+                if container in self.persistence_pairs:
+                    if len(container.simplex._vertices) > current_dimension:
+                        more_elements = True
+                    if len(container.simplex._vertices) == current_dimension:
+                        if container.simplex._weight != self.persistence_pairs[container].simplex._weight:
+                            y_coordinate = current_height
+                            alpha = 1-(self.persistence_pairs[container].simplex._weight-container.simplex._weight)/epsilon
+                            rgb_values = colorsys.hls_to_rgb(
+                                (hue+len(container.simplex._vertices)*(3-5**.5)*.5)%1.0,
+                                saturation,
+                                lightness)
+                            current_height = current_height+1
+                            plt.plot(
+                                [container.simplex._weight, self.persistence_pairs[container].simplex._weight],
+                                [y_coordinate, y_coordinate],
+                                color=(rgb_values[0], rgb_values[1], rgb_values[2], 1-alpha),
+                                linestyle='-', linewidth=1)
+            current_dimension = current_dimension+1
+            current_height = current_height+30
+
+        plt.axis([0, epsilon, 0, current_height])
         plt.show()
-        
-class SimplexContainer:
+
+class SimplexContainer(object):
+    '''
+    A Container for weighted simplices which maintains persistent homology information
+
+
+    Vars:
+        simplex (the corresponding weighted simplex object)
+        entries (a list of the nonzero entries in the persistent homology matrix.
+                 corresponds with a '1' in this Z/2Z implementation)
+        index (an identifying number. used for human readable output)
+
+    EXAMPLES:
+    >>> HashPoint([1,2,3])
+    point 0: [1, 2, 3]
+    '''
     def __init__(self, sim):
         self.simplex = sim
         self.entries = sortedcontainers.SortedSet()
         self.index = -1
-    def compute_entries(self, ph):
-        if len(self.simplex._vertices)<2:
+    def compute_entries(self, parent):
+        '''
+        Compute the initial values of the entries set.
+        for a simplex with vertices (1,4,6,16), the entries will be the simplex containers whose vertices are:
+        (1,4,6),(1,4,16),(1,6,16),(4,6,16), which are the faces of the 3-simplex.
+        '''
+        if len(self.simplex._vertices) < 2:
             return
-        for x in range(len(self.simplex._vertices)):
+        for index in range(len(self.simplex._vertices)):
             # Make more pythonic!
-            self.entries.add(ph.VertexDict[tuple(self.simplex._vertices[:x]+self.simplex._vertices[x+1:])])
-            
+            self.entries.add(parent.vertex_dict[tuple(self.simplex._vertices[:index]+self.simplex._vertices[index+1:])])
+
     def __hash__(self):
         return hash(tuple(self.simplex._vertices))
-    
-    def __lt__(self,other):
+
+    def __lt__(self, other):
         return self.simplex < other.simplex
 
-    def __gt__(self,other):
+    def __gt__(self, other):
         return other < self
 
-    def __le__(self,other):
+    def __le__(self, other):
         return self.simplex <= other.simplex
 
-    def __ge__(self,other):
+    def __ge__(self, other):
         return other <= self
 
-    def __eq__(self,other):
-        return self.simplex==other.simplex
+    def __eq__(self, other):
+        return self.simplex == other.simplex
 
-    def __ne__(self,other):
-        return not self==other
+    def __ne__(self, other):
+        return not self == other
 
     def __cmp__(self, other):
         return self.simplex.__cmp__(other.simplex)
