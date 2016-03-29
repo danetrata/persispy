@@ -2,164 +2,106 @@ import sortedcontainers
 from collections import defaultdict
 import numpy as np
 import itertools as it
+from matplotlib import pyplot as plt
+import persispy.weighted_simplicial_complex as wsc
+DEBUG = False
 
 class PersistentHomology:
-    def __init__(self, sortedCliqueList, n):
-        self.componentDictionary = dict()
-        self.highestLabel = defaultdict(int)
-        self.eventQueue = sortedcontainers.SortedList()
-        self.bettyList = defaultdict(int)
-        self.componentCount = dict()
-        simplices = sortedCliqueList.get_full_simplex_iterator(n)
-        for s in simplices:
-            self._addSimplex(s)
-        
-    def compute(self, epsilon):
-        while True:
-            if(len(self.eventQueue)!=0):
-                if(self.eventQueue[0].epsilon<epsilon):
-                    self.eventQueue[0].handle(self.bettyList)
-                    del self.eventQueue[0]
-                else:
-                    break
-            else:
-                break
-                    
-                
-        
-    def _addSimplex(self, Sim):
-        if len(Sim)==0:
-            return np.float_(0.0)
-        if Sim in self.componentDictionary:
-            return self.componentDictionary[Sim].weight
-        if len(Sim)==1:
-            S = _SimplexContainer(Sim, self.highestLabel[0], np.float_(0.0))
-            self.highestLabel[0] +=1
-            self.componentDictionary[Sim] = S
-            self.eventQueue.add(_event(np.float_(0.0), 0, 1))
-            return np.float_(0.0)
-        else:
-            dim = len(Sim)-1
+    def __init__(self, simplicial_complex, n):
+        self.Currentindex=0
+        self.VertexDict = dict() #look up simplex container from tuple of vertices
+        self.Simplices = self.sort_simplices(simplicial_complex, n)
+        self.PersistencePairs = dict()
+        for i,s in enumerate(self.Simplices):
+            self.VertexDict[tuple(s.simplex._vertices)] = s
+            s.index=i
+            s.compute_entries(self)
+        for s in self.Simplices:
+            #print [v._index for v in s.simplex._vertices]
+            if len(s.simplex._vertices)!=1:
+                rowiszero = False
+                while s.entries[0] in self.PersistencePairs:
+                    s.entries = s.entries ^ (self.PersistencePairs[s.entries[0]].entries)
+                    #print 'xor'
+                    if len(s.entries)==0:
+                        rowiszero=True
+                        break
+                    #print [x.index for x in s.entries]
+                if not rowiszero:
+                    #print 'pair: '+ str(s.index)+' '+str(s.entries[-1].index)+' '+str(-s.entries[-1].simplex._weight+s.simplex._weight)
+                    self.PersistencePairs[s.entries[0]]=s
             
-            weight = np.float_(0.0)
-            for x in it.combinations(Sim, len(Sim)-1):
-                weight = max(weight, self._addSimplex(x))
-            if dim == 1:
-                weight = np.sqrt(sum((Sim[0]._coords-Sim[1]._coords)*(Sim[0]._coords-Sim[1]._coords)))
-            S = _SimplexContainer(Sim, self.highestLabel[dim], weight)
-            self.highestLabel[dim]+=1
-            self.componentDictionary[Sim] = S
-            i = it.combinations(Sim, len(Sim)-1)
-            a = self.componentDictionary[i.next()]
-            for x in i:
-                if a.componentIndex>self.componentDictionary[x].componentIndex:
-                    a = self.componentDictionary[x]
-            equal = True
-            for x in it.combinations(Sim, len(Sim)-1):
-                if a.componentIndex != self.componentDictionary[x].componentIndex:
-                    equal = False
-                    _SimplexContainer.mergeComponent(a,self.componentDictionary[x])
-            if equal:
-                self.eventQueue.add(_event(weight, dim, 1))
-            else:
-                self.eventQueue.add(_event(weight, dim-1, -1))
-            return weight
-                                    
-            
-        
-        
-        '''
-        if Sim not in self.componentDictionary:
-            dim = len(Sim)-1
-            S = _SimplexContainer(Sim, self.highestLabel[dim])
-            self.componentDictionary[Sim]=S
-            self.highestLabel[dim]+=1
-            if dim == 0:
-                self.eventQueue.add(_event(0, 0, 1))
-                return 0
-            
-            weight = 0
-            for i in range(len(S.simplex)):
-                weight = max(weight, self._addSimplex(S.simplex[:i]+S.simplex[i+1:]))
-            if dim == 1:
-                weight = np.sqrt(sum((S.simplex[0]._coords-S.simplex[1]._coords)*(S.simplex[0]._coords-S.simplex[1]._coords)))
-            a = self.componentDictionary[S.simplex[:-1]]
-            added = False
-            lowestIndex = a
-            for i in range(1,len(S.simplex)):
-                b = self.componentDictionary[S.simplex[:i]+S.simplex[i+1:]]
-                if a.componentIndex > b.componentIndex:
-                    lowestIndex = b
-                if a.componentIndex != b.componentIndex:
-                    self.eventQueue.add(_event(weight, dim-1, -1))
-                    added = True
-            if not added:
-                self.eventQueue.add(_event(weight, dim, 1))
-            for i in range(0,len(S.simplex)):
-                _SimplexContainer.mergeComponent(lowestIndex,self.componentDictionary[S.simplex[:i]+S.simplex[i+1:]])
-            return weight
-        '''    
-                
-
-                
+    def sort_simplices(self, simplicial_complex, n):
+        _wSimplices = [] 
+        for dimension in simplicial_complex._simplices:
+            if dimension<=n+1:
+                _wSimplices.extend(simplicial_complex._simplices[dimension])
+#         if DEBUG:
+#             for item in _wSimplices:
+#                 print(item)
+        simContainer = [SimplexContainer(s) for s in sorted(_wSimplices)]
+#         if DEBUG: print(simContainer)
+        return sorted(simContainer)
 
 
-class _SimplexContainer:
-    def __init__(self, S, Ci, w):
-        self._nextSimplex = None
-        self._firstSimplex = self
-        self.simplex = S
-        self.componentIndex = Ci
-        self.weight = w
+    def plotBarCode(self,d,e):
+        i=1
+        j=1;
+        moreElements=True
+        #WeightOrderedSimplices=sorted(self.Simplices,key=lambda sim: -sim.simplex._weight)
+        while moreElements:
+            moreElements=False
+            for s in self.Simplices:
+                if s in self.PersistencePairs:
+                    if len(s.simplex._vertices)>j:
+                        moreElements=True
+                    if len(s.simplex._vertices)==j:
+                        if s.simplex._weight!=self.PersistencePairs[s].simplex._weight:
+                            y=i
+                            c = 1-(self.PersistencePairs[s].simplex._weight-s.simplex._weight)/e
+                            i=i+1
+                            plt.plot([s.simplex._weight,self.PersistencePairs[s].simplex._weight],[y,y],color='black',linestyle='-', linewidth=10)
+#                             plt.plot([s.simplex._weight,self.PersistencePairs[s].simplex._weight],[y,y],color=(c,c,c,1-c),linestyle='-', linewidth=10)
+            j=j+1
+            i=i+100
+            
+        plt.axis([0,e,0,i])
+        plt.show()
         
-    @staticmethod
-    def mergeComponent(S1, S2):
-        if S1==S2:
+class SimplexContainer:
+    def __init__(self, sim):
+        self.simplex = sim
+        self.entries = sortedcontainers.SortedSet()
+        self.index = -1
+
+    def compute_entries(self, ph):
+        if len(self.simplex._vertices)<2:
             return
-        tempS = S1._nextSimplex
-        S1._nextSimplex = S2._firstSimplex
-        S=S1
-        while S._nextSimplex is not None:
-            S._firstSimplex = S1._firstSimplex
-            S.componentIndex = S1.componentIndex
-            S = S._nextSimplex
-        S._firstSimplex = S1._firstSimplex
-        S.componentIndex = S1.componentIndex
-        S._nextSimplex = tempS
-        
-    def __cmp__(self, other):
-        '''
-        if self == None and other == none:
-            return 0
-        if self == None:
-            return -1
-        if other == None:
-            return 1
-        '''
-        return self.componentIndex.__cmp__(other.componentIndex)
+        for x in range(len(self.simplex._vertices)):
+            # Make more pythonic!
+            self.entries.add(ph.VertexDict[tuple(self.simplex._vertices[:x]+self.simplex._vertices[x:])])
+            
+    def __hash__(self):
+        return hash(tuple(self.simplex._vertices))
 
-class _event:
-    def __init__(self, e, b, c):
-        self.epsilon = e
-        self.betty = b
-        self.change = c
-        
+    def __lt__(self,other):
+        return self.simplex < other.simplex
+
+    def __gt__(self,other):
+        return other < self
+
+    def __le__(self,other):
+        return self.simplex <= other.simplex
+
+    def __ge__(self,other):
+        return other <= self
+
+    def __eq__(self,other):
+        return self.simplex==other.simplex
+
+    def __ne__(self,other):
+        return not self==other
+
     def __cmp__(self, other):
-        if self.epsilon < other.epsilon:
-            return -1
-        if self.epsilon > other.epsilon:
-            return 1
-        return 0
-    
-    def handle(self, bettylist):
-        bettylist[self.betty] += self.change
-        
-    def __str__(self):
-        return self.__repr__
-    
-    def __repr__(self):
-        return "("+str(self.epsilon)+", "+str(self.betty)+", "+str(self.change)+")"
-    
-    
-    
-    
+        return self.simplex.__cmp__(other.simplex)
+

@@ -1,5 +1,4 @@
-
-""" 
+"""
 input: pointCloud OR
     wGraph
 """
@@ -7,61 +6,93 @@ input: pointCloud OR
 import numpy as np
 import time
 
-"""
-http://bastibe.de/2013-05-30-speeding-up-matplotlib.html
-speed up matplotlib.
-have a return value that is usuable in the gui
->>>    fig, ax = plt.subplots()
->>>    line, = ax.plot(np.random.randn(100))
->>>    plt.show(block = False)
->>>    line.set_ydata(np.random.randn(100))
->>>    ax.draw_artist(ax.patch)
->>>    ax.draw_artist(line)
->>>    fig.cavnas.update()
->>>    fig.canvas.flush_events()
-"""
+import matplotlib
+# TODO: Marginpar does this actually do anything? In py.test-ing I found out that it
+# seems to not.--Ben
+matplotlib.use('GTK3Agg')
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg\
+        import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import tkinter as tk
 
-def sanitize_points(points):
-    """
-    makes sure all types of points can be plotted
-    returns them into seperated axises
-    """
-    pass
+def create_fig():
+    def destroy():
+        root.destroy()
+        root.quit()
+        plt.close('all')
+    def onsize(event):
+        root.winfo_width(), root.winfo_height()
+# only time to call pyplot
+    fig = plt.figure()
+#     fig.set_size_inches(8, 8)
+    root = tk.Tk()
+    root.protocol("WM_DELETE_WINDOW", destroy)
+    root.bind("<Configure>", onsize)
+    frame = tk.Frame(root)
+    frame.pack(side='top', fill='both', expand=1 )
+    canvas = FigureCanvasTkAgg(fig, master = frame)
+    canvas.get_tk_widget().pack(side='top', fill='both', expand=1 )
+#     canvas.get_tk_widget().pack()
+    canvas._tkcanvas.pack(side='top', fill='both', expand=1)
+    toolbar = NavigationToolbar2TkAgg(canvas, root)
+    toolbar.update()
+    toolbar.pack()
+    return fig, root
 
-def sanitize_edge(edges):
-    """
-    makes sure all types of points can be plotted
-    returns them into seperated axises
-    """
-    pass
 
-def show(fig):
-    """
-    Due to avoiding pyplot, we must handle all the backend calls...
-    """
-    master = tk.Tk()
-    canvas = FigureCanvasTkAgg(fig, master = master)
-    NavigationToolbar2TkAgg(canvas, master)
-    canvas.get_tk_widget().pack()
+def get_canvas(root):
+    children = root.winfo_children()
+    for child in children:
+        if child.winfo_children():
+            children.extend(child.winfo_children())
+
+
+    for child in children:
+        if isinstance(child, NavigationToolbar2TkAgg):
+            return child
+
+    assert False, "No Canvas in root" 
+
+def show(root):
+    canvas = get_canvas(root)
+#     canvas.update()
+#     canvas.flush_events()
     canvas.draw()
-    master.mainloop()
+    root.mainloop()
 
 from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import Tkinter as tk
+from persispy.point_cloud import PointCloud
+from persispy.weighted_simplicial_complex import wGraph
 
-def plot2d(pointCloud, gui = False):
+
+def plot2d(*args, **kwargs):
+    for object in args:
+        if isinstance(object, PointCloud) or isinstance(object, Intersect):
+            fig = plot2d_pc(*args, **kwargs)
+            return fig
+        if isinstance(object, wGraph):
+            return plot2d_ng(*args, **kwargs)
+
+
+def plot3d(*args, **kwargs):
+    for object in args:
+        if isinstance(object, PointCloud) or isinstance(object, Intersect):
+            return plot3d_pc(*args, **kwargs)
+        if isinstance(object, wGraph):
+            return plot3d_ng(*args, **kwargs)
+
+import matplotlib.pyplot as plt
+
+def plot2d_pc(pointCloud, gui = False):
     """
-    avoiding pyplot to be able to display nicely in a GUI
     """
-    fig = Figure()
 
-    ax = fig.add_subplot(111)
-    fig.set_size_inches(10.0,10.0)
 
-    xcoords=[p._coords[0] for p in pointCloud._points]
-    ycoords=[p._coords[1] for p in pointCloud._points]
+    xcoords = [p._coords[0] for p in pointCloud._points]
+    ycoords = [p._coords[1] for p in pointCloud._points]
 
+
+    fig, ax = plt.subplots(1)
     ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
     ax.grid(True)
@@ -69,173 +100,177 @@ def plot2d(pointCloud, gui = False):
     ax.set_aspect('equal')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
-    ax.set_xlim(-3,3)
-    ax.set_ylim(-3,3)
+
+#     ax.set_xlim(-3,3)
+#     ax.set_ylim(-3,3)
 # what do?
 #     plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
     if gui:
         return fig
     else:
-        show(fig)
+        plt.show(fig)
 
+import matplotlib as mpl
 
-
-
-
-def _display_plot(self, plt, method, save, DEBUG = True):
-    """
-    We display a plot.
-    Additionally, we can instead save a plot automatically.
-    """
-
-    if save is False:
-        plt.show()
-    elif save is not False:
-
-        def save_file(name): 
-            """
-            Saves the current plot. Has overwrite safeguards.
-            """
-
-            if os.path.isfile(name+'.png') is False:
-                plt.savefig(name)
-            else:
-                attempt = 2
-                while(os.path.isfile(name+'_'+str(attempt)+'.png')):
-                    attempt = attempt + 1
-                plt.savefig(name+'_'+str(attempt))
-
-
-        if type(save) is bool: # default
-            save_file(method)
-        elif type(save) is str: # if save gets a string
-            save_file(save)
-    return True
-
-
-def plot2d_neighborhood_graph(self,
-        epsilon,
+def plot2d_ng(wGraph,
         axes=(0,1),
-        shading_axis=2,
+        shading_axis=1,
         method='subdivision', 
         save = False, 
-        title = False):
+        title = False,
+        gui = False):
     """
     Plots the 2d neighborhood graph
     """
 
-    if self._space=='affine':
-        g=self.neighborhood_graph(epsilon,method)
-        edges=[]
-        c=[]
-
-        # For the two plotting directions
-        minx=min(p._coords[axes[0]] for p in self._points)
-        maxx=max(p._coords[axes[0]] for p in self._points)
-        miny=min(p._coords[axes[1]] for p in self._points)
-        maxy=max(p._coords[axes[1]] for p in self._points)
-
-        # For the shading direction
-        minz=min(p._coords[shading_axis] for p in self._points)
-        maxz=max(p._coords[shading_axis] for p in self._points)
-
-        for p in self._points:
-            if p._coords[shading_axis]<=minz+(maxz-minz)/2:
-                pc=p._coords
-                for e in g._adj[p]:
-                    qc=e[0]._coords
-                    edges.append([[qc[axes[0]],qc[axes[1]]],[pc[axes[0]],pc[axes[1]]]])
-                    c.append(((p._coords[shading_axis]-minz)/(maxz-minz),.5,.5,.5))
-        for p in self._points:
-            if p._coords[shading_axis]>=minz+(maxz-minz)/2:
-                pc=p._coords
-                for e in g._adj[p]:
-                    qc=e[0]._coords
-                    edges.append([[qc[axes[0]],qc[axes[1]]],[pc[axes[0]],pc[axes[1]]]])
-                    c.append(((p._coords[shading_axis]-minz)/(maxz-minz),.5,.5,.5))
-        lines=mpl.collections.LineCollection(edges,color=c)
-
-        if self._fig is None: # faster to clear than to close and open
-            fig = plt.figure()
-        plt.clf()
-
-        ax = fig.add_subplot(111)
-        fig.set_size_inches(10.0,10.0)
-        if title is not False:
-            fig.suptitle(title)
-        ax.grid(True)
-        ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
-        ax.set_xlim(-3,3)
-        ax.set_ylim(-3,3)
-        ax.set_aspect('equal')
-        ax.add_collection(lines)
-#             xcoords=[p._coords[axes[0]] for p in self._points]
-#             ycoords=[p._coords[axes[1]] for p in self._points]
-#             ax.plot(xcoords,ycoords,',')
-
-        self._display_plot(plt, "plot2d_ng", save)
-
-        return True
-    else:
-        return None
-
-def plot3d(self, axes=(0,1,2), save = False, title = False):
     
+    def pick_ax(coords):
+        x, y = coords[axes[0]], coords[axes[1]]
+        return x, y
 
-    if self._space=='affine':
+    edges = []
+    colors = []
 
-        if self._fig is None: # faster to clear than to close and open
-            fig = plt.figure()
-        plt.clf() # clears the figure
+    # For the two plotting directions
+    minx=min(p[0] for p in wGraph._adj.keys())
+    maxx=max(p[0] for p in wGraph._adj.keys())
+    miny=min(p[1] for p in wGraph._adj.keys())
+    maxy=max(p[1] for p in wGraph._adj.keys())
 
-        ax = fig.add_subplot(111)
-        fig.set_size_inches(10.0,10.0)
-        if title is not False:
-            fig.suptitle(title)
-        ax = plt3.Axes3D(fig)
-        xcoords=[p._coords[axes[0]] for p in self._points]
-        ycoords=[p._coords[axes[1]] for p in self._points]
-        if len(self._points[0]) == 3:
-            zcoords=[p._coords[axes[2]] for p in self._points]
+    cp = wGraph.connected_edges()
+
+    # For the shading direction
+
+    minz=min(p[shading_axis] for p in wGraph._adj.keys())
+    maxz=max(p[shading_axis] for p in wGraph._adj.keys())
+
+    x, y, pointColors = [], [], []
+    for p in wGraph._adj:
+        if p._coords[shading_axis]<=minz+(maxz-minz)/2:
+            px, py = pick_ax(p._coords)
+            for e in wGraph._adj[p]:
+                qx, qy = pick_ax(e[0]._coords)
+                edges.append([
+                        [qx, qy],
+                        [px, py]])
+
+                colors.append(((p._coords[shading_axis]-minz)/(maxz-minz),
+                    .5,
+                    .5,
+                    .5))
+            x.append(px)
+            y.append(py)
+            pointColors.append(((p._coords[shading_axis]-minz)/(maxz-minz),
+                .5,
+                .5,
+                .5))
+
+
+
+    for p in wGraph._adj:
+        if p._coords[shading_axis]>=minz+(maxz-minz)/2:
+            px, py = pick_ax(p._coords)
+            for e in wGraph._adj[p]:
+                qx, qy = pick_ax(e[0]._coords)
+                edges.append([
+                        [qx, qy],
+                        [px, py]])
+
+                colors.append(((p._coords[shading_axis]-minz)/(maxz-minz),
+                    .5,
+                    .5,
+                    .5))
+
+            x.append(px)
+            y.append(py)
+            pointColors.append(((p._coords[shading_axis]-minz)/(maxz-minz),
+                .5,
+                .5,
+                .5))
+    assert x
+
+    lines=mpl.collections.LineCollection(edges, color=colors)
+
+
+    fig, ax = plt.subplots(1)
+#     fig = Figure()
+#     ax = fig.add_subplot(111)
+    ax.add_collection(lines)
+    fig.set_size_inches(10.0,10.0)
+    if title:
+        fig.suptitle(title)
+    ax.grid(True)
+    ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+
+    ax.set_aspect('equal')
+
+#     x, y = pick_ax(zip(*wGraph.vertices()))
+    ax.scatter(x, y, marker = 'o', color = pointColors, zorder = len(x))
+
+    if gui:
+        return fig
+    else:
+        plt.show(fig)
+
+def plot3d_pc(pointCloud, axes=(0,1,2), gui = False, title = False):
+    if pointCloud._space=='affine':
+
+        xcoords=[p._coords[axes[0]] for p in pointCloud._points]
+        ycoords=[p._coords[axes[1]] for p in pointCloud._points]
+        if len(pointCloud._points[0]) == 3:
+            zcoords=[p._coords[axes[2]] for p in pointCloud._points]
         else:
-            zcoords=[0 for _ in self._points]
+            zcoords=[0 for _ in pointCloud._points]
+
+
+
+
+        fig = plt.figure()
+        ax = Axes3D(fig)
+
         ax.scatter(xcoords, ycoords, zcoords, marker = '.', color = '#ff6666')
+
+        fig.set_size_inches(10.0,10.0)
+        if title:
+            fig.suptitle(title)
+
+        ax.grid(True)
+        ax.set_aspect('equal')
+
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
-        ax.set_xlim(-3,3)
-        ax.set_ylim(-3,3)
-        ax.set_zlim(-3,3)
-        # Set camera viewpoint
-        # Elevation of camera (default is 30)
-        ax.elev=30
-        # Azimuthal angle of camera (default is 30)
-        ax.azim=30
-        # Camera distance (default is 10)
-        ax.dist=10
-        fig.add_axes(ax)
 
-        # whether to display plot or save it
-        self._display_plot(plt, "plot3d", save)
-
-        return True
-    else:
-        return None
+#         # Set camera viewpoint
+#         # Elevation of camera (default is 30)
+#         ax.elev=20
+#         # Azimuthal angle of camera (default is 30)
+#         ax.azim=30
+#         # Camera distance (default is 10)
+#         ax.dist=10
+#         fig.add_axes(ax)
+#         ax.set_aspect('equal')
 
 
 
+        if gui:
+            return fig
+        else:
+            plt.show(fig)
+#             show(fig)
 
+import mpl_toolkits.mplot3d as a3
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.patches as mpatches
 
-
-def plot3d_neighborhood_graph(self, 
-        epsilon, 
-        axes=(0,1,2), 
+def plot3d_ng(wGraph, 
         cmap = 0,
         method='subdivision', 
         save = False, 
         title = False,
-        DEBUG = False):
+        DEBUG = False,
+        gui = False):
 
     """ 
     For a given epsilon, makes a 3-dimensional plot of a neighborhood 
@@ -246,115 +281,143 @@ def plot3d_neighborhood_graph(self,
         1 - Accent
         2 - Paired
         3 - rainbow
+        4 - winter
     Also, the function can also take a different method, and 
     automatically save a plot with or without a title
     """
 
-    if self._space=='affine':
-
-        if self._fig is None: # faster to clear than to close and open
-            fig = plt.figure()
-
-        plt.clf()
-        if title is not False:
-            fig.suptitle(title)
-
-        ax = plt3.Axes3D(fig)
+    plt.rc('text', usetex=True)
+    plt.rc('font', family = 'sans-serif: Computer Modern Sans serif')
+    plt.axis('off')
 
 
-        g=self.neighborhood_graph(epsilon, method)
-        adj = g._adj
-        cp = g.connected_components()
-        cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
-                plt.cm.rainbow]
-        cmap = cmaps[cmap] # color mappings 
-        line_colors = cmap(np.linspace(0,1, len(cp)))
 
-        componentIndex = 0
-        totalEdges = 0
-        for component in cp:
-            edges = {}
-            if len(component) > 1:
-                edgeIndex = 0
-                for vertex in component:
-                    for endPoint in adj[vertex]:
-                        if len(self._points[0]) >= 3:
-                            edges[edgeIndex] = hash_edge.HashEdge(
-                                    array([
-                                        [vertex[axes[0]],
-                                            vertex[axes[1]],
-                                            vertex[axes[2]]],
-                                        [endPoint[0][axes[0]],
-                                            endPoint[0][axes[1]],
-                                            endPoint[0][axes[2]]]]
-                                        ), index = edgeIndex
-                                    )
-                        elif len(self._points[0]) == 2:
-                            edges[edgeIndex] = hash_edge.HashEdge(
-                                    array([
-                                        [vertex[axes[0]],
-                                            vertex[axes[1]], 
-                                            0], 
-                                        [endPoint[0][axes[0]],
-                                            endPoint[0][axes[1]], 
-                                            0]]
-                                        ), index = edgeIndex
-                                    )
-                        edgeIndex += 1
-            edges = edges.values()
-            edges = set(edges)
-            for _ in edges:
-                totalEdges += 1
+#     fig = plt.figure()
+    fig, window = create_fig()
+    window.wm_title("3D Neighborhood Graph")
+    ax = Axes3D(fig)
 
-            if DEBUG:
-                print edges
 
-            lines = a3.art3d.Poly3DCollection(edges)
-            lines.set_edgecolor(line_colors[componentIndex])
-            ax.add_collection(lines)
-            componentIndex += 1
-        
-        if DEBUG: print totalEdges
 
-        textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
-        # place a text box in upper left in axes coords
-        props = dict(boxstyle='round', facecolor='white', alpha=0.5)
-        ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
-                verticalalignment='top', bbox = props)
+    epsilon = wGraph._epsilon
+    adj = wGraph._adj
+    cp = wGraph.connected_components()
+    cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
+            plt.cm.rainbow, plt.cm.winter]
+    cmap = cmaps[cmap] # color mappings 
+    line_colors = cmap(np.linspace(0,1, len(cp)))
+    
 
-        fig.set_size_inches(10.0,10.0)
+    cp = wGraph.connected_edges(padding = 3)
+    cp.sort(key = len)
 
-        ax.set_xlabel('x')
-        ax.set_ylabel('y')
-        ax.set_zlabel('z')
+    numberEdges = wGraph.num_edges()
 
-        ax.set_xlim(-3,3)
-        ax.set_ylim(-3,3)
-        ax.set_zlim(-3,3)
+    for componentIndex, component in enumerate(cp):
 
-        ax.grid(True)
-        ax.set_aspect('equal')
+#         scalar = float(len(component)) / numberEdges + 1
+#         tempcomponent = []
+#         for i, edge in enumerate(component):
+#             tempcomponent.append(edge*scalar)
+#         component = set(tempcomponent)
 
-        if self.gui:
-            return fig
-        print self._fig
-        self._display_plot(plt, "plot3d_ng", save)
+            
 
-        print self._fig
-        plt.close()
 
-        return True
+        if DEBUG:
+            print (edges)
+
+        lines = a3.art3d.Poly3DCollection(component)
+
+        if componentIndex % 2 == 1:
+
+            componentIndex = -1*componentIndex
+        lines.set_edgecolor(line_colors[componentIndex])
+        ax.add_collection(lines)
+    
+    if DEBUG: print (totalEdges)
+    
+    if wGraph.singletons():
+        x, y, z = zip(*wGraph.singletons(padding = 3))
+        ax.scatter(x, y, z, 
+                marker = '.', 
+                s = 15, 
+                color = '#ff6666', 
+                label = r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
+
+
+    textstr = r'\noindent\makebox[90pt]{%d\hfill}Number of Points\\ \\'\
+            r'\makebox[90pt]{%f\hfill}Distance\\ \\'\
+            r'\makebox[90pt]{%d\hfill}Edges\\ \\'\
+            r'\makebox[90pt]{%d\hfill}Connected Components' \
+    % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
+
+
+    
+    # place a text box in upper left in axes coords
+#     props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+#     ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
+#             verticalalignment='top', bbox = props)
+
+# proxy artist to show properties
+    properties = ax.plot([0], [0], color = 'white', label = textstr)
+    ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
+
+# 
+#     ax.set_xlabel('x')
+#     ax.set_ylabel('y')
+#     ax.set_zlabel('z')
+
+
+#     # Set camera viewpoint
+#     # Elevation of camera (default is 30)
+#     ax.elev=30
+#     # Azimuthal angle of camera (default is 30)
+#     ax.azim=20
+#     # Camera distance (default is 10)
+#     ax.dist=10
+
+#     ax.grid(True)
+    ax.set_xlim(-3,3)
+    ax.set_ylim(-3,3)
+    ax.set_zlim(-3,3)
+    ax.set_aspect('equal')
+#     ax.autoscale_view(True, True, True)
+
+
+    if gui:
+        return fig
     else:
-        return None
+#         plt.show()
+        show(window)
+
+
+from persispy.phc import Intersect
+from persispy.points import plane, sphere
+
 
 
 if __name__ == "__main__": 
-    from points import plane
 
-    pc = plane(200)
 
+
+    pc = sphere(1000)
     plot2d(pc)
-#     pc.plot3d()
+    plot3d(pc)
+    ng = pc.neighborhood_graph(0.2)
+    plot2d(ng)
+    plot3d(ng)
+
+
+
+    pc = Intersect('x^2 + y^2 + z^2 -1', 1000)
+    plot2d(pc)
+    plot3d(pc)
+    ng = pc.neighborhood_graph(0.2)
+    plot2d(ng)
+    plot3d(ng)
+
+
 
 #     ng = pc.neighborhood_graph(.13)
 #     ng.plot2d()
