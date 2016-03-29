@@ -6,6 +6,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 import Tkinter as tk
 
+from ..points import plane
+from ..plot import plot2d, plot3d
+
 
 class PersispyWindow:
     """
@@ -82,14 +85,16 @@ class PersispyWindow:
 
 
 
-    from persispy.samples import plane
-    from persispy.plot import plot2d
+
     def _show_plot(self):
         """
         updates the canvas when graph is pressed
         """
+
+
         pc = plane(100)
-        fig = pc.plot2d(gui = True)
+        ng = pc.neighborhood_graph(0.2)
+        fig = plot3d(ng, gui = True)
 
         self.canvas = FigureCanvasTkAgg(fig, self._root)
         self.canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)

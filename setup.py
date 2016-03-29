@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+from setuptools import setup
+
+>>>>>>> 9cb3ba2a4b7ce613470d7b5d0a188f5274b01021
 
 def is_package(path): # find packages helper function
     return (
@@ -44,6 +46,7 @@ setup(
     version='0.0.1',
     description="A python package for persistent homology.",
     long_description=readme + '\n\n' + history,
+    packages=['persispy'],
     author="Benjamin Antieau",
     author_email='benjamin.antieau@gmail.com',
     url='https://github.com/benjaminantieau/persispy',

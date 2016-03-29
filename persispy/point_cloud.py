@@ -2,21 +2,19 @@
 # and the methods that act on those points.
 # Left alone for now because many modules rely on this.
 
+from persispy.weighted_simplicial_complex import wGraph
+from persispy.utils import tuples
+from persispy.hashing import HashPoint,HashEdge
+
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as plt3
 import mpl_toolkits.mplot3d as a3
-import weighted_simplicial_complex as wsc
-from utils import tuples
 from numpy import array
 import math
 import os as os
-
 import sys
-
-
-import hash_edge, hash_point
 
 
 
@@ -34,28 +32,21 @@ class PointCloud:
         try:
             self._points=list(points)
         except TypeError:
-            raise TypeError('Input points should be of iterable points.')
+            raise TypeError('Input points should be a list of points.')
         try:
             hash(self._points[0])
         except TypeError:
-            print "Detected points are not HashPoint. Attempting to convert."
-            points = [hash_point.HashPoint(
-                    points[n], 
-                    index=n) 
-                    for n in range(len(points))] 
+            print("Detected points are not hashable. Attempting to convert to HashPoints.")
+            self._points = [HashPoint(points[n],index=n) for n in range(len(points))] 
 #             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to either "affine" or "projective".')
 
-        self._points = points
         self._space = space
         self._fig = None
         self.gui = gui
 
-
-
-    def __str__(self):
-
+    def __repr__(self):
         try:
             repr(self.dimension())
         except AttributeError:
@@ -64,12 +55,10 @@ class PointCloud:
             ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
 
-
-    def __repr__(self):
-        return self._points.__repr__()
-
-
     def __len__(self):
+        return len(self._points)
+
+    def size(self):
         return len(self._points)
 
     def __getitem__(self, key):
@@ -80,7 +69,6 @@ class PointCloud:
 
 
     def dimension(self):
-
         if self._space=='affine':
             return len(self._points[0]._coords)
         elif self._space=='projective':
@@ -88,7 +76,6 @@ class PointCloud:
 
 
     def plot2d(self, axes=(0,1), save = False, title = False):
-
         if self._space=='affine':
 
             if self._fig is None:
@@ -105,12 +92,20 @@ class PointCloud:
             ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
             ax.grid(True)
-            ax.axis([1.1*min(xcoords),1.1*max(xcoords),1.1*min(ycoords),1.1*max(ycoords)])
+            # TEST: the following code fixes a problem in the automatic window
+            # sizing when there are negative coordinates. I'm sure there is a
+            # smarter way to do this. It should be changed in the other
+            # plotting functions as well. To be really smart, we should also
+            # make the border scale with the total size of the plot.
+            maxx=max(xcoords)
+            minx=min(xcoords)
+            maxy=max(ycoords)
+            miny=min(ycoords)
+            ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
+
             ax.set_aspect('equal')
             ax.set_xlabel('x')
             ax.set_ylabel('y')
-#             ax.set_xlim(-3,3)
-#             ax.set_ylim(-3,3)
             plt.setp([a.get_xticklabels() for a in fig.axes[:-1]], visible=False)
 
             self._display_plot(plt, "plot2d", save)
@@ -176,6 +171,23 @@ class PointCloud:
             ax.set_xlabel('x')
             ax.set_ylabel('y')
             ax.set_zlabel('z')
+
+            # For the two plotting directions
+#            minx=min(p._coords[axes[0]] for p in self._points)
+#            maxx=max(p._coords[axes[0]] for p in self._points)
+#            miny=min(p._coords[axes[1]] for p in self._points)
+#            maxy=max(p._coords[axes[1]] for p in self._points)
+#            minz=min(p._coords[axes[2]] for p in self._points)
+#            maxz=max(p._coords[axes[2]] for p in self._points)
+
+#            ax.set_xlim(minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx))
+#            ax.set_ylim(miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny))
+#            ax.set_xlim(minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz))
+
+#             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny),minz-.1*abs(maxz-minz),maxz+.1*abs(maxz-minz)])
+
+            # TODO: I would prefer we do an automatic window sizing function here
+            # too.
             ax.set_xlim(-3,3)
             ax.set_ylim(-3,3)
             ax.set_zlim(-3,3)
@@ -219,7 +231,6 @@ class PointCloud:
             maxx=max(p._coords[axes[0]] for p in self._points)
             miny=min(p._coords[axes[1]] for p in self._points)
             maxy=max(p._coords[axes[1]] for p in self._points)
-            print maxx,minx
 
             # For the shading direction
             minz=min(p._coords[shading_axis] for p in self._points)
@@ -261,10 +272,6 @@ class PointCloud:
             ax.scatter(xcoords,ycoords, marker = 'o', color = "#ff6666")
 
             ax.axis([minx-.1*abs(maxx-minx),maxx+.1*abs(maxx-minx),miny-.1*abs(maxy-miny),maxy+.1*abs(maxy-miny)])
-            # Commented these out as they resulted in a lot of empty space for
-            # me. --Ben A.
-#             ax.set_xlim(-3,3)
-#             ax.set_ylim(-3,3)
             ax.set_aspect('equal')
             ax.add_collection(lines)
 #             xcoords=[p._coords[axes[0]] for p in self._points]
@@ -330,8 +337,8 @@ class PointCloud:
                     edgeIndex = 0
                     for vertex in component:
                         for endPoint in adj[vertex]:
-                            if len(self._points[0]) >= 3:
-                                edges[edgeIndex] = hash_edge.HashEdge(
+                            if len(self._points[0]._coords) >= 3:
+                                edges[edgeIndex] = HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]],
@@ -342,7 +349,7 @@ class PointCloud:
                                             ), index = edgeIndex
                                         )
                             elif len(self._points[0]) == 2:
-                                edges[edgeIndex] = hash_edge.HashEdge(
+                                edges[edgeIndex] = HashEdge(
                                         array([
                                             [vertex[axes[0]],
                                                 vertex[axes[1]], 
@@ -359,14 +366,23 @@ class PointCloud:
                     totalEdges += 1
 
                 if DEBUG:
-                    print edges
+                    print(edges)
+
+                # TODO: this code for some reason causes python to hang. Not
+                # sure what the problem is. It is there to plot all of the
+                # points so that it captures the points not connected to
+                # anything else.
+#                 xcoords=[p._coords[axes[0]] for p in self._points]
+#                 ycoords=[p._coords[axes[1]] for p in self._points]
+#                 zcoords=[p._coords[axes[2]] for p in self._points]
+#                 ax.scatter(xcoords,ycoords,zcoords, marker = 'o', color = "#ff6666")
 
                 lines = a3.art3d.Poly3DCollection(edges)
                 lines.set_edgecolor(line_colors[componentIndex])
                 ax.add_collection(lines)
                 componentIndex += 1
             
-            if DEBUG: print totalEdges
+            if DEBUG: print(totalEdges)
 
             textstr = 'number of points $=%d$ \ndistance $=%f$\nedges $=%d$\nconnected components $=%d$' % (len(self._points), epsilon, g.num_edges(), len(cp))
             # place a text box in upper left in axes coords
@@ -380,6 +396,8 @@ class PointCloud:
             ax.set_ylabel('y')
             ax.set_zlabel('z')
 
+            # TODO: do automatic-window sizing as we implement it in
+            # self.plot3d().
             ax.set_xlim(-3,3)
             ax.set_ylim(-3,3)
             ax.set_zlim(-3,3)
@@ -389,10 +407,10 @@ class PointCloud:
 
             if self.gui:
                 return fig
-            print self._fig
+            print(self._fig)
             self._display_plot(plt, "plot3d_ng", save)
 
-            print self._fig
+            print(self._fig)
             plt.close()
 
             return True
@@ -502,20 +520,20 @@ class PointCloud:
                                 dictionary, 
                                 pointarray, 
                                 depth=d)
-                        return wsc.wGraph(dictionary, epsilon)
+                        return wGraph(dictionary, epsilon)
                     else:
                         self._subdivide_neighbors(epsilon, 
                                 dictionary, 
                                 pointarray, 
                                 coordinate = m, 
                                 depth=d)
-                        return wsc.wGraph(dictionary, epsilon)
+                        return wGraph(dictionary, epsilon)
                 else: #  most calls end up here
                       #  also starts the recursion
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
                     # mystery dictionary assignments..?
                     # {point: {adj points:distance}}
-                    return wsc.wGraph(dictionary, epsilon)
+                    return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
             '''
@@ -531,12 +549,12 @@ class PointCloud:
                             dictionary[self._points[j]].add((self._points[i],dist))
                     elif self._space=='projective':
                         return None
-            return wsc.wGraph(dictionary, epsilon)
+            return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'nonrecursive_subdivision':
             if self._space == 'affine':
                 self._nonrecursive_subdivision(epsilon, dictionary, pointarray)
-                return wsc.wGraph(dictionary,epsilon)
+                return wGraph(dictionary,epsilon)
             return None
         elif methodarray[0]=='approximate':
             return None
