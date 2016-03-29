@@ -9,7 +9,6 @@ AUTHORS:
     - Benjamin Antieau (2015-04)
 '''
 
-
 import hashlib as hashlib
 import numpy as np
 
