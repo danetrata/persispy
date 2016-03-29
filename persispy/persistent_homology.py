@@ -35,7 +35,7 @@ class PersistentHomology:
                     #print 'pair: '+ str(s.index)+' '+str(s.entries[-1].index)+' '+str(-s.entries[-1].simplex._weight+s.simplex._weight)
                     self.PersistencePairs[s.entries[0]]=s
             
-    def plotBarCode(self,d,e):
+    def plotBarCode(self,d,e,hue = 0,saturation = .5,lightness=.5):
         i=1
         j=1;
         moreElements=True
@@ -50,11 +50,11 @@ class PersistentHomology:
                         if s.simplex._weight!=self.PersistencePairs[s].simplex._weight:
                             y=i
                             a = 1-(self.PersistencePairs[s].simplex._weight-s.simplex._weight)/e
-                            rgb = colorsys.hls_to_rgb(len(s.simplex._vertices)*(3-5**.5)*.5,.5,.5)
+                            rgb = colorsys.hls_to_rgb((hue+len(s.simplex._vertices)*(3-5**.5)*.5)%1.0,saturation,lightness)
                             i=i+1
                             plt.plot([s.simplex._weight,self.PersistencePairs[s].simplex._weight],[y,y],color=(rgb[0],rgb[1],rgb[2],1-a),linestyle='-', linewidth=1)
             j=j+1
-            i=i+100
+            i=i+30
             
         plt.axis([0,e,0,i])
         plt.show()
