@@ -407,10 +407,8 @@ class PointCloud:
 
             if self.gui:
                 return fig
-            print(self._fig)
             self._display_plot(plt, "plot3d_ng", save)
 
-            print(self._fig)
             plt.close()
 
             return True
