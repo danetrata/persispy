@@ -305,7 +305,10 @@ def plot3d_ng(wGraph,
             plt.cm.rainbow, plt.cm.winter]
     cmap = cmaps[cmap] # color mappings 
     line_colors = cmap(np.linspace(0,1, len(cp)))
-    
+
+
+    # [0, 0.1, 0.2 ... 1 ]
+
 
     cp = wGraph.connected_edges(padding = 3)
     cp.sort(key = len)
@@ -376,11 +379,28 @@ def plot3d_ng(wGraph,
 #     # Camera distance (default is 10)
 #     ax.dist=10
 
+    minx = min([coord[0] for coord in list(adj.keys())])
+    maxx = max([coord[0] for coord in list(adj.keys())])
+    miny = min([coord[1] for coord in list(adj.keys())])
+    maxy = max([coord[1] for coord in list(adj.keys())])
+    minz = min([coord[2] for coord in list(adj.keys())])
+    maxz = max([coord[2] for coord in list(adj.keys())])
+
+    
+
 #     ax.grid(True)
-    ax.set_xlim(-3,3)
-    ax.set_ylim(-3,3)
-    ax.set_zlim(-3,3)
+
+    xpadding = abs(minx-maxx) * 0.1
+    ypadding = abs(miny-maxy) * 0.1
+    zpadding = abs(minz-maxz) * 0.1
+    ax.set_xlim(minx - xpadding,
+            maxx + xpadding)
+    ax.set_ylim(miny - ypadding,
+            maxy + ypadding)
+    ax.set_zlim(minz - xpadding,
+            maxz + zpadding)
     ax.set_aspect('equal')
+
 #     ax.autoscale_view(True, True, True)
 
 
@@ -402,19 +422,23 @@ if __name__ == "__main__":
 
     pc = sphere(1000)
     plot2d(pc)
+    pc.plot2d()
     plot3d(pc)
+    pc.plot3d()
     ng = pc.neighborhood_graph(0.2)
     plot2d(ng)
+    pc.plot2d_neighborhood_graph(0.2)
     plot3d(ng)
+    pc.plot3d_neighborhood_graph(0.2)
 
 
 
-    pc = Intersect('x^2 + y^2 + z^2 -1', 1000)
-    plot2d(pc)
-    plot3d(pc)
-    ng = pc.neighborhood_graph(0.2)
-    plot2d(ng)
-    plot3d(ng)
+#     pc = Intersect('x^2 + y^2 + z^2 -1', 1000)
+#     plot2d(pc)
+#     plot3d(pc)
+#     ng = pc.neighborhood_graph(0.2)
+#     plot2d(ng)
+#     plot3d(ng)
 
 
 
