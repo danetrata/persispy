@@ -1,5 +1,5 @@
 from persispy import point_cloud
-from persispy.samples import points
+from persispy import points
 from persispy.phc.points import phc
 def test_plots():
 #     point_cloud.PointCloud.plot2d(points.sphere(1000))

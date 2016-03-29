@@ -35,7 +35,7 @@ def sphere(num_points,radius=1,method='rejection'):
     points on the 2-sphere with its usual measure.
 
     EXAMPLES:
-    >>> points_2sphere(1000,radius=4)
+    >>> sphere(1000,radius=4)
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     def normalize(x):
@@ -60,7 +60,7 @@ def sphere(num_points,radius=1,method='rejection'):
 def torus(num_points, gui = False):
     '''
     EXAMPLES:
-    >>> points_3d_torus(1000)
+    >>> torus(1000)
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
@@ -72,7 +72,7 @@ def torus(num_points, gui = False):
 def flat_torus(num_points):
     '''
     EXAMPES:
-    >>> points_flat_torus(1000)
+    >>> flat_torus(1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
     angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
@@ -110,7 +110,7 @@ def box(number_of_points,
 def cube(dim,num_points):
     '''
     EXAMPLES:
-    >>> points_cube(4,1000)
+    >>> cube(4,1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
     return PointCloud([HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
