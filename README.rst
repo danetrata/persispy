@@ -27,17 +27,29 @@ Contributing
 ============
 
 
-Persispy
+
+persispy
 --------
 
+To obtain the github repository, run the following code.
 
-We recommend installing with pip. The -e flag tells python that module will be edited frequently.
+::
+    git clone https://github.com/benjaminantieau/persispy
+
+New contributions are via the develop branch, which you can view by running.
+
+::
+    git checkout develop
+
+Now, we recommend installing with pip. The -e flag tells python that module will be edited frequently.
 
 ::
 
-  pip install -e persispy 
+  pip install -e persispy/
 
-An alternative to pip is to call the setup file directly. For a local installation, the --home flag tells to install to a particular directory. Be sure to append non-standard paths to your sys.path.
+An alternative to pip is to call the setup file directly.
+For a local installation, the --home flag tells to install to a particular directory.
+Be sure to append non-standard paths to your sys.path.
 
 ::
 
@@ -113,3 +125,13 @@ or alternatively, we can again call the setup.py file with
 
 
 
+Non-python dependencies
+=======================
+
+Plotting in persispy is via matplotlib, which can be tricky to install. On OS
+X, the Anaconda python environment includes matplotlib. On Ubuntu 14.04, run
+
+::
+    
+    sudo apt-get install libfreetype-dev
+    sudo apt-get install `blah'
