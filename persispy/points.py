@@ -18,12 +18,25 @@ certain subroutines of the PointCloud class, especially the neighborhood_graph
 function.
 '''
 
+import numpy as np
 import numpy.random as npr
 import scipy.constants as scic
-import numpy as np
 
 from persispy.point_cloud import PointCloud
 from persispy.hashing import HashPoint
+
+def circle(num_points,radius=1):
+    '''
+    Returns a PointCloud with num_points random points on the circle (1-sphere) of given
+    radius centered at the origin in R^2.
+
+    EXAMPLES:
+    >>> circle(1000,radius=4)
+    PointCloud with 1000 points in real affine space of dimension 2
+    '''
+    angles = np.array([(2*scic.pi)*npr.random() for n in range(num_points)])
+    return PointCloud([HashPoint([np.cos(theta),np.sin(theta)],index) for index,theta in
+        enumerate(angles)])
 
 # 3d examples
 def sphere(num_points,radius=1,method='rejection'):
@@ -40,20 +53,20 @@ def sphere(num_points,radius=1,method='rejection'):
     '''
     def normalize(x):
         return (1/np.sqrt(sum(x*x)))*x
-    if method=='normalized':
+    if method == 'normalized':
         return PointCloud([HashPoint(normalize(2*npr.random(3)-1),index=n) for n in range(num_points)],space='affine')
-    elif method=='rectangular':
-        angles=np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
+    elif method == 'rectangular':
+        angles = np.array([2*scic.pi*npr.random(2) for n in range(num_points)])
         return PointCloud([HashPoint(radius*np.array([np.sin(angles[n][0])*np.cos(angles[n][1]),np.sin(angles[n][0])*np.sin(angles[n][1]),np.cos(angles[n][0])]),index=n) for n in range(num_points)],space='affine')
-    elif method=='rejection':
+    elif method == 'rejection':
         count = 0
-        points=[]
-        while count<num_points:
-            pt=2*npr.random(3)-1
+        points = []
+        while count < num_points:
+            pt = 2*npr.random(3)-1
             if np.sqrt(sum(pt*pt)) <= radius:
-                points.append(HashPoint(normalize(pt),count))
-                count=count+1
-        return PointCloud(points,space='affine')
+                points.append(HashPoint(normalize(pt), count))
+                count = count+1
+        return PointCloud(points, space='affine')
     else:
         raise TypeError('The argument "method" should be either "normalized", "rectangular", or "rejection".')
 
