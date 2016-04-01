@@ -9,7 +9,6 @@ from string import ascii_letters, digits
 import numpy as np
 
 from persispy.hashing import HashPoint
-from persispy.plot import plot3d, plot2d
 from persispy.point_cloud import PointCloud
 
 from phcpy.solver import total_degree_start_system, total_degree
