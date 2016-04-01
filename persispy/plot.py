@@ -51,7 +51,7 @@ def get_canvas(root):
         if isinstance(child, NavigationToolbar2TkAgg):
             return child
 
-    assert False, "No Canvas in root" 
+    assert False, "No Canvas in root"
 
 def show(root):
     canvas = get_canvas(root)
@@ -63,6 +63,7 @@ def show(root):
 from matplotlib.figure import Figure
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wGraph
+from persispy.phc import Intersect
 
 
 def plot2d(*args, **kwargs):
@@ -116,15 +117,15 @@ import matplotlib as mpl
 def plot2d_ng(wGraph,
         axes=(0,1),
         shading_axis=1,
-        method='subdivision', 
-        save = False, 
+        method='subdivision',
+        save = False,
         title = False,
         gui = False):
     """
     Plots the 2d neighborhood graph
     """
 
-    
+
     def pick_ax(coords):
         x, y = coords[axes[0]], coords[axes[1]]
         return x, y
@@ -264,16 +265,16 @@ import mpl_toolkits.mplot3d as a3
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.patches as mpatches
 
-def plot3d_ng(wGraph, 
+def plot3d_ng(wGraph,
         cmap = 0,
-        method='subdivision', 
-        save = False, 
+        method='subdivision',
+        save = False,
         title = False,
         DEBUG = False,
         gui = False):
 
-    """ 
-    For a given epsilon, makes a 3-dimensional plot of a neighborhood 
+    """
+    For a given epsilon, makes a 3-dimensional plot of a neighborhood
     graph.
     Currently, there are the following cmap options which are selected
     by index:
@@ -282,7 +283,7 @@ def plot3d_ng(wGraph,
         2 - Paired
         3 - rainbow
         4 - winter
-    Also, the function can also take a different method, and 
+    Also, the function can also take a different method, and
     automatically save a plot with or without a title
     """
 
@@ -304,7 +305,7 @@ def plot3d_ng(wGraph,
     cp = wGraph.connected_components()
     cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
             plt.cm.rainbow, plt.cm.winter]
-    cmap = cmaps[cmap] # color mappings 
+    cmap = cmaps[cmap] # color mappings
     line_colors = cmap(np.linspace(0,1, len(cp)))
 
 
@@ -324,7 +325,7 @@ def plot3d_ng(wGraph,
 #             tempcomponent.append(edge*scalar)
 #         component = set(tempcomponent)
 
-            
+
 
 
         if DEBUG:
@@ -337,15 +338,15 @@ def plot3d_ng(wGraph,
             componentIndex = -1*componentIndex
         lines.set_edgecolor(line_colors[componentIndex])
         ax.add_collection(lines)
-    
+
     if DEBUG: print (totalEdges)
-    
+
     if wGraph.singletons():
         x, y, z = zip(*wGraph.singletons(padding = 3))
-        ax.scatter(x, y, z, 
-                marker = '.', 
-                s = 15, 
-                color = '#ff6666', 
+        ax.scatter(x, y, z,
+                marker = '.',
+                s = 15,
+                color = '#ff6666',
                 label = r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
 
 
@@ -356,7 +357,7 @@ def plot3d_ng(wGraph,
     % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
 
 
-    
+
     # place a text box in upper left in axes coords
 #     props = dict(boxstyle='round', facecolor='white', alpha=0.5)
 #     ax.text2D(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=14,
@@ -366,7 +367,7 @@ def plot3d_ng(wGraph,
     properties = ax.plot([0], [0], color = 'white', label = textstr)
     ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
 
-# 
+#
 #     ax.set_xlabel('x')
 #     ax.set_ylabel('y')
 #     ax.set_zlabel('z')
@@ -387,7 +388,7 @@ def plot3d_ng(wGraph,
     minz = min([coord[2] for coord in list(adj.keys())])
     maxz = max([coord[2] for coord in list(adj.keys())])
 
-    
+
 
 #     ax.grid(True)
 
@@ -412,12 +413,12 @@ def plot3d_ng(wGraph,
         show(window)
 
 
-from persispy.phc import Intersect
-from persispy.points import plane, sphere
 
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
+
+    from persispy.points import plane, sphere
 
 
 
