@@ -18,6 +18,7 @@
 private*
 
 # nonessential project files
+.vim
 .ropeproject
 
 # Various swap files to ignore
