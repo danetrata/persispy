@@ -37,13 +37,15 @@ class Intersect(object):
         self.points = []
         if DEBUG:
             self.attempt = 0
-        self._startsystem, self._startsol = self._start_system()
-        partition = 200
+#         self._startsystem, self._startsol = self._start_system()
+        partition = 256
         i = 0
-        while i < num_points / partition:
-            i = i + 1
+        while i < num_points // partition:
+            self._startsystem, self._startsol = self._start_system()
             self.find_more_points(partition, return_complex)
-        self.find_more_points(num_points / partition, return_complex)
+            i = i + 1
+
+        self.find_more_points(num_points - len(self.points), return_complex)
         self.__call__()
 
     def degree(self):
@@ -54,9 +56,9 @@ class Intersect(object):
 
     def _system(self):
         """
-        We construct a square system, where the number of variables is equal
-        to the number of eqations. The resulting points are regular and bounded
-        by the variety.
+        We construct a square system, where the number of variables is
+        equal to the number of eqations. The resulting points are
+        regular and bounded by the variety.
         """
         phceqn = self.eqn + ";"
         phcsystem = [phceqn]
@@ -68,8 +70,8 @@ class Intersect(object):
     #  doesn't need to make a new one for each intersection
     def _start_system(self):
         """
-        We first set up a start system so phcpy doesn't have to create a new
-        one everytime.
+        We first set up a start system so phcpy doesn't have to create
+        a new one everytime.
         """
 
         phcsystem = self._system()
@@ -130,10 +132,11 @@ class Intersect(object):
                             # sometimes phcpy gives more points than we ask,
                             # thus the additional check
                             if component == point[-1] \
-                                    and closeness\
+                                    and closeness \
                                     and len(points) < num_points:
                                 points.append(tuple(
                                     [component.real for component in point]))
+                                assert len(points) < num_points
                                 if DEBUG:
                                     print (
                                         "appended point:",
@@ -285,33 +288,6 @@ def parse(eqn):
     return varlist, coefflist
 
 
-def main():
-    """
-    Script to test Intersect.
-    TODO: make into a doctest
-    """
-    user = input("torus or sphere? ")
-    if user == "torus":
-        selection = "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2"
-    elif user == "sphere":
-        selection = "x^2 + y^2 + z^2 - 1"
-    else:
-        print ("invalid input")
-        return
-
-    pc = Intersect(eqn=selection, num_points=5, return_complex=True)
-
-    print(pc)
-    print(pc)
-    print(pc[0])
-    print(pc.points[0])
-    print(pc.degree())
-    pc.plot3d()
-    ng = pc.neighborhood_graph(0.15)
-    plot2d(ng, shading_axis=2)
-    pc.plot2d_neighborhood_graph(0.15)
-    plot3d(ng)
-
-
 if __name__ == "__main__":
-    main()
+    import doctest
+    doctest.testmod()
