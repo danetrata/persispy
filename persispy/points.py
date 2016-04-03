@@ -22,8 +22,34 @@ import numpy as np
 import numpy.random as npr
 import scipy.constants as scic
 
-from persispy.point_cloud import PointCloud
+
 from persispy.hashing import HashPoint
+from persispy.phc import Intersect
+from persispy.point_cloud import PointCloud
+
+equations = {
+    "circle"        :"x^2 + y^2 - 1",
+    "sphere"        :"x^2 + y^2 + z^2 - 1",
+    "torus"         :"16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2",
+    "eightsurface"  :"4*z^4 + 1/2 * (x^2 + y^2 - 4*z^2) - 1/4",
+    "hyperbolid"    :"x^2 + y^2 - z^2 - 1",
+    "degree3sphere" :"x^3 + y^3 + z^3 - 1"
+}
+
+def intersect_hyperbolid(number_of_points):
+    return Intersect(equations["hyperbolid"], number_of_points)
+
+def intersect_eightsurface(number_of_points):
+    return Intersect(equations["eightsurface"], number_of_points)
+
+def intersect_torus(number_of_points):
+    return Intersect(equations["torus"], number_of_points)
+
+def intersect_circle(number_of_points):
+    return Intersect(equations["circle"], number_of_points)
+
+def intersect_sphere(number_of_points):
+    return Intersect(equations['sphere'], number_of_points)
 
 
 def circle(num_points, radius=1):
@@ -33,7 +59,7 @@ def circle(num_points, radius=1):
 
     EXAMPLES:
     >>> circle(1000,radius=4)
-    PointCloud with 1000 points in real affine space of dimension 2
+    Point cloud with 1000 points in real affine space of dimension 2
     '''
     angles = np.array([(2 * scic.pi) * npr.random() for _ in range(num_points)])
     return PointCloud([HashPoint([np.cos(theta), np.sin(theta)], index)
@@ -142,7 +168,15 @@ def box(number_of_points,
     We return a set of points in a box of given dimension. On default,
     returns a unit box in the plane. We can specify a str or int seed.
     We can also ask to return the seed used to generate a run. Note, the
-    returned seed is a ndarray of 624 uints.
+    returned seed is a ndarray of 624 units and is returned as a tuple.
+
+    EXAMPLES:
+    >>> box(1000, 2)
+    Point cloud with 1000 points in real affine space of dimension 2
+
+    >>> box(1000, 4)
+    Point cloud with 1000 points in real affine space of dimension 4
+
     """
     if seed:
         npr.seed(seed)
@@ -162,61 +196,4 @@ def box(number_of_points,
 
     return result
 
-# How is this different from box?
 
-
-def cube(dim, num_points):
-    '''
-    EXAMPLES:
-    >>> cube(4,1000)
-    Point cloud with 1000 points in real affine space of dimension 4
-    '''
-    return PointCloud([HashPoint(npr.random(dim), index=n)
-                       for n in range(num_points)], space='affine')
-
-# How is this different from box?
-
-
-def plane(num_points, side_length=1, seed=False, return_seed=False):
-    """
-    takes the number of points and returns a list of
-    uniform distribution of points
-    {(x,y): 0 < x < 1, 0 < y < 1}
-    Optional:
-    seed        - sets a particular random state
-    return_seed - returns a descriptive tuple of the random state
-    """
-    if seed:
-        npr.seed(seed)
-
-    result = PointCloud(
-        [HashPoint(
-            npr.uniform(-side_length, side_length, size=2),
-            index=n)
-         for n in range(num_points)],
-        space='affine')
-
-    if return_seed:
-        return_seed = npr.get_state()
-        result = (result, return_seed)
-
-    return result
-
-
-def save_to_file(data):
-    """
-    Prompts the user for a file name and writes the data to file.
-    """
-    name = raw_input("give a file name : ")
-    datafile = open(name, 'w')
-    datafile.write(str(data))
-    datafile.close()
-
-
-def main():
-
-    pass
-
-
-if __name__ == "__main__":
-    main()

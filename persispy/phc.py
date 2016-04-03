@@ -27,7 +27,7 @@ class Intersect(object):
     def __init__(self,
                  eqn,
                  num_points=1,
-                 bounds=1,
+                 bounds=10,
                  return_complex=False):
         self._bounds = bounds
         self.complex_threshold = 0.1
@@ -35,8 +35,10 @@ class Intersect(object):
         self.eqn = eqn
         self.varlist, self.coefflist = parse(eqn)
         self.points = []
+
         if DEBUG:
             self.attempt = 0
+
 #         self._startsystem, self._startsol = self._start_system()
         partition = 256
         i = 0
@@ -45,6 +47,7 @@ class Intersect(object):
             self.find_more_points(partition, return_complex)
             i = i + 1
 
+        self._startsystem, self._startsol = self._start_system()
         self.find_more_points(num_points - len(self.points), return_complex)
         self.__call__()
 
@@ -66,58 +69,48 @@ class Intersect(object):
             phcsystem.append(self._intersect())
         return phcsystem
 
-    #  This first block sets up the start system so the solver
-    #  doesn't need to make a new one for each intersection
+    def _intersect(self):
+        """
+        We form intersects from the extracted terms. We return a plane with
+        random coefficients to intersect the variety. The intersects must be
+        of the same dimension as the variety to prevent a overdetermined
+        system (which phc doesn't do nicely)
+        """
+        bounds = self._bounds
+        randomlist = np.random.normal(scale=bounds, size=len(self.varlist))
+        intersect = []
+        for i, var in enumerate(self.varlist):
+            intersect.append(str(randomlist[i]) + " * " + var)
+            if i < len(self.varlist) - 1:
+                intersect.append(" + ")
+#             else:
+#                 intersect.append(" + " + str(randomlist[i]))
+        intersect.append(";")
+        intersect = "".join(intersect)
+        return intersect
+
     def _start_system(self):
         """
         We first set up a start system so phcpy doesn't have to create
         a new one everytime.
         """
-
         phcsystem = self._system()
         startsystem, startsol = total_degree_start_system(phcsystem)
-        if DEBUG:
-            print("system of equations")
-            print("--")
-            for equation in phcsystem:
-                print (equation)
-            print("--")
-            print("start solutions: ", len(startsol))
-            for equation in startsystem:
-                print (equation)
-            for solution in startsol:
-                print (solution)
-            self.attempt = self.attempt + 1
-            print("self.attempt #" + str(self.attempt))
         return startsystem, startsol
 
-    #  Uses the already made start system. Otherwise, identical to
-    #  the block above
     def find_more_points(self, num_points, return_complex=False):
         """
         We find additional points on the variety.
         """
-        # phcpy solver
         points = []
         failure = 0
         while(len(points) < num_points):
             phcsystem = self._system()
             phcsolutions = track(phcsystem, self._startsystem, self._startsol)
 
-            if DEBUG:
-                print("system of equations")
-                print("--")
-                for sol in phcsolutions:
-                    print(sol)
-                print("--")
-                print("number of solutions: ", len(phcsolutions))
-                self.attempt = self.attempt + 1
-                print("attempt #" + str(self.attempt))
 
             #  Parsing the output of solutions
             for sol in phcsolutions:
-                if DEBUG:
-                    print ("phc solutions: \n", sol)
                 solutiondict = strsol2dict(sol)
 
                 point = [solutiondict[variable] for variable in self.varlist]
@@ -129,18 +122,14 @@ class Intersect(object):
                         # choses the points we want
                         if self._is_close(component.imag) \
                                 and self._in_bounds(component.real):
-                            # sometimes phcpy gives more points than we ask,
-                            # thus the additional check
+                            # sometimes phcpy gives more points than we
+                            # ask, thus the additional check
                             if component == point[-1] \
                                     and closeness \
                                     and len(points) < num_points:
                                 points.append(tuple(
                                     [component.real for component in point]))
-                                assert len(points) < num_points
-                                if DEBUG:
-                                    print (
-                                        "appended point:",
-                                        [component.real for component in point])
+                                assert len(points) <= num_points
                                 failure = 0
                         else:
                             closeness = False
@@ -149,29 +138,8 @@ class Intersect(object):
                 raise RuntimeError(
                     "equation has too many complex solutions in a row")
 
-        if DEBUG:
-            print ("points: ", points)
 
         self.points = points + self.points
-
-    def _intersect(self):
-        """
-        We form intersects from the extracted terms. We return a plane with
-        random coefficients to intersect the variety. The intersects must be
-        of the same dimension as the variety to prevent a overdetermined
-        system (which phc doesn't do nicely)
-        """
-        bounds = self._bounds
-#         location = np.random.uniform(-bounds, bounds)
-        randomlist = np.random.normal(scale=bounds, size=len(self.varlist))
-        intersect = []
-        for i, number in enumerate(randomlist):
-            intersect.append(str(number) + " * " + self.varlist[i])
-            if i < len(randomlist) - 1:
-                intersect.append(" + ")
-        intersect.append(";")
-        intersect = "".join(intersect)
-        return intersect
 
     def _is_close(self, number):
         """
@@ -180,8 +148,6 @@ class Intersect(object):
         """
         epsilon = self.complex_threshold
         result = abs(number) <= epsilon
-        if DEBUG and result:
-            print ("Selected component is close")
         return result
 
     def _in_bounds(self, number):
@@ -192,8 +158,6 @@ class Intersect(object):
         bounds = self._bounds
         if bounds and \
                 -bounds <= number and number <= bounds:
-            if DEBUG:
-                print ("Selected component is in bounds")
             return True
         else:
             return False
@@ -239,11 +203,6 @@ def parse(eqn):
     We parse the string into phcpy input to generate the intersects.
     """
 
-    if DEBUG:
-        print("=====")
-        print("input eqn: ", eqn + ";")
-        print("=====")
-
     terms = eqn
     # Extracting terms from the target
     for operation in ["+", "-", "*", "**", "^"]:
@@ -257,8 +216,6 @@ def parse(eqn):
         if not term.isdigit() and term.isalnum() and term not in varlist:
             varlist.append(term)
     varlist.sort()
-    if DEBUG:
-        print("list of variables: ", varlist)
 
     coeffs = eqn
     coeffs = coeffs.replace("-", "+")
@@ -288,6 +245,3 @@ def parse(eqn):
     return varlist, coefflist
 
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod()

@@ -34,9 +34,9 @@ pDict = {
 
 defaultWidget = ['Iter:0',
         ' ',
-        'Skip:0', 
+        'Skip:0',
         ' ',
-        Percentage(), 
+        Percentage(),
         ' ',
         Bar(marker= RotatingMarker(),
                 left='[',
@@ -44,33 +44,33 @@ defaultWidget = ['Iter:0',
         ' ',
         ET(),
         ' ',
-        ETA(), 
+        ETA(),
         ' '
         ]
 
-pointWidget =     ['Point:', 
-        Percentage(), 
+pointWidget =     ['Point:',
+        Percentage(),
         ' ',
         Bar(marker = RotatingMarker(),
                 left='[(',
                 right=')]'),
-        ' ', 
+        ' ',
         ET(),
         ' ',
-        ETA(), 
+        ETA(),
         ' '
         ]
 
-distanceWidget =     ['Distance:', 
-        Percentage(), 
+distanceWidget =     ['Distance:',
+        Percentage(),
         ' ',
         Bar(marker = RotatingMarker(),
                 left='[(',
                 right=')]'),
-        ' ', 
+        ' ',
         ET(),
         ' ',
-        ETA(), 
+        ETA(),
         ' '
         ]
 
@@ -141,7 +141,7 @@ def double_stratified(point_cloud,
             ["Number of points", "Distance", "Connected components"])
 
 
-    if PROGRESS: 
+    if PROGRESS:
         pointBar = ProgressBar(widgets = pointWidget, maxval = maxPoints)
         pointBar.start()
 
@@ -150,7 +150,7 @@ def double_stratified(point_cloud,
 
         if PROGRESS:
             down() # To prepare for subBar
-            distanceBar = ProgressBar(widgets = distanceWidget, 
+            distanceBar = ProgressBar(widgets = distanceWidget,
                     maxval = maxDistance)
             distanceBar.start()
 
@@ -160,7 +160,7 @@ def double_stratified(point_cloud,
 
             try:
                 points_epsilon_tests(point_cloud, numPoints, distance, csv, eqn)
-                
+
             except Exception as inst:
                 pass
 
@@ -201,7 +201,7 @@ def stratified(point_cloud,
     eqn = False
     testName = test_name
 
-    csv = make_csv(testName, 
+    csv = make_csv(testName,
             ["Number of points", "Distance", "Connected components"])
 
     iteration = 0
@@ -226,7 +226,7 @@ def stratified(point_cloud,
 
             try:
                 points_epsilon_tests(point_cloud, numPoints, distance, csv, eqn)
-                
+
             except Exception as inst:
                 skip += 1
                 if PROGRESS: updateDefaultSkipBar(pBar, skip)
@@ -260,13 +260,13 @@ def monte_carlo(point_cloud,
         testName = 'test',
         eqn = False):
     """
-    We run a Monte Carlo test, choosing number of points and a distance at 
+    We run a Monte Carlo test, choosing number of points and a distance at
     random uniformly and count the number of connected components.
     >>> monte_carlo(box, (0.01, 1), (1, 1500), 10)
     True
     """
 
-    csv = make_csv(testName, 
+    csv = make_csv(testName,
             ["Number of points", "Distance", "Connected components"])
 
     minDistance, maxDistance = distance_bounds
@@ -302,7 +302,7 @@ def monte_carlo(point_cloud,
         if DEBUG: print(iteration)
         iteration += 1
 
-    if PROGRESS: 
+    if PROGRESS:
         pBar.finish()
         down()
 
@@ -326,7 +326,7 @@ def points_epsilon_tests(point_cloud, num_points, distance, csv):
         if DEBUG: print(inst)
         failures.append(inst.args[0])
         return failures
-    
+
 
     if DEBUG: print(','.join(row))
     csv.writerow(row)
@@ -339,17 +339,16 @@ def points_epsilon_tests(point_cloud, num_points, distance, csv):
 #     prompt = input("How many times to run the test?")
 #     for _ in range(int(prompt)):
 #         stratified((10, 1500, 10))
-# 
+#
 #         double_stratified((10, 1500, 10),
-#                 (0.01, 0.3, 0.01)) 
+#                 (0.01, 0.3, 0.01))
 
 
-def main():
-    repeat()
 
 def test():
     import doctest
     doctest.testmod(extraglobs = {PROGRESS:False})
 
-if __name__ == "__main__": test()
-    
+if __name__ == "__main__":
+    test()
+

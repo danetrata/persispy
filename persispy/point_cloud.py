@@ -41,6 +41,9 @@ class PointCloud(object):
     def __init__(self, points, space='affine', gui=False):
         try:
             self._points = list(points)
+            import sys
+            if len(self._points) > 1000:
+                sys.setrecursionlimit(len(self._points)**2)
         except TypeError:
             raise TypeError('Input points should be a list of points.')
         try:
@@ -70,6 +73,18 @@ class PointCloud(object):
         return 'Point cloud with ' + repr(self.num_points()) + \
             ' points in real ' + self._space + \
             ' space of dimension ' + repr(self.dimension())
+
+    def get_points(self):
+        """
+        We return the PointCloud's points.
+        """
+        return self._points
+
+    def get_space(self):
+        """
+        We return the PointCloud's space.
+        """
+        return self._space
 
     def __len__(self):
         return len(self._points)
@@ -140,12 +155,13 @@ class PointCloud(object):
         '''
         WARNING: do not run this in a Dropbox folder.
 
-        WARNING: this function rewrites movie.mp4 in the working directory by
-        default. To change this, add file_name='your_file_name.mp4' to the
-        function call.
+        WARNING: this function rewrites movie.mp4 in the working
+        directory by default. To change this, add
+        file_name='your_file_name.mp4' to the function call.
 
-        WARNING: this function is currently very slow for large data sets,
-        thanks it seems to the slowness in plotting so many points.
+        WARNING: this function is currently very slow for large data
+        sets, thanks it seems to the slowness in plotting so many
+        points.
         '''
         if self._space == 'affine':
             epsilon = 0
@@ -259,7 +275,6 @@ class PointCloud(object):
             for i in range(len(self._points)):
                 for j in range(i + 1, len(self._points)):
                     if self._space == 'affine':
-                        #                         dist=np.sqrt(sum((self._points[i]._coords-self._points[j]._coords) *(self._points[i]._coords-self._points[j]._coords)))
                         dist = np.sqrt(
                             sum((self._points[i]._coords - self._points[j]._coords)**2))
                         if dist < epsilon:
@@ -369,9 +384,6 @@ class PointCloud(object):
                         dictionary[gluesmaller[i]].add((gluebigger[j], dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i], dist))
 
-#    def _subdivide_neighbors(self, e, dictionary, pointarray, coordinate=0, method='exact', depth=-1):
-            # recursively compute for the two regions, now using a different
-            # reference coordinate, to reduce gluing area
             if depth == -1:  # depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate + 1) % self.dimension()
                 self._subdivide_neighbors(
@@ -382,7 +394,6 @@ class PointCloud(object):
                 coordinate = (coordinate + 1) % self.dimension()
                 self._subdivide_neighbors(e, depth - 1, coordinate, smaller)
                 self._subdivide_neighbors(e, depth - 1, coordinate, bigger)
-    # def _selectpoint(self, pointarray, k, n):
             if depth == 0:
                 self._neighborhood_graph(e, method, smaller, dictionary)
                 self._neighborhood_graph(e, method, bigger, dictionary)
