@@ -7,7 +7,7 @@ import numpy as np
 # import time
 
 import matplotlib
-matplotlib.use('GTK3Agg') # Useful for using mpl in tkinter.
+matplotlib.use('GTK3Agg')  # Useful for using mpl in tkinter.
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -113,8 +113,9 @@ def plot2d_pc(pointCloud, gui=False):
     We plot a plot cloud.
     """
 
-    xcoords = [p._coords[0] for p in pointCloud._points]
-    ycoords = [p._coords[1] for p in pointCloud._points]
+    points = pointCloud.get_points()
+    xcoords = [p[0] for p in points]
+    ycoords = [p[1] for p in points]
 
     fig, ax = plt.subplots(1)
     ax.scatter(xcoords, ycoords, marker='o', color="#ff6666")
@@ -152,6 +153,7 @@ def plot2d_ng(wGraph,
     """
     We plot the 2d neighborhood graph, taking the axes to shade on.
     """
+    points = wGraph.get_points()
 
     def pick_ax(coords):
         """
@@ -164,53 +166,50 @@ def plot2d_ng(wGraph,
     colors = []
 
     # For the two plotting directions
-    minx = min(p[0] for p in wGraph._adj.keys())
-    maxx = max(p[0] for p in wGraph._adj.keys())
-    miny = min(p[1] for p in wGraph._adj.keys())
-    maxy = max(p[1] for p in wGraph._adj.keys())
+    minx = min(p[0] for p in points)
+    maxx = max(p[0] for p in points)
+    miny = min(p[1] for p in points)
+    maxy = max(p[1] for p in points)
 
     # For the shading direction
 
-    minz = min(p[shading_axis] for p in wGraph._adj.keys())
-    maxz = max(p[shading_axis] for p in wGraph._adj.keys())
+    minz = min(p[shading_axis] for p in points)
+    maxz = max(p[shading_axis] for p in points)
 
     x, y, pointColors = [], [], []
-    for p in wGraph._adj:
-        if p._coords[shading_axis] <= minz + (maxz - minz) / 2:
-            px, py = pick_ax(p._coords)
-            for e in wGraph._adj[p]:
-                qx, qy = pick_ax(e[0]._coords)
+    adjacency = wGraph.get_adjacency()
+    for p in adjacency:
+        if p[shading_axis] <= minz + (maxz - minz) / 2:
+            px, py = pick_ax(p)
+            for e in adjacency[p]:
+                qx, qy = pick_ax(e[0])
                 edges.append([
                     [qx, qy],
                     [px, py]])
 
-                colors.append(((p._coords[shading_axis] - minz) / (maxz - minz),
-                               .5,
-                               .5,
-                               .5))
+                colors.append(((p[shading_axis] - minz) / (maxz - minz),
+                               .5, .5, .5))
             x.append(px)
             y.append(py)
             pointColors.append(
-                ((p._coords[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
+                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
 
-    for p in wGraph._adj:
-        if p._coords[shading_axis] >= minz + (maxz - minz) / 2:
-            px, py = pick_ax(p._coords)
-            for e in wGraph._adj[p]:
-                qx, qy = pick_ax(e[0]._coords)
+    for p in adjacency:
+        if p[shading_axis] >= minz + (maxz - minz) / 2:
+            px, py = pick_ax(p)
+            for e in adjacency[p]:
+                qx, qy = pick_ax(e[0])
                 edges.append([
                     [qx, qy],
                     [px, py]])
 
-                colors.append(((p._coords[shading_axis] - minz) / (maxz - minz),
-                               .5,
-                               .5,
-                               .5))
+                colors.append(((p[shading_axis] - minz) / (maxz - minz),
+                               .5, .5, .5))
 
             x.append(px)
             y.append(py)
             pointColors.append(
-                ((p._coords[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
+                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
     assert x
 
     lines = mpl.collections.LineCollection(edges, color=colors)
@@ -244,14 +243,15 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
     """
     We plot a point cloud.
     """
-    if pointCloud._space == 'affine':
+    if pointCloud.get_space() == 'affine':
 
-        xcoords = [p._coords[axes[0]] for p in pointCloud._points]
-        ycoords = [p._coords[axes[1]] for p in pointCloud._points]
-        if len(pointCloud._points[0]) == 3:
-            zcoords = [p._coords[axes[2]] for p in pointCloud._points]
+        points = pointCloud.get_points()
+        xcoords = [p[axes[0]] for p in points]
+        ycoords = [p[axes[1]] for p in points]
+        if len(points[0]) == 2:
+            zcoords = [0 for _ in points]
         else:
-            zcoords = [0 for _ in pointCloud._points]
+            zcoords = [p[axes[2]] for p in points]
 
         fig = plt.figure()
         ax = Axes3D(fig)
@@ -285,6 +285,7 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
             plt.show(fig)
 #             show(fig)
 
+
 def plot3d_ng(wGraph,
               cmap=0,
               method='subdivision',
@@ -310,14 +311,13 @@ def plot3d_ng(wGraph,
     plt.rc('font', family='sans-serif: Computer Modern Sans serif')
     plt.axis('off')
 
-
 #     fig = plt.figure()
     fig, window = create_fig()
     window.wm_title("3D Neighborhood Graph")
     ax = Axes3D(fig)
 
-    epsilon = wGraph._epsilon
-    adj = wGraph._adj
+    epsilon = wGraph.get_epsilon()
+    adj = wGraph.get_adjacency()
     cp = wGraph.connected_components()
     cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
              plt.cm.rainbow, plt.cm.winter]
@@ -357,7 +357,7 @@ def plot3d_ng(wGraph,
         r'\makebox[90pt]{%f\hfill}Distance\\ \\'\
         r'\makebox[90pt]{%d\hfill}Edges\\ \\'\
         r'\makebox[90pt]{%d\hfill}Connected Components' \
-        % (len(wGraph._adj), epsilon, wGraph.num_edges(), len(cp))
+        % (len(adj), epsilon, wGraph.num_edges(), len(cp))
 
     ax.plot([0], [0], color='white', label=textstr)
     ax.legend(loc='lower left', fontsize='x-large', borderpad=1)
@@ -366,18 +366,22 @@ def plot3d_ng(wGraph,
     maxx = max([coord[0] for coord in list(adj.keys())])
     miny = min([coord[1] for coord in list(adj.keys())])
     maxy = max([coord[1] for coord in list(adj.keys())])
-    minz = min([coord[2] for coord in list(adj.keys())])
-    maxz = max([coord[2] for coord in list(adj.keys())])
 
     xpadding = abs(minx - maxx) * 0.1
     ypadding = abs(miny - maxy) * 0.1
-    zpadding = abs(minz - maxz) * 0.1
     ax.set_xlim(minx - xpadding,
                 maxx + xpadding)
     ax.set_ylim(miny - ypadding,
                 maxy + ypadding)
-    ax.set_zlim(minz - xpadding,
-                maxz + zpadding)
+
+    zaxis = [coord[2] for coord in list(adj.keys()) if len(coord) > 2]
+    if zaxis:
+        minz = min(zaxis)
+        maxz = max(zaxis)
+        zpadding = abs(minz - maxz) * 0.1
+        ax.set_zlim(minz - xpadding,
+                    maxz + zpadding)
+
     ax.set_aspect('equal')
 
     if gui:
@@ -385,32 +389,3 @@ def plot3d_ng(wGraph,
     else:
         #         plt.show()
         show(window)
-
-
-if __name__ == "__main__":
-
-    from persispy.points import sphere
-
-    pc = sphere(1000)
-    plot2d(pc)
-    pc.plot2d()
-    plot3d(pc)
-    pc.plot3d()
-    ng = pc.neighborhood_graph(0.2)
-    plot2d(ng)
-    pc.plot2d_neighborhood_graph(0.2)
-    plot3d(ng)
-    pc.plot3d_neighborhood_graph(0.2)
-
-
-#     pc = Intersect('x^2 + y^2 + z^2 -1', 1000)
-#     plot2d(pc)
-#     plot3d(pc)
-#     ng = pc.neighborhood_graph(0.2)
-#     plot2d(ng)
-#     plot3d(ng)
-
-
-#     ng = pc.neighborhood_graph(.13)
-#     ng.plot2d()
-#     ng.plot3d()
