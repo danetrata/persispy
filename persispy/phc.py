@@ -20,18 +20,22 @@ DEBUG = False
 
 class Intersect(object):
     """
-    We take an equation that is in general form A*x^2 + B*x + C = 0 and
-    return a PointCloud on that variety.
+    We take an equation that is, in general, of the form
+    A*x^2 + B*x + C = 0 and return a PointCloud on that variety.
     """
 
     def __init__(self,
                  eqn,
                  num_points=1,
                  bounds=10,
-                 return_complex=False):
+                 return_complex=False,
+                 coefficient_distribution='normal',
+                 intersect_constant=False):
         self._bounds = bounds
-        self.complex_threshold = 0.1
         self._failure = num_points
+        self._coefficient_distribution = coefficient_distribution
+        self._intersect_constant = intersect_constant
+        self.complex_threshold = 0.1
         self.eqn = eqn
         self.varlist, self.coefflist = parse(eqn)
         self.points = []
@@ -67,24 +71,40 @@ class Intersect(object):
         phcsystem = [phceqn]
         for _ in range(len(self.varlist) - 1):
             phcsystem.append(self._intersect())
+#         print(phcsystem)
         return phcsystem
 
     def _intersect(self):
         """
-        We form intersects from the extracted terms. We return a plane with
-        random coefficients to intersect the variety. The intersects must be
-        of the same dimension as the variety to prevent a overdetermined
-        system (which phc doesn't do nicely)
+        We form intersects from the extracted terms. We return a plane
+        with random coefficients to intersect the variety. The
+        intersects must be of the same dimension as the variety to
+        prevent a overdetermined system (which phc doesn't do nicely)
         """
         bounds = self._bounds
-        randomlist = np.random.normal(scale=bounds, size=len(self.varlist))
+        coefficient_distribution = self._coefficient_distribution
+        constant = self._intersect_constant
+
+        if coefficient_distribution == 'rejection':
+            def normalize(x):
+                return (1 / np.sqrt(sum(x * x))) * x
+            randomlist = [None]
+            while not all(randomlist):
+                pt = 2 * np.random.random(size=len(self.varlist)) - 1
+                if np.sqrt(sum(pt * pt)) <= 1:
+                    randomlist = normalize(pt)
+        if coefficient_distribution == 'normal':
+            randomlist = np.random.normal(loc=center, scale=bounds, size=len(self.varlist))
+        elif coefficient_distribution == 'uniform':
+            randomlist = np.random.uniform(high=bounds, low=0,
+                                           size=len(self.varlist))
         intersect = []
         for i, var in enumerate(self.varlist):
             intersect.append(str(randomlist[i]) + " * " + var)
             if i < len(self.varlist) - 1:
                 intersect.append(" + ")
-#             else:
-#                 intersect.append(" + " + str(randomlist[i]))
+            elif constant:
+                intersect.append(" + " + str(randomlist[i]))
         intersect.append(";")
         intersect = "".join(intersect)
         return intersect
@@ -107,7 +127,6 @@ class Intersect(object):
         while(len(points) < num_points):
             phcsystem = self._system()
             phcsolutions = track(phcsystem, self._startsystem, self._startsol)
-
 
             #  Parsing the output of solutions
             for sol in phcsolutions:
@@ -137,7 +156,6 @@ class Intersect(object):
             if self._failure <= failure:
                 raise RuntimeError(
                     "equation has too many complex solutions in a row")
-
 
         self.points = points + self.points
 
@@ -243,5 +261,3 @@ def parse(eqn):
                     break
 
     return varlist, coefflist
-
-

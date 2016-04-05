@@ -28,25 +28,30 @@ from persispy.phc import Intersect
 from persispy.point_cloud import PointCloud
 
 equations = {
-    "circle"        :"x^2 + y^2 - 1",
-    "sphere"        :"x^2 + y^2 + z^2 - 1",
-    "torus"         :"16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2",
-    "eightsurface"  :"4*z^4 + 1/2 * (x^2 + y^2 - 4*z^2) - 1/4",
-    "hyperbolid"    :"x^2 + y^2 - z^2 - 1",
-    "degree3sphere" :"x^3 + y^3 + z^3 - 1"
+    "circle": "x^2 + y^2 - 1",
+    "sphere": "x^2 + y^2 + z^2 - 1",
+    "torus": "16*x^2 + 16*y^2 - (x^2 + y^2 + z^2 + 3)^2",
+    "eightsurface": "4*z^4 + 1/2 * (x^2 + y^2 - 4*z^2) - 1/4",
+    "hyperbolid": "x^2 + y^2 - z^2 - 1",
+    "degree3sphere": "x^3 + y^3 + z^3 - 1"
 }
+
 
 def intersect_hyperbolid(number_of_points):
     return Intersect(equations["hyperbolid"], number_of_points)
 
+
 def intersect_eightsurface(number_of_points):
     return Intersect(equations["eightsurface"], number_of_points)
+
 
 def intersect_torus(number_of_points):
     return Intersect(equations["torus"], number_of_points)
 
+
 def intersect_circle(number_of_points):
     return Intersect(equations["circle"], number_of_points)
+
 
 def intersect_sphere(number_of_points):
     return Intersect(equations['sphere'], number_of_points)
@@ -71,11 +76,13 @@ def circle(num_points, radius=1):
 def sphere(num_points, radius=1, method='rejection'):
     '''
     Returns a PointCloud with num_points random points on the 2-sphere
-    of given radius. With method=='normalized', random points are
-    plotted in the unit cube, and then divided by their length. With
-    method=='rectangular', random polar coordinates are given. With
-    method=='rejection', a rejection method is given to produce actually
-    equidistributed points on the 2-sphere with its usual measure.
+    of given radius.
+    With method=='normalized', random points are plotted in the unit
+    cube, and then divided by their length.
+    With method=='rectangular', random polar coordinates are given.
+    With method=='rejection', a rejection method is given to produce
+    actually equidistributed points on the 2-sphere with its usual
+    measure.
 
     EXAMPLES:
     >>> sphere(1000,radius=4)
@@ -195,5 +202,3 @@ def box(number_of_points,
         result = (result, return_seed)
 
     return result
-
-
