@@ -155,15 +155,6 @@ def plot2d_ng(wGraph,
     """
     points = wGraph.get_points()
 
-    def pick_ax(coords):
-        """
-        Small helper fuction to pick our the axes of interest.
-        """
-        x, y = coords[axes[0]], coords[axes[1]]
-        return x, y
-
-    edges = []
-    colors = []
 
     # For the two plotting directions
     minx = min(p[0] for p in points)
@@ -176,40 +167,11 @@ def plot2d_ng(wGraph,
     minz = min(p[shading_axis] for p in points)
     maxz = max(p[shading_axis] for p in points)
 
-    x, y, pointColors = [], [], []
+
     adjacency = wGraph.get_adjacency()
-    for p in adjacency:
-        if p[shading_axis] <= minz + (maxz - minz) / 2:
-            px, py = pick_ax(p)
-            for e in adjacency[p]:
-                qx, qy = pick_ax(e[0])
-                edges.append([
-                    [qx, qy],
-                    [px, py]])
+    x, y, pointcolors, edges, colors = color_by_ax(adjacency, shading_axis,
+                                                   minz, maxz, axes)
 
-                colors.append(((p[shading_axis] - minz) / (maxz - minz),
-                               .5, .5, .5))
-            x.append(px)
-            y.append(py)
-            pointColors.append(
-                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
-
-    for p in adjacency:
-        if p[shading_axis] >= minz + (maxz - minz) / 2:
-            px, py = pick_ax(p)
-            for e in adjacency[p]:
-                qx, qy = pick_ax(e[0])
-                edges.append([
-                    [qx, qy],
-                    [px, py]])
-
-                colors.append(((p[shading_axis] - minz) / (maxz - minz),
-                               .5, .5, .5))
-
-            x.append(px)
-            y.append(py)
-            pointColors.append(
-                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
     assert x
 
     lines = mpl.collections.LineCollection(edges, color=colors)
@@ -231,13 +193,59 @@ def plot2d_ng(wGraph,
     ax.set_aspect('equal')
 
 #     x, y = pick_ax(zip(*wGraph.vertices()))
-    ax.scatter(x, y, marker='o', color=pointColors, zorder=len(x))
+    ax.scatter(x, y, marker='o', color=pointcolors, zorder=len(x))
 
     if gui:
         return fig
     else:
         plt.show(fig)
 
+def pick_ax(coords, axes):
+    """
+    Small helper fuction to pick our the axes of interest.
+    """
+    x, y = coords[axes[0]], coords[axes[1]]
+    return x, y
+
+def color_by_ax(adjacency, shading_axis, minz, maxz, axes):
+    """
+    """
+    edges = []
+    colors = []
+    x, y, pointcolors = [], [], []
+    for p in adjacency:
+        if p[shading_axis] <= minz + (maxz - minz) / 2:
+            px, py = pick_ax(p, axes)
+            for e in adjacency[p]:
+                qx, qy = pick_ax(e[0], axes)
+                edges.append([
+                    [qx, qy],
+                    [px, py]])
+
+                colors.append(((p[shading_axis] - minz) / (maxz - minz),
+                               .5, .5, .5))
+            x.append(px)
+            y.append(py)
+            pointcolors.append(
+                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
+
+        elif p[shading_axis] >= minz + (maxz - minz) / 2:
+            px, py = pick_ax(p, axes)
+            for e in adjacency[p]:
+                qx, qy = pick_ax(e[0], axes)
+                edges.append([
+                    [qx, qy],
+                    [px, py]])
+
+                colors.append(((p[shading_axis] - minz) / (maxz - minz),
+                               .5, .5, .5))
+
+            x.append(px)
+            y.append(py)
+            pointcolors.append(
+                ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
+
+    return x,y, pointcolors, edges, colors
 
 def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
     """
@@ -287,7 +295,7 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
 
 
 def plot3d_ng(wGraph,
-              cmap=0,
+              cmap=3,
               method='subdivision',
               save=False,
               title=False,
@@ -324,11 +332,13 @@ def plot3d_ng(wGraph,
     cmap = cmaps[cmap]  # color mappings
     line_colors = cmap(np.linspace(0, 1, len(cp)))
 
+
     # [0, 0.1, 0.2 ... 1 ]
 
     cp = wGraph.connected_edges(padding=3)
     cp.sort(key=len)
 
+    componentIndex = int
     for componentIndex, component in enumerate(cp):
 
         #         scalar = float(len(component)) / numberEdges + 1
@@ -345,12 +355,14 @@ def plot3d_ng(wGraph,
         lines.set_edgecolor(line_colors[componentIndex])
         ax.add_collection(lines)
 
+    componentIndex += 1
+
     if wGraph.singletons():
         x, y, z = zip(*wGraph.singletons(padding=3))
         ax.scatter(x, y, z,
                    marker='.',
                    s=15,
-                   color='#ff6666',
+                   color=line_colors[componentIndex:],
                    label=r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
 
     textstr = r'\noindent\makebox[90pt]{%d\hfill}Number of Points\\ \\'\

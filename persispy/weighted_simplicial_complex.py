@@ -248,6 +248,9 @@ class wGraph(object):
         return components
 
     def singletons(self, padding=False):
+        """
+        We return the singletons.
+        """
         if not self._connected_components:
             self.connected_components()
         cp = self._connected_components
@@ -272,6 +275,7 @@ class wGraph(object):
         """
         Returns a list of edges that make up a connected component. We assume
         no multiple edges.
+        NOTE: We do not include single points. See .singletons()
         """
 
         if not self._connected_components:
