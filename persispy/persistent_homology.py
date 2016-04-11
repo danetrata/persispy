@@ -39,16 +39,22 @@ class PersistentHomology(object):
             #print [v._index for v in s.simplex._vertices]
             if len(container.simplex._vertices) != 1:
                 rowiszero = False
-                while container.entries[0] in self.persistence_pairs:
-                    container.entries = container.entries ^ (self.persistence_pairs[container.entries[0]].entries)
+                while container.entries[-1] in self.persistence_pairs:
+                    container.entries = container.entries ^ (self.persistence_pairs[container.entries[-1]].entries)
+                    #container.entries = container.entries ^ (self.persistence_pairs[container.entries[0]].entries)
                     #print 'xor'
                     if len(container.entries) == 0:
                         rowiszero = True
                         break
                     #print [x.index for x in s.entries]
                 if not rowiszero:
-                    self.persistence_pairs[container.entries[0]] = container
-
+                    self.persistence_pairs[container.entries[-1]] = container
+    def get_differential(self):
+        result = [[0 for i in range(len(self.simplex_containers))] for j in range(len(self.simplex_containers))]
+        for container1 in self.simplex_containers:
+            for container2 in container1.entries:
+                result[container2.index][container1.index]=1
+        return result
     def plot_bar_code(self, epsilon, hue=0, saturation=.5, lightness=.5):
         '''
         EXAMPLES:
@@ -80,6 +86,24 @@ class PersistentHomology(object):
                                 [y_coordinate, y_coordinate],
                                 color=(rgb_values[0], rgb_values[1], rgb_values[2], 1-alpha),
                                 linestyle='-', linewidth=1)
+                else:
+                    if len(container.entries)==0:
+                        if len(container.simplex._vertices) > current_dimension:
+                            more_elements = True
+                        if len(container.simplex._vertices) == current_dimension:
+                            if container.simplex._weight != epsilon:
+                                y_coordinate = current_height
+                                alpha = 1-(epsilon-container.simplex._weight)/epsilon
+                                rgb_values = colorsys.hls_to_rgb(
+                                    (hue+len(container.simplex._vertices)*(3-5**.5)*.5)%1.0,
+                                    saturation,
+                                    lightness)
+                                current_height = current_height+1
+                                plt.plot(
+                                    [container.simplex._weight, epsilon],
+                                    [y_coordinate, y_coordinate],
+                                    color=(rgb_values[0], rgb_values[1], rgb_values[2], 1-alpha),
+                                    linestyle='-', linewidth=1)
             current_dimension = current_dimension+1
             current_height = current_height+30
 
