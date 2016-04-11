@@ -24,7 +24,10 @@ import scipy.constants as scic
 
 
 from persispy.hashing import HashPoint
-from persispy.phc import Intersect
+try:
+    from persispy.phc import Intersect
+except:
+    print("PHCpy is not currently installed. PHC functions are unavailable.")
 from persispy.point_cloud import PointCloud
 
 equations = {
@@ -181,7 +184,7 @@ def box(number_of_points,
     >>> box(1000, 2)
     Point cloud with 1000 points in real affine space of dimension 2
 
-    >>> box(1000, 4)
+    >>> box(1000, dimension=4)
     Point cloud with 1000 points in real affine space of dimension 4
 
     """

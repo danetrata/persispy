@@ -7,18 +7,30 @@ import numpy as np
 # import time
 
 import matplotlib
-matplotlib.use('GTK3Agg')  # Useful for using mpl in tkinter.
+import sys
+if sys.version_info <= (3, 0): # Python 2
+    matplotlib.use('GTKAgg')
+else: # Python 3
+    matplotlib.use('GTK3Agg') # Useful for using mpl in tkinter.
+                          # Needs to be called here.
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-import tkinter as tk
+try: # python3
+    import tkinter as tk
+except: # python2
+    import Tkinter as tk
+import mpl_toolkits.mplot3d as a3
 from matplotlib.figure import Figure
+from matplotlib.axes import Axes
+from mpl_toolkits.mplot3d import Axes3D
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wGraph
-from persispy.phc import Intersect
-import mpl_toolkits.mplot3d as a3
-from mpl_toolkits.mplot3d import Axes3D
-# import matplotlib.patches as mpatches
+try:
+    from persispy.phc import Intersect
+except:
+    Intersect = type("None", (object,), {"None": None})
+    print("PHCpy is not currently installed. PHC functions are unavailable.")
 
 
 def create_fig():
@@ -144,14 +156,34 @@ import matplotlib as mpl
 
 
 def plot2d_ng(wGraph,
+              shading_style='axes',
               axes=(0, 1),
               shading_axis=1,
               method='subdivision',
               save=False,
-              title=False,
-              gui=False):
+              title="2D Neighborhood Graph",
+              gui=False,
+              cmap=0):
     """
     We plot the 2d neighborhood graph, taking the axes to shade on.
+    """
+    if shading_style == 'axes':
+        color_by_ax(wGraph, axes, shading_axis, method, save, title, gui)
+    elif shading_style == 'component':
+        color_by_component(wGraph, axes, shading_axis, cmap, method,
+                           save, title, gui)
+
+
+def pick_ax(coords, axes):
+    """
+    Small helper fuction to pick our the axes of interest.
+    """
+    x, y = coords[axes[0]], coords[axes[1]]
+    return x, y
+
+def color_by_ax(wGraph, axes, shading_axis, method, save, title, gui):
+    """
+    We color the graph by applying a gradient to an axis.
     """
     points = wGraph.get_points()
 
@@ -169,47 +201,6 @@ def plot2d_ng(wGraph,
 
 
     adjacency = wGraph.get_adjacency()
-    x, y, pointcolors, edges, colors = color_by_ax(adjacency, shading_axis,
-                                                   minz, maxz, axes)
-
-    assert x
-
-    lines = mpl.collections.LineCollection(edges, color=colors)
-
-    fig, ax = plt.subplots(1)
-#     fig = Figure()
-#     ax = fig.add_subplot(111)
-    ax.add_collection(lines)
-    fig.set_size_inches(10.0, 10.0)
-    if title:
-        fig.suptitle(title)
-    ax.grid(True)
-    ax.axis(
-        [minx - .1 * abs(maxx - minx),
-         maxx + .1 * abs(maxx - minx),
-         miny - .1 * abs(maxy - miny),
-         maxy + .1 * abs(maxy - miny)])
-
-    ax.set_aspect('equal')
-
-#     x, y = pick_ax(zip(*wGraph.vertices()))
-    ax.scatter(x, y, marker='o', color=pointcolors, zorder=len(x))
-
-    if gui:
-        return fig
-    else:
-        plt.show(fig)
-
-def pick_ax(coords, axes):
-    """
-    Small helper fuction to pick our the axes of interest.
-    """
-    x, y = coords[axes[0]], coords[axes[1]]
-    return x, y
-
-def color_by_ax(adjacency, shading_axis, minz, maxz, axes):
-    """
-    """
     edges = []
     colors = []
     x, y, pointcolors = [], [], []
@@ -245,7 +236,131 @@ def color_by_ax(adjacency, shading_axis, minz, maxz, axes):
             pointcolors.append(
                 ((p[shading_axis] - minz) / (maxz - minz), .5, .5, .5))
 
-    return x,y, pointcolors, edges, colors
+    lines = mpl.collections.LineCollection(edges, color=colors)
+
+    fig, ax = plt.subplots(1)
+
+#     fig = Figure()
+#     ax = fig.add_subplot(111)
+    ax.add_collection(lines)
+    fig.set_size_inches(10.0, 10.0)
+    if title:
+        fig.suptitle(title)
+    ax.grid(True)
+    ax.axis(
+        [minx - .1 * abs(maxx - minx),
+         maxx + .1 * abs(maxx - minx),
+         miny - .1 * abs(maxy - miny),
+         maxy + .1 * abs(maxy - miny)])
+
+    ax.set_aspect('equal')
+
+#     x, y = pick_ax(zip(*wGraph.vertices()))
+    ax.scatter(x, y, marker='o', color=pointcolors, zorder=len(x))
+
+    if gui:
+        return fig
+    else:
+        plt.show(fig)
+
+def color_by_component(wGraph, cmap, method, save, title, gui):
+
+    plt.rc('text', usetex=True)
+    plt.rc('font', family='sans-serif: Computer Modern Sans serif')
+    plt.axis('off')
+
+#     fig = plt.figure()
+    fig, window = create_fig()
+    window.wm_title(title)
+    ax = fig.add_subplot(1, 1, 1)
+    epsilon = wGraph.get_epsilon()
+    adj = wGraph.get_adjacency()
+    cp = wGraph.connected_components()
+    cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
+             plt.cm.rainbow, plt.cm.winter]
+    cmap = cmaps[cmap]  # color mappings
+    line_colors = cmap(np.linspace(0, 1, len(cp)))
+    line_colors = line_colors[::-1]
+
+
+    # [0, 0.1, 0.2 ... 1 ]
+
+    ce = wGraph.connected_edges()
+    ce.sort(key=len)
+
+    componentIndex = -1
+    for componentIndex, component in enumerate(ce):
+
+        #         scalar = float(len(component)) / numberEdges + 1
+        #         tempcomponent = []
+        #         for i, edge in enumerate(component):
+        #             tempcomponent.append(edge*scalar)
+        #         component = set(tempcomponent)
+
+        lines = mpl.collections.LineCollection(component)
+
+#         if componentIndex % 2 == 1:
+#
+#             componentIndex = -1 * componentIndex
+        lines.set_edgecolor(line_colors[componentIndex])
+        ax.add_collection(lines)
+
+    componentIndex += 1
+
+    if wGraph.singletons():
+        x, y = zip(*wGraph.singletons())
+        ax.scatter(x, y,
+                   marker='.',
+                   s=15,
+                   color=line_colors[componentIndex:],
+                   label=r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
+
+    textstr = r'\noindent\makebox[90pt]{%d\hfill}Number of Points\\ \\'\
+        r'\makebox[90pt]{%.3f\hfill}Distance\\ \\'\
+        r'\makebox[90pt]{%d\hfill}Edges\\ \\'\
+        r'\makebox[90pt]{%d\hfill}Connected Components' \
+        % (len(adj), epsilon, wGraph.num_edges(), len(cp))
+
+    minx = min([coord[0] for coord in list(adj.keys())])
+    maxx = max([coord[0] for coord in list(adj.keys())])
+    miny = min([coord[1] for coord in list(adj.keys())])
+    maxy = max([coord[1] for coord in list(adj.keys())])
+
+    xpadding = abs(minx - maxx) * 0.1
+    ypadding = abs(miny - maxy) * 0.1
+    ax.set_xlim(minx - xpadding,
+                maxx + xpadding)
+    ax.set_ylim(miny - ypadding,
+                maxy + ypadding)
+
+    ax.set_aspect('equal')
+
+
+    ax.plot([0], [0], color='white', label=textstr)
+
+# # Shrink current axis by 20%
+#     box = ax.get_position()
+#     ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+#
+# # Put a legend to the right of the current axis
+#     ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+#
+#     box = ax.get_position()
+#     ax.set_position([box.x0, box, y0, box.width])
+
+# Shrink current axis's height by 10% on the bottom
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+# Put a legend below current axis
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
+
+    if gui:
+        return fig
+    else:
+        show(window)
 
 def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
     """
@@ -298,8 +413,7 @@ def plot3d_ng(wGraph,
               cmap=3,
               method='subdivision',
               save=False,
-              title=False,
-              DEBUG=False,
+              title="3D Neighborhood Graph",
               gui=False):
     """
     For a given epsilon, makes a 3-dimensional plot of a neighborhood
@@ -321,7 +435,7 @@ def plot3d_ng(wGraph,
 
 #     fig = plt.figure()
     fig, window = create_fig()
-    window.wm_title("3D Neighborhood Graph")
+    window.wm_title(title)
     ax = Axes3D(fig)
 
     epsilon = wGraph.get_epsilon()
@@ -335,11 +449,11 @@ def plot3d_ng(wGraph,
 
     # [0, 0.1, 0.2 ... 1 ]
 
-    cp = wGraph.connected_edges(padding=3)
-    cp.sort(key=len)
+    ce = wGraph.connected_edges(padding=3)
+    ce.sort(key=len)
 
     componentIndex = int
-    for componentIndex, component in enumerate(cp):
+    for componentIndex, component in enumerate(ce):
 
         #         scalar = float(len(component)) / numberEdges + 1
         #         tempcomponent = []
@@ -366,7 +480,7 @@ def plot3d_ng(wGraph,
                    label=r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
 
     textstr = r'\noindent\makebox[90pt]{%d\hfill}Number of Points\\ \\'\
-        r'\makebox[90pt]{%f\hfill}Distance\\ \\'\
+        r'\makebox[90pt]{%.3f\hfill}Distance\\ \\'\
         r'\makebox[90pt]{%d\hfill}Edges\\ \\'\
         r'\makebox[90pt]{%d\hfill}Connected Components' \
         % (len(adj), epsilon, wGraph.num_edges(), len(cp))
