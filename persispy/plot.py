@@ -7,12 +7,7 @@ import numpy as np
 # import time
 
 import matplotlib
-import sys
-if sys.version_info <= (3, 0): # Python 2
-    matplotlib.use('GTKAgg')
-else: # Python 3
-    matplotlib.use('GTK3Agg') # Useful for using mpl in tkinter.
-                          # Needs to be called here.
+matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
@@ -160,7 +155,6 @@ def plot2d_ng(wGraph,
               axes=(0, 1),
               shading_axis=1,
               method='subdivision',
-              save=False,
               title="2D Neighborhood Graph",
               gui=False,
               cmap=0):
@@ -168,10 +162,11 @@ def plot2d_ng(wGraph,
     We plot the 2d neighborhood graph, taking the axes to shade on.
     """
     if shading_style == 'axes':
-        color_by_ax(wGraph, axes, shading_axis, method, save, title, gui)
+        color_by_ax(wGraph, axes, shading_axis, method,
+                    title, gui)
     elif shading_style == 'component':
-        color_by_component(wGraph, axes, shading_axis, cmap, method,
-                           save, title, gui)
+        color_by_component(wGraph, cmap, method,
+                           title, gui)
 
 
 def pick_ax(coords, axes):
@@ -181,7 +176,7 @@ def pick_ax(coords, axes):
     x, y = coords[axes[0]], coords[axes[1]]
     return x, y
 
-def color_by_ax(wGraph, axes, shading_axis, method, save, title, gui):
+def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
     """
     We color the graph by applying a gradient to an axis.
     """
@@ -414,7 +409,8 @@ def plot3d_ng(wGraph,
               method='subdivision',
               save=False,
               title="3D Neighborhood Graph",
-              gui=False):
+              gui=False,
+              fancy=True):
     """
     For a given epsilon, makes a 3-dimensional plot of a neighborhood
     graph.
@@ -425,8 +421,6 @@ def plot3d_ng(wGraph,
         2 - Paired
         3 - rainbow
         4 - winter
-    Also, the function can also take a different method, and
-    automatically save a plot with or without a title
     """
 
     plt.rc('text', usetex=True)
@@ -437,6 +431,9 @@ def plot3d_ng(wGraph,
     fig, window = create_fig()
     window.wm_title(title)
     ax = Axes3D(fig)
+    if not fancy:
+        ax.grid(False)
+        ax.set_axis_off()
 
     epsilon = wGraph.get_epsilon()
     adj = wGraph.get_adjacency()
