@@ -92,7 +92,7 @@ def sphere(num_points, radius=1, method='rejection'):
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     def normalize(x):
-        return (1 / np.sqrt(sum(x * x))) * x
+        return (radius / np.sqrt(sum(x * x))) * x
     if method == 'normalized':
         return PointCloud([
             HashPoint(
@@ -124,9 +124,9 @@ def sphere(num_points, radius=1, method='rejection'):
         count = 0
         points = []
         while count < num_points:
-            pt = 2 * npr.random(3) - 1
+            pt = 2 * radius * npr.random(3) - radius
             if np.sqrt(sum(pt * pt)) <= radius:
-                points.append(HashPoint(normalize(pt), count))
+                points.append(HashPoint(pt, count))
                 count = count + 1
         return PointCloud(points, space='affine')
     else:
