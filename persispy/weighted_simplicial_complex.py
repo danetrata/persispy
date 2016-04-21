@@ -531,11 +531,11 @@ class wSimplicialComplex:
 
 class sorted_clique_list:
 
-    def __init__(self, wg):
+    def __init__(self, wg, dimension=-1):
         '''wg is a weighted graph'''
         self._cliques = []
         sorted_clique_list._BronKerboschPivot(set(), set(
-            wg._adj.keys()), set(), wg._adj, self._cliques)
+            wg._adj.keys()), set(), wg._adj, self._cliques, dimension)
         self._cliques.sort()
 
     def get_simplex_iterator(self, n):
@@ -567,30 +567,29 @@ class sorted_clique_list:
         return _clique_iterator(itertools.chain(iter(j), i))
 
     @staticmethod
-    def _BronKerbosch(r, p, x, adj, c):
-        if len(p) == 0 and len(x) == 0:
+    def _BronKerbosch(r, p, x, adj, c, dim=-1):
+        if (len(p) == 0 and len(x) == 0) or (len(r) == dim):
             c.append(sorted(tuple(r)))
         else:
             for v in set(p):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerbosch(
-                    r | {v}, p & nbh, x & nbh, adj, c)
+                    r | {v}, p & nbh, x & nbh, adj, c,dim)
                 p.remove(v)
                 x.add(v)
 
     @staticmethod
-    def _BronKerboschPivot(r, p, x, adj, c):
-        if len(p) == 0 and len(x) == 0:
+    def _BronKerboschPivot(r, p, x, adj, c, dim=-1):
+        if (len(p) == 0 and len(x) == 0) or (len(r) == dim):
             c.append(sorted(tuple(r)))
         else:
-            # The next line looks a little fishy.--Ben
             for u in p | x:
                 break
             # u = iter(p | x).next()
             for v in iter(set(p) - adj[u]):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerboschPivot(
-                    r | {v}, p & nbh, x & nbh, adj, c)
+                    r | {v}, p & nbh, x & nbh, adj, c,dim)
                 p.remove(v)
                 x.add(v)
 
