@@ -165,7 +165,7 @@ def plot2d_ng(wGraph,
         color_by_ax(wGraph, axes, shading_axis, method,
                     title, gui)
     elif shading_style == 'component':
-        color_by_component(wGraph, cmap, method,
+        color_by_component(wGraph, axes, cmap, method,
                            title, gui)
 
 
@@ -258,7 +258,16 @@ def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
     else:
         plt.show(fig)
 
-def color_by_component(wGraph, cmap, method, save, title, gui):
+
+def pick_ax_edge(component, axes):
+    selected_axes = []
+    for edge in component:
+        endpoint1, endpoint2 = edge
+        selected_axes.append(((endpoint1[axes[0]], endpoint1[axes[1]]),
+                             (endpoint2[axes[0]], endpoint2[axes[1]])))
+    return selected_axes
+
+def color_by_component(wGraph, axes, cmap, method, title, gui):
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='sans-serif: Computer Modern Sans serif')
@@ -292,6 +301,7 @@ def color_by_component(wGraph, cmap, method, save, title, gui):
         #             tempcomponent.append(edge*scalar)
         #         component = set(tempcomponent)
 
+        component = pick_ax_edge(component, axes)
         lines = mpl.collections.LineCollection(component)
 
 #         if componentIndex % 2 == 1:
@@ -303,7 +313,7 @@ def color_by_component(wGraph, cmap, method, save, title, gui):
     componentIndex += 1
 
     if wGraph.singletons():
-        x, y = zip(*wGraph.singletons())
+        x, y = zip(*[pick_ax(point, axes) for point in wGraph.singletons()])
         ax.scatter(x, y,
                    marker='.',
                    s=15,
@@ -449,7 +459,7 @@ def plot3d_ng(wGraph,
     ce = wGraph.connected_edges(padding=3)
     ce.sort(key=len)
 
-    componentIndex = int
+    componentIndex = -1
     for componentIndex, component in enumerate(ce):
 
         #         scalar = float(len(component)) / numberEdges + 1

@@ -169,6 +169,14 @@ def flat_torus(num_points):
         space='affine')
 
 
+def cube(dim,num_points):
+    '''
+    EXAMPLES:
+    >>> cube(4,1000)
+    Point cloud with 1000 points in real affine space of dimension 4
+    '''
+    return PointCloud([HashPoint(npr.random(dim),index=n) for n in range(num_points)],space='affine')
+
 def box(number_of_points,
         dimension=2,
         side_length=1,
