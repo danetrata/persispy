@@ -173,8 +173,10 @@ def pick_ax(coords, axes):
     """
     Small helper fuction to pick our the axes of interest.
     """
-    x, y = coords[axes[0]], coords[axes[1]]
-    return x, y
+    point = []
+    for ax in axes:
+        point.append(coords[ax])
+    return tuple(point)
 
 def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
     """
@@ -262,9 +264,12 @@ def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
 def pick_ax_edge(component, axes):
     selected_axes = []
     for edge in component:
-        endpoint1, endpoint2 = edge
-        selected_axes.append(((endpoint1[axes[0]], endpoint1[axes[1]]),
-                             (endpoint2[axes[0]], endpoint2[axes[1]])))
+        endpoint1 = []
+        endpoint2 = []
+        for ax in axes:
+            endpoint1.append(edge[0][ax])
+            endpoint2.append(edge[1][ax])
+        selected_axes.append((endpoint1, endpoint2))
     return selected_axes
 
 def color_by_component(wGraph, axes, cmap, method, title, gui):
@@ -415,6 +420,7 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
 
 
 def plot3d_ng(wGraph,
+              axes=(0,1,2),
               cmap=3,
               method='subdivision',
               save=False,
@@ -468,7 +474,7 @@ def plot3d_ng(wGraph,
         #             tempcomponent.append(edge*scalar)
         #         component = set(tempcomponent)
 
-        lines = a3.art3d.Poly3DCollection(component)
+        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
 
         if componentIndex % 2 == 1:
 
@@ -479,7 +485,8 @@ def plot3d_ng(wGraph,
     componentIndex += 1
 
     if wGraph.singletons():
-        x, y, z = zip(*wGraph.singletons(padding=3))
+        x, y, z = zip(*[pick_ax(point, axes) for point in \
+                        wGraph.singletons(padding=3)])
         ax.scatter(x, y, z,
                    marker='.',
                    s=15,
