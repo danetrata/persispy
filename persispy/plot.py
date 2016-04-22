@@ -7,6 +7,8 @@ import numpy as np
 # import time
 
 import matplotlib
+import matplotlib as mpl
+from matplotlib.collections import LineCollection
 matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
@@ -147,7 +149,23 @@ def plot2d_pc(pointCloud, gui=False):
     else:
         plt.show(fig)
 
-import matplotlib as mpl
+
+
+cmaps = ['Accent', 'Dark2', 'Paired', 'Pastel1',
+         'Pastel1', 'Set1', 'Set2', 'Set3',
+         'gist_earth', 'terrain', 'ocean',
+         'gist_stern', 'brg', 'CMRmap', 'cubehelix',
+         'gnuplot', 'gnuplot2', 'gist_ncar',
+         'nipy_spectral', 'jet', 'rainbow',
+         'gist_rainbow', 'hsv', 'flag', 'prism']
+
+def get_cmap(cmap):
+    if type(cmap) is int:
+        print(cmaps[cmap])
+        return plt.get_cmap(cmaps[cmap])
+    if type(cmap) is str:
+        return plt.get_cmap(cmap)
+    assert False
 
 
 def plot2d_ng(wGraph,
@@ -157,7 +175,7 @@ def plot2d_ng(wGraph,
               method='subdivision',
               title="2D Neighborhood Graph",
               gui=False,
-              cmap=0):
+              cmap='Paired'):
     """
     We plot the 2d neighborhood graph, taking the axes to shade on.
     """
@@ -285,9 +303,7 @@ def color_by_component(wGraph, axes, cmap, method, title, gui):
     epsilon = wGraph.get_epsilon()
     adj = wGraph.get_adjacency()
     cp = wGraph.connected_components()
-    cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
-             plt.cm.rainbow, plt.cm.winter]
-    cmap = cmaps[cmap]  # color mappings
+    cmap = get_cmap(cmap)  # color mappings
     line_colors = cmap(np.linspace(0, 1, len(cp)))
     line_colors = line_colors[::-1]
 
@@ -419,9 +435,31 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
 #             show(fig)
 
 
+def set_aspect_equal_3d(ax):
+    """Fix equal aspect bug for 3D plots."""
+
+    xlim = ax.get_xlim3d()
+    ylim = ax.get_ylim3d()
+    zlim = ax.get_zlim3d()
+
+    from numpy import mean
+    xmean = mean(xlim)
+    ymean = mean(ylim)
+    zmean = mean(zlim)
+
+    plot_radius = max([abs(lim - mean_)
+                       for lims, mean_ in ((xlim, xmean),
+                                           (ylim, ymean),
+                                           (zlim, zmean))
+                       for lim in lims])
+
+    ax.set_xlim3d([xmean - plot_radius, xmean + plot_radius])
+    ax.set_ylim3d([ymean - plot_radius, ymean + plot_radius])
+    ax.set_zlim3d([zmean - plot_radius, zmean + plot_radius])
+
 def plot3d_ng(wGraph,
               axes=(0,1,2),
-              cmap=3,
+              cmap='Paired',
               method='subdivision',
               save=False,
               title="3D Neighborhood Graph",
@@ -439,6 +477,7 @@ def plot3d_ng(wGraph,
         4 - winter
     """
 
+
     plt.rc('text', usetex=True)
     plt.rc('font', family='sans-serif: Computer Modern Sans serif')
     plt.axis('off')
@@ -454,9 +493,7 @@ def plot3d_ng(wGraph,
     epsilon = wGraph.get_epsilon()
     adj = wGraph.get_adjacency()
     cp = wGraph.connected_components()
-    cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
-             plt.cm.rainbow, plt.cm.winter]
-    cmap = cmaps[cmap]  # color mappings
+    cmap = get_cmap(cmap)  # color mappings
     line_colors = cmap(np.linspace(0, 1, len(cp)))
 
 
@@ -474,15 +511,19 @@ def plot3d_ng(wGraph,
         #             tempcomponent.append(edge*scalar)
         #         component = set(tempcomponent)
 
-        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
+#         lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
+#         lines.set_edgecolor(line_colors[componentIndex])
 
-        if componentIndex % 2 == 1:
+        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes),
+                               edgecolor=line_colors[componentIndex])
 
-            componentIndex = -1 * componentIndex
-        lines.set_edgecolor(line_colors[componentIndex])
         ax.add_collection(lines)
 
+
+        plt.colorbar()
+
     componentIndex += 1
+
 
     if wGraph.singletons():
         x, y, z = zip(*[pick_ax(point, axes) for point in \
@@ -502,26 +543,28 @@ def plot3d_ng(wGraph,
     ax.plot([0], [0], color='white', label=textstr)
     ax.legend(loc='lower left', fontsize='x-large', borderpad=1)
 
-    minx = min([coord[0] for coord in list(adj.keys())])
-    maxx = max([coord[0] for coord in list(adj.keys())])
-    miny = min([coord[1] for coord in list(adj.keys())])
-    maxy = max([coord[1] for coord in list(adj.keys())])
+    set_aspect_equal_3d(ax)
 
-    xpadding = abs(minx - maxx) * 0.1
-    ypadding = abs(miny - maxy) * 0.1
-    ax.set_xlim(minx - xpadding,
-                maxx + xpadding)
-    ax.set_ylim(miny - ypadding,
-                maxy + ypadding)
-
-    zaxis = [coord[2] for coord in list(adj.keys()) if len(coord) > 2]
-    if zaxis:
-        minz = min(zaxis)
-        maxz = max(zaxis)
-        zpadding = abs(minz - maxz) * 0.1
-        ax.set_zlim(minz - xpadding,
-                    maxz + zpadding)
-
+#     minx = min([coord[0] for coord in list(adj.keys())])
+#     maxx = max([coord[0] for coord in list(adj.keys())])
+#     miny = min([coord[1] for coord in list(adj.keys())])
+#     maxy = max([coord[1] for coord in list(adj.keys())])
+#
+#     xpadding = abs(minx - maxx) * 0.1
+#     ypadding = abs(miny - maxy) * 0.1
+#     ax.set_xlim(minx - xpadding,
+#                 maxx + xpadding)
+#     ax.set_ylim(miny - ypadding,
+#                 maxy + ypadding)
+#
+#     zaxis = [coord[2] for coord in list(adj.keys()) if len(coord) > 2]
+#     if zaxis:
+#         minz = min(zaxis)
+#         maxz = max(zaxis)
+#         zpadding = abs(minz - maxz) * 0.1
+#         ax.set_zlim(minz - xpadding,
+#                     maxz + zpadding)
+#
     ax.set_aspect('equal')
 
     if gui:
@@ -529,3 +572,5 @@ def plot3d_ng(wGraph,
     else:
         #         plt.show()
         show(window)
+
+

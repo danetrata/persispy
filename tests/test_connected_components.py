@@ -6,7 +6,11 @@ import time
 from csv import writer
 from datetime import datetime
 from numpy.random import uniform, random_integers
-from persispy.phc import Intersect
+try:
+    from persispy.phc import Intersect
+except ImportError:
+    Intersect = type("None", (object,), {"None": None})
+    print("PHCpy is not currently installed. PHC functions are unavailable.")
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import \
     wSimplex, wGraph, wSimplicialComplex
@@ -303,7 +307,7 @@ def monte_carlo(point_cloud,
 
         try:
             num_points = npr.random_integers(minPoints, maxPoints)
-            points_epsilon_tests(point_cloud, num_points, distance, csv, eqn)
+            points_epsilon_tests(point_cloud, num_points, distance, csv)
             if PROGRESS:
                 updateDefaultIterBar(pBar, iteration)
         except Exception as inst:

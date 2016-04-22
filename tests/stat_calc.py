@@ -27,9 +27,9 @@ def read(object):
 
 
 def average_trials(dataSet):
-    
+
     numPoints, distance, connectedComponents = dataSet
-    # dictionary indexed by (numPoints, distance) 
+    # dictionary indexed by (numPoints, distance)
     npd = {}
     for i, trial in np.ndenumerate(connectedComponents):
         point = (numPoints[i], distance[i])
@@ -62,22 +62,19 @@ def read_csv(filename):
         reader = csv.reader(f)
         next(reader) # assumes a header
         sheet = [row for row in reader]
-        
+
     return sheet
 
 def read_directory(directoryName):
-    
+
     merged = []
     for subdir, dirs, files in os.walk(directoryName):
         for file in files:
             if file.endswith(".csv"):
                 filePath = directoryName +'/'+ file
                 merged += read_csv(filePath)
-    
+
     return merged
-
-
-
 
 
 # def show(fig):
@@ -130,18 +127,66 @@ def plot_data(x, y, title, subtitle, xtitle, ytitle, threshold = False):
             xtitle,
             ytitle
             )
-    
+
     add_title(ax[0], title, subtitle, str(len(x)))
     if threshold:
         for sub in ax:
-            function = lambda n: ((np.log(n)+threshold[0])/ \
-                    (threshold[1]*n))**(1.0/threshold[2])
+
+#             function = lambda n: ((np.log(n)+threshold[0])/ \
+#                     (threshold[1]*n))**(1.0/threshold[2])
+            function = lambda n: (np.log(n) / n)**(0.5)
             add_threshold(sub, x, threshold, function)
+
 
 #     fig.tight_layout()
 
     plt.show()
-    
+
+def proximity_map(x, y, cp, title, subtitle, xtitle, ytitle, threshold = False):
+    """
+    input: x axis, y axis
+    where the index of each is a point
+    creates a scatter plot
+    """
+    plt.rc('text', usetex=True)
+    plt.rc('font', family = 'sans-serif: Computer Modern Sans serif')
+    fig, ax = plt.subplots(1, sharex=True, sharey=True, facecolor = "white")
+    ax.set_xlim(0, max(x))
+    ax.set_ylim(0, max(y))
+    ax.set_aspect('auto')
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
+
+    maxcp = max(cp)
+    colors = [component for component in cp]
+
+#     colors = []
+#     for component in cp:
+#         if component == 1:
+#             colors.append(1)
+#         else:
+#             colors.append(0)
+
+#     for i in range(len(cp)):
+#         print(x[i], y[i], cp[i], colors[i])
+    plt.scatter(x, y, c = np.array(colors), norm=matplotlib.colors.LogNorm(),
+                cmap = "OrRd_r",
+                color='#490000', linewidths=1, label='Set of Components')
+    formatter = matplotlib.ticker.ScalarFormatter()
+    formatter.set_scientific(False)
+    cb = plt.colorbar(format=formatter)
+    cb.set_label('Number of connected components')
+
+    add_title(ax, title, subtitle, str(len(x)))
+    if threshold:
+        function = lambda n: (np.log(n) / n)**(0.5)
+        add_threshold(ax, x, threshold, function)
+
+
+#     fig.tight_layout()
+
+    plt.show()
+
 def process_totally_connected((numPoints, distance, connectedComponents), dataSetName, prompt):
     totallyConnected = [[],[]]
     for i in range(len(connectedComponents)):
@@ -149,9 +194,6 @@ def process_totally_connected((numPoints, distance, connectedComponents), dataSe
                 numPoints[i] > 50:
             totallyConnected[0].append(numPoints[i])
             totallyConnected[1].append(distance[i])
-    
-
-
 
     image = zip(totallyConnected[0], totallyConnected[1])
     import itertools
@@ -167,18 +209,18 @@ def process_totally_connected((numPoints, distance, connectedComponents), dataSe
 
     from scipy.optimize import curve_fit
     dimension = input("enter the dimension: ")
-    def func(n, c, omega): 
+    def func(n, c, omega):
         return ((np.log(n)+c)/(omega*n))**(1.0/dimension)
 
-    (cOptimized, omegaOptimized), pcov = curve_fit(func, 
-            totallyConnectedEdge[0], 
+    (cOptimized, omegaOptimized), pcov = curve_fit(func,
+            totallyConnectedEdge[0],
             totallyConnectedEdge[1])
     print(cOptimized, omegaOptimized)
-    
+
 
     c, omega = cOptimized, omegaOptimized
-    plot_data(x = totallyConnected[0], 
-            y = totallyConnected[1], 
+    plot_data(x = totallyConnected[0],
+            y = totallyConnected[1],
             title = "Completely Connected Components",
             subtitle = prompt,
             xtitle = dataSetName[0],
@@ -186,25 +228,32 @@ def process_totally_connected((numPoints, distance, connectedComponents), dataSe
             threshold = (c, omega, dimension)
             )
 
-
-
-
-
 def add_threshold(ax, x, threshold, formula):
 
     plt.rc('text', usetex=True)
     plt.rc('font', family='sans-serif')
-    textstr = "Complete Threshold = "\
-            r'$\displaystyle{\left({\frac{\ln n \cdot + %.2f}{%.2f \cdot n}}\right)'\
-            r'^{\frac{1}{%d}}}$' % threshold
+#     textstr = "Complete Threshold = "\
+#             r'$\displaystyle{\left({\frac{\ln n \cdot + %.2f}{%.2f \cdot n}}\right)'\
+#             r'^{\frac{1}{%d}}}$' % threshold
+    textstr = r"Threshold = $\left(\frac{\log n}{n}\right)^{1 / d}$"
+
     # place a text box in upper left in axes coords
     props = dict(boxstyle='round', facecolor='white', alpha=0.7)
 #     ax.text(0.1, 0.35, textstr, transform=ax.transAxes, fontsize=20,
 #             verticalalignment='top', bbox = props)
     x = np.array(range(min(x), max(x)))
-    f = formula(x) 
-    ax.plot(x, f, '-', linewidth = 4, color = 'black', label = textstr)
-    ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
+    f = formula(x)
+    ax.plot(x, f, '-', linewidth = 4, color = 'red', label = textstr)
+#     ax.legend(loc='lower left', fontsize= 'x-large', borderpad = 1)
+
+# Shrink current axis's height by 10% on the bottom
+    box = ax.get_position()
+    ax.set_position([box.x0, box.y0 + box.height * 0.1,
+                    box.width, box.height * 0.9])
+
+# Put a legend below current axis
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+            fancybox=True, shadow=True, ncol=5)
 
 def scatter(ax, x, y, title, subtitle, xtitle, ytitle):
     ax.plot(x, y, 'o', color = "#ff6666")
@@ -214,13 +263,12 @@ def scatter(ax, x, y, title, subtitle, xtitle, ytitle):
     ax.set_xlabel(xtitle)
     ax.set_ylabel(ytitle)
 
-
 def heat_map(ax, x, y, title, subtitle, xtitle, ytitle):
 
 # Calculate the point density
     xy = np.vstack([x,y])
     z = gaussian_kde(xy)(xy)
-    
+
 
     ax.scatter(x, y, c=z, s=100, edgecolor='')
     ax.set_xlabel(xtitle)
@@ -261,10 +309,10 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
         connected = zip(*connected)
         textstr = "not a completely connected graph: %d"\
                 % (len(z) - len(totallyConnected))
-        ax.scatter(connected[0], 
-                connected[1], 
-                connected[2], 
-                marker = 'o', 
+        ax.scatter(connected[0],
+                connected[1],
+                connected[2],
+                marker = 'o',
                 color = '#3399ff',
                 label = textstr)
 
@@ -272,10 +320,10 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
         totallyConnected = zip(*totallyConnected)
         textstr = "a completely connected graph: %d"\
                 % len(totallyConnected[0])
-        ax.scatter(totallyConnected[0], 
-                totallyConnected[1], 
+        ax.scatter(totallyConnected[0],
+                totallyConnected[1],
                 totallyConnected[2],
-                marker = 'o', 
+                marker = 'o',
                 color = '#ff33ff',
                 label = textstr)
 
@@ -295,12 +343,10 @@ def plot3d(x, y, z, title, subtitle, xtitle, ytitle, ztitle):
     plt.show()
 
 
-
+import matplotlib
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 import numpy as np
-
-
 
 def mean(data):
     """
@@ -344,28 +390,23 @@ def varience(data):
     variance = float(sumSquaredDiff)/len(data)
     return variance
 
-
 def standard_deviation(data):
     return np.sqrt(varience(data))
-
-
-
 
 
 class NPDProperty:
     """
     Number of Points vs Distance Properties
     """
-    
+
     def __init__(self):
         self.connected = []
-        
+
     def mean(self):
         return mean(self.connected)
 
     def standard_deviation(self):
         return standard_deviation(self.connected)
-
 
 
 import sys
@@ -375,17 +416,15 @@ def main():
     else:
         prompt = raw_input("Enter a filename or directory: ")
 
-    
     dataSet = read(prompt)
     numPoints, distance, connectedComponents = dataSet
 
-    dataSetName = ["Number of Points", 
-            "Distance Between Points", 
+    dataSetName = ["Number of Points",
+            "Distance Between Points",
             "Connected Components"]
 
 
-
-    if True:
+    if False:
 #        plot3d(numPoints, distance, connectedComponents,
 #                "All Data in One Graph",
 #                prompt,
@@ -407,21 +446,33 @@ def main():
                 )
 
 
-    process_totally_connected(dataSet, dataSetName, prompt)
+    c = 1
+    omega = 1
+    dimension = 2
+    proximity_map(x = numPoints,
+            y = distance,
+            cp = connectedComponents,
+            title = "Sampling graphs around the threshold",
+            subtitle = prompt,
+            xtitle = dataSetName[0],
+            ytitle = dataSetName[1],
+            threshold = (c, omega, dimension)
+            )
 
+#     process_totally_connected(dataSet, dataSetName, prompt)
 
-    def manual_fit():
-        while(True):
-            comega = raw_input("enter c and \omega (seperated by a space): ")
-            c, omega = [float(number) for number in comega.split(' ')]
-
-            plot_data(x = totallyConnected[0], 
-                    y = totallyConnected[1], 
-                    title = "Totally Connected Components",
-                    subtitle = prompt,
-                    xtitle = dataSetName[0],
-                    ytitle = dataSetName[1],
-                    threshold = (c, omega, dimension)
-                    )
+#     def manual_fit():
+#         while(True):
+#             comega = raw_input("enter c and \omega (seperated by a space): ")
+#             c, omega = [float(number) for number in comega.split(' ')]
+#
+#             plot_data(x = totallyConnected[0],
+#                     y = totallyConnected[1],
+#                     title = "Totally Connected Components",
+#                     subtitle = prompt,
+#                     xtitle = dataSetName[0],
+#                     ytitle = dataSetName[1],
+#                     threshold = (c, omega, dimension)
+#                     )
 
 if __name__ == "__main__": main()
