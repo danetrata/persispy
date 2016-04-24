@@ -437,11 +437,12 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
 
 def set_aspect_equal_3d(ax):
     """Fix equal aspect bug for 3D plots."""
-
+#     print(ax.get_w_lims())
     xlim = ax.get_xlim3d()
     ylim = ax.get_ylim3d()
     zlim = ax.get_zlim3d()
 
+#     print(xlim, ylim, zlim)
     from numpy import mean
     xmean = mean(xlim)
     ymean = mean(ylim)
@@ -453,9 +454,67 @@ def set_aspect_equal_3d(ax):
                                            (zlim, zmean))
                        for lim in lims])
 
+#     print(xmean, ymean, zmean, plot_radius)
+
     ax.set_xlim3d([xmean - plot_radius, xmean + plot_radius])
     ax.set_ylim3d([ymean - plot_radius, ymean + plot_radius])
     ax.set_zlim3d([zmean - plot_radius, zmean + plot_radius])
+
+def set_aspect_equal_3d_2(ax):
+    minx = min([coord[0] for coord in list(adj.keys())])
+    maxx = max([coord[0] for coord in list(adj.keys())])
+    midpointx = (minx + maxx) / 2
+    radiusx = abs(maxx - midpointx)
+    miny = min([coord[1] for coord in list(adj.keys())])
+    maxy = max([coord[1] for coord in list(adj.keys())])
+    midpointy = (miny + maxy) / 2
+    radiusy = abs(maxy - midpointy)
+
+    ax.set_xlim3d([xmean - plot_radius, xmean + plot_radius])
+    ax.set_ylim3d([ymean - plot_radius, ymean + plot_radius])
+    ax.set_zlim3d([zmean - plot_radius, zmean + plot_radius])
+
+    zaxis = [coord[2] for coord in list(adj.keys()) if len(coord) > 2]
+    if zaxis:
+        minz = min(zaxis)
+        maxz = max(zaxis)
+        midpointz = (minz + maxz) / 2
+        radiusz = abs(maxz - minpointz)
+
+
+def add_color_bar(values, colors):
+    components = []
+    for vertex, edge in zip(*values):
+        components.append('G' + str((vertex, edge)))
+
+    cmap = mpl.colors.ListedColormap(colors)
+    cmap.set_over('0.25')
+    cmap.set_under('0.75')
+
+#     norm = mpl.colors.BoundaryNorm(bounds, cmapcb.N)
+#     cb2 = mpl.colorbar.ColorbarBase(axcb, cmap=cmapcb, norm=norm,
+#                                     boundaries=bounds,
+#                                     spacing='proportional',
+#                                     orientation='horizontal')
+
+#     norm = mpl.colors.Normalize(vmin=min(values), vmax=max(values))
+#     norm = mpl.colors.BoundaryNorm(boundaries=values, ncolors=len(values))
+#     norm = mpl.colors.LogNorm(vmin=min(values), vmax=max(values))
+
+
+
+    sm = plt.cm.ScalarMappable(cmap=cmap)
+#     sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm._A = []
+#     sm.set_array()
+    cbar = plt.colorbar(sm, shrink=0.9, pad=0, fraction=0.1)
+
+    ticks = np.linspace(0, 1, len(components)+1)
+    cbar.set_ticks(ticks)
+    cbar.set_ticklabels(components)
+    cbar.set_label("%s largest components G(V, E)" % len(components))
+
+
 
 def plot3d_ng(wGraph,
               axes=(0,1,2),
@@ -464,7 +523,8 @@ def plot3d_ng(wGraph,
               save=False,
               title="3D Neighborhood Graph",
               gui=False,
-              fancy=True):
+              fancy=True,
+              add_colorbar=False):
     """
     For a given epsilon, makes a 3-dimensional plot of a neighborhood
     graph.
@@ -486,6 +546,7 @@ def plot3d_ng(wGraph,
     fig, window = create_fig()
     window.wm_title(title)
     ax = Axes3D(fig)
+#     axcb = fig.add_axes([0.05, 0.80, 0.9, 0.15])
     if not fancy:
         ax.grid(False)
         ax.set_axis_off()
@@ -494,15 +555,30 @@ def plot3d_ng(wGraph,
     adj = wGraph.get_adjacency()
     cp = wGraph.connected_components()
     cmap = get_cmap(cmap)  # color mappings
+    ce = wGraph.connected_edges(padding=3)
+#     line_colors = cmap(np.linspace(0, 1, len(ce)))
     line_colors = cmap(np.linspace(0, 1, len(cp)))
+    edge_component = {}
+#     print(ce)
+#     print(type(ce))
+    cv = wGraph.connected_vertices(padding=3)
+
+    for i, component in enumerate(cv):
+        edge_component[frozenset(ce[i])] = component
+#         edge_component[ce[i]] = component[i]
+
 
 
     # [0, 0.1, 0.2 ... 1 ]
 
-    ce = wGraph.connected_edges(padding=3)
     ce.sort(key=len)
 
     componentIndex = -1
+    lines_collection  = []
+    import colorsys
+    vertex_sizes = []
+    edge_sizes = []
+    component_colors = []
     for componentIndex, component in enumerate(ce):
 
         #         scalar = float(len(component)) / numberEdges + 1
@@ -510,28 +586,47 @@ def plot3d_ng(wGraph,
         #         for i, edge in enumerate(component):
         #             tempcomponent.append(edge*scalar)
         #         component = set(tempcomponent)
+        component = frozenset(component)
 
-#         lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
+        saturation = .5
+        lightness = .5
+        hue=.5
+        rgb_values = colorsys.hls_to_rgb(
+            (hue+componentIndex*(3-5**.5)*.5)%1.0,
+            saturation,
+            lightness)
+        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
 #         lines.set_edgecolor(line_colors[componentIndex])
+        lines.set_edgecolor(rgb_values)
+        if not edge_sizes or \
+                max(edge_sizes) <= len(component):
 
-        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes),
-                               edgecolor=line_colors[componentIndex])
+            if 10 <= len(edge_sizes):
+                i = edge_sizes.index(min(edge_sizes))
+                vertex_sizes.pop(i)
+                edge_sizes.pop(i)
+                component_colors.pop(i)
+
+            vertex_sizes.append(len(edge_component[component]))
+            edge_sizes.append(len(component))
+            component_colors.append(rgb_values)
 
         ax.add_collection(lines)
 
 
-        plt.colorbar()
 
     componentIndex += 1
 
-
-    if wGraph.singletons():
+    points = wGraph.singletons(padding=3)
+#     point_colors = cmap(np.linspace(0, 1, len(points)))
+    if points:
         x, y, z = zip(*[pick_ax(point, axes) for point in \
-                        wGraph.singletons(padding=3)])
+                        points])
         ax.scatter(x, y, z,
                    marker='.',
                    s=15,
-                   color=line_colors[componentIndex:],
+#                    color=point_colors,
+                   color=line_colors[:componentIndex],
                    label=r"\makebox[90pt]{%d\hfill}Singletons" % len(x))
 
     textstr = r'\noindent\makebox[90pt]{%d\hfill}Number of Points\\ \\'\
@@ -544,27 +639,11 @@ def plot3d_ng(wGraph,
     ax.legend(loc='lower left', fontsize='x-large', borderpad=1)
 
     set_aspect_equal_3d(ax)
+    if add_colorbar and \
+            2 <= len(edge_sizes):
+        add_color_bar((vertex_sizes, edge_sizes), component_colors)
 
-#     minx = min([coord[0] for coord in list(adj.keys())])
-#     maxx = max([coord[0] for coord in list(adj.keys())])
-#     miny = min([coord[1] for coord in list(adj.keys())])
-#     maxy = max([coord[1] for coord in list(adj.keys())])
-#
-#     xpadding = abs(minx - maxx) * 0.1
-#     ypadding = abs(miny - maxy) * 0.1
-#     ax.set_xlim(minx - xpadding,
-#                 maxx + xpadding)
-#     ax.set_ylim(miny - ypadding,
-#                 maxy + ypadding)
-#
-#     zaxis = [coord[2] for coord in list(adj.keys()) if len(coord) > 2]
-#     if zaxis:
-#         minz = min(zaxis)
-#         maxz = max(zaxis)
-#         zpadding = abs(minz - maxz) * 0.1
-#         ax.set_zlim(minz - xpadding,
-#                     maxz + zpadding)
-#
+
     ax.set_aspect('equal')
 
     if gui:

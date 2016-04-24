@@ -247,6 +247,28 @@ class wGraph(object):
 
         return components
 
+    def connected_vertices(self, padding=False):
+        if not self._connected_components:
+            self.connected_components()
+        cp = self._connected_components
+
+        components = []
+        for componentIndex, component in enumerate(cp):
+            vertices = []
+            if len(component) > 1:
+                for vertex in component:
+                    vertexList = list(vertex)
+                    while len(vertexList) < padding:
+                        vertexList.append(0)
+                    vertices.append(tuple(vertexList))
+
+            if vertices:
+                vertices = set(vertices)
+                components.append(vertices)
+
+        return components
+
+
     def singletons(self, padding=False):
         """
         We return the singletons.
