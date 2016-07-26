@@ -8,8 +8,8 @@ def is_package(path): # find packages helper function
         os.path.isdir(path) and
         os.path.isfile(os.path.join(path, '__init__.py'))
     )
-    
-def find_packages(path, base=""): 
+
+def find_packages(path, base=""):
                                   #| given a path,
                                   #| recursively walks the directory to find
                                   #| submodules
@@ -32,7 +32,8 @@ with open('HISTORY.rst') as history_file:
     history = history_file.read().replace('.. :changelog:', '')
 
 requirements = [
-    # TODO: put package requirements here
+    'numpy',
+    'scipy'
 ]
 
 test_requirements = [

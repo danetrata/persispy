@@ -71,7 +71,6 @@ class Intersect(object):
         phcsystem = [phceqn]
         for _ in range(len(self.varlist) - 1):
             phcsystem.append(self._intersect())
-#         print(phcsystem)
         return phcsystem
 
     def _intersect(self):
@@ -87,6 +86,7 @@ class Intersect(object):
 
         if coefficient_distribution == 'rejection':
             def normalize(x):
+                "Normalizes the point"
                 return (1 / np.sqrt(sum(x * x))) * x
             randomlist = [None]
             while not all(randomlist):
@@ -94,7 +94,7 @@ class Intersect(object):
                 if np.sqrt(sum(pt * pt)) <= 1:
                     randomlist = normalize(pt)
         if coefficient_distribution == 'normal':
-            randomlist = np.random.normal(loc=center, scale=bounds, size=len(self.varlist))
+            randomlist = np.random.normal(scale=bounds, size=len(self.varlist))
         elif coefficient_distribution == 'uniform':
             randomlist = np.random.uniform(high=bounds, low=0,
                                            size=len(self.varlist))

@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 import sortedcontainers
 
 
-
 class PersistentHomology(object):
     '''
     A Container for persistent homology information
@@ -23,13 +22,16 @@ class PersistentHomology(object):
     >>> HashPoint([1,2,3])
     point 0: [1, 2, 3]
     '''
+
     def __init__(self, simplicial_complex, n):
-        self.vertex_dict = dict() #look up simplex container from tuple of vertices
+        self.vertex_dict = dict()  # look up simplex container from tuple of vertices
         weighted_simplices = []
         for dimension in simplicial_complex._simplices:
-            if dimension <= n+1:
-                weighted_simplices.extend(simplicial_complex._simplices[dimension])
-        self.simplex_containers = sorted([SimplexContainer(s) for s in sorted(weighted_simplices)])
+            if dimension <= n + 1:
+                weighted_simplices.extend(
+                    simplicial_complex._simplices[dimension])
+        self.simplex_containers = sorted(
+            [SimplexContainer(s) for s in sorted(weighted_simplices)])
         self.persistence_pairs = dict()
         for i, container in enumerate(self.simplex_containers):
             self.vertex_dict[tuple(container.simplex._vertices)] = container
@@ -40,7 +42,8 @@ class PersistentHomology(object):
             if len(container.simplex._vertices) != 1:
                 rowiszero = False
                 while container.entries[-1] in self.persistence_pairs:
-                    container.entries = container.entries ^ (self.persistence_pairs[container.entries[-1]].entries)
+                    container.entries = container.entries ^ (
+                        self.persistence_pairs[container.entries[-1]].entries)
                     #container.entries = container.entries ^ (self.persistence_pairs[container.entries[0]].entries)
                     #print 'xor'
                     if len(container.entries) == 0:
@@ -49,12 +52,16 @@ class PersistentHomology(object):
                     #print [x.index for x in s.entries]
                 if not rowiszero:
                     self.persistence_pairs[container.entries[-1]] = container
+
     def get_differential(self):
-        result = [[0 for i in range(len(self.simplex_containers))] for j in range(len(self.simplex_containers))]
+        result = [
+            [0 for i in range(len(self.simplex_containers))]
+            for j in range(len(self.simplex_containers))]
         for container1 in self.simplex_containers:
             for container2 in container1.entries:
-                result[container2.index][container1.index]=1
+                result[container2.index][container1.index] = 1
         return result
+
     def plot_bar_code(self, epsilon, hue=0, saturation=.5, lightness=.5):
         '''
         EXAMPLES:
@@ -73,42 +80,45 @@ class PersistentHomology(object):
                     if len(container.simplex._vertices) > current_dimension:
                         more_elements = True
                     if len(container.simplex._vertices) == current_dimension:
-                        if container.simplex._weight != self.persistence_pairs[container].simplex._weight:
+                        if container.simplex._weight != self.persistence_pairs[
+                                container].simplex._weight:
                             y_coordinate = current_height
-                            alpha = 1-(self.persistence_pairs[container].simplex._weight-container.simplex._weight)/epsilon
+                            alpha = 1 - (self.persistence_pairs[
+                                         container].simplex._weight - container.simplex._weight) / epsilon
                             rgb_values = colorsys.hls_to_rgb(
-                                (hue+len(container.simplex._vertices)*(3-5**.5)*.5)%1.0,
-                                saturation,
-                                lightness)
-                            current_height = current_height+1
+                                (hue + len(container.simplex._vertices) *
+                                 (3 - 5 ** .5) * .5) % 1.0, saturation, lightness)
+                            current_height = current_height + 1
                             plt.plot(
                                 [container.simplex._weight, self.persistence_pairs[container].simplex._weight],
                                 [y_coordinate, y_coordinate],
-                                color=(rgb_values[0], rgb_values[1], rgb_values[2], 1-alpha),
+                                color=(rgb_values[0], rgb_values[1], rgb_values[2], 1 - alpha),
                                 linestyle='-', linewidth=1)
                 else:
-                    if len(container.entries)==0:
+                    if len(container.entries) == 0:
                         if len(container.simplex._vertices) > current_dimension:
                             more_elements = True
-                        if len(container.simplex._vertices) == current_dimension:
+                        if len(
+                                container.simplex._vertices) == current_dimension:
                             if container.simplex._weight != epsilon:
                                 y_coordinate = current_height
-                                alpha = 1-(epsilon-container.simplex._weight)/epsilon
+                                alpha = 1 - (epsilon - container.simplex._weight) / epsilon
                                 rgb_values = colorsys.hls_to_rgb(
-                                    (hue+len(container.simplex._vertices)*(3-5**.5)*.5)%1.0,
-                                    saturation,
+                                    (hue + len(container.simplex._vertices) *
+                                     (3 - 5 ** .5) * .5) % 1.0, saturation,
                                     lightness)
-                                current_height = current_height+1
+                                current_height = current_height + 1
                                 plt.plot(
                                     [container.simplex._weight, epsilon],
                                     [y_coordinate, y_coordinate],
-                                    color=(rgb_values[0], rgb_values[1], rgb_values[2], 1-alpha),
+                                    color=(rgb_values[0], rgb_values[1], rgb_values[2], 1 - alpha),
                                     linestyle='-', linewidth=1)
-            current_dimension = current_dimension+1
-            current_height = current_height+30
+            current_dimension = current_dimension + 1
+            current_height = current_height + 30
 
         plt.axis([0, epsilon, 0, current_height])
         plt.show()
+
 
 class SimplexContainer(object):
     '''
@@ -125,10 +135,12 @@ class SimplexContainer(object):
     >>> HashPoint([1,2,3])
     point 0: [1, 2, 3]
     '''
+
     def __init__(self, sim):
         self.simplex = sim
         self.entries = sortedcontainers.SortedSet()
         self.index = -1
+
     def compute_entries(self, parent):
         '''
         Compute the initial values of the entries set.
@@ -139,7 +151,14 @@ class SimplexContainer(object):
             return
         for index in range(len(self.simplex._vertices)):
             # Make more pythonic!
-            self.entries.add(parent.vertex_dict[tuple(self.simplex._vertices[:index]+self.simplex._vertices[index+1:])])
+            self.entries.add(
+                parent.vertex_dict[
+                    tuple(
+                        self.simplex._vertices[
+                            :index] +
+                        self.simplex._vertices[
+                            index +
+                            1:])])
 
     def __hash__(self):
         return hash(tuple(self.simplex._vertices))
@@ -164,4 +183,3 @@ class SimplexContainer(object):
 
     def __cmp__(self, other):
         return self.simplex.__cmp__(other.simplex)
-

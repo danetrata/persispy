@@ -28,7 +28,7 @@ class TestPersispy(unittest.TestCase):
 
 
 from persispy.phc import Intersect
-from persispy.points import sphere 
+from persispy.points import sphere
 
 class TestPHCPack(unittest.TestCase):
 
@@ -59,8 +59,8 @@ class TestPHCPack(unittest.TestCase):
 
         def wrapper1():
             selection = "x^2 + y^2 + z^2 - 1"
-            pc = Intersect(eqn = selection, 
-                    num_points = self.points, 
+            pc = Intersect(eqn = selection,
+                    num_points = self.points,
                     return_complex = True)
 
         print("")
@@ -68,15 +68,14 @@ class TestPHCPack(unittest.TestCase):
         print("phc():    %f" % t.timeit(wrapper1, number = 3))
 
 import numpy.random as npr
-from persispy.points import plane
+from persispy.points import box
 import timeit as t
 from time import sleep
 
 class TestConnectedComponents(unittest.TestCase):
-    
+
     def setUp(self):
-        npr.seed(1991)
-        pc = plane(200)
+        pc = box(20, seed=1991)
         self.ng = pc.neighborhood_graph(0.2)
 
     def test_time_cp(self):
@@ -91,8 +90,10 @@ class TestConnectedComponents(unittest.TestCase):
         print(".connected_components():   %f" % t.timeit(wrapper, number = 10))
         print(".connected_components_1(): %f" % t.timeit(wrapper1, number = 10))
 
-    def test_connected_components_equal_to_3(self):
-        self.assertEqual(len(self.ng.connected_components()), 3)
+    def test_connected_components_equal_to(self):
+        x = 5
+        print(len(self.ng.connected_components()))
+        self.assertEqual(len(self.ng.connected_components()), x)
 
 
 if __name__ == '__main__':
