@@ -15,7 +15,6 @@ Left alone for now because many modules rely on this.
 '''
 
 import math
-import os as os
 
 import numpy as np
 # from numpy import array
@@ -144,70 +143,6 @@ class PointCloud(object):
         print (">>> persispy.plot.plot3d(wGraph)")
         plot3d(wgraph, *args, **kwargs)
 
-    # Makes movie of 2-dimensional plots
-    def film_neighborhood_graph(
-            self,
-            step,
-            num_steps,
-            fps=24,
-            method='subdivision',
-            file_name='movie.mp4'):
-        '''
-        WARNING: do not run this in a Dropbox folder.
-
-        WARNING: this function rewrites movie.mp4 in the working
-        directory by default. To change this, add
-        file_name='your_file_name.mp4' to the function call.
-
-        WARNING: this function is currently very slow for large data
-        sets, thanks it seems to the slowness in plotting so many
-        points.
-        '''
-        if self._space == 'affine':
-            epsilon = 0
-            h = self.neighborhood_graph(step * num_steps, method)
-            os.system("rm _tmp*.png")
-            fig, (ax) = plt.subplots(1, 1)
-            # Resolution of video
-            # Example: (10,10) gives a 1000x1000 pixel resolution video
-            fig.set_size_inches(10.0, 10.0)
-            for i in range(num_steps):
-                epsilon = epsilon + step
-                g = h.neighborhood_graph(epsilon)
-                for p in self._points:
-                    if p._coords[2] <= 0:
-                        for e in g._adj[p]:
-                            ax.plot([e[0]._coords[0], p._coords[0]], [e[0]._coords[1], p._coords[
-                                    1]], color=(.5 * p._coords[2] + .5, .5, .5, .5))
-                for p in self._points:
-                    if p._coords[2] > 0:
-                        for e in g._adj[p]:
-                            ax.plot([e[0]._coords[0], p._coords[0]], [e[0]._coords[1], p._coords[
-                                    1]], color=(.5 * p._coords[2] + .5, .5, .5, .5))
-
-                ax.grid(True)
-                ax.set_aspect('equal')
-                plt.setp([a.get_xticklabels()
-                          for a in fig.axes[:-1]], visible=False)
-                # Graph bounds
-                # Depends on point cloud used, values (-3,3) and (-3,3) work for
-                # torus
-                ax.set_xlim(-3, 3)
-                ax.set_ylim(-3, 3)
-                fname = '_tmp%05d.png' % i
-                plt.savefig(fname)
-                plt.cla()
-            plt.close(fig)
-            os.system("rm " + file_name)
-            # Movie maker command
-            # Changed to "avconv" from "ffmpeg", change back if older system
-            # (options are the same)
-            os.system("avconv -r " + str(fps) + " -i _tmp%05d.png " + file_name)
-            os.system("rm _tmp*.png")
-            return None
-        else:
-            return None
-
     def neighborhood_graph(self,
                            epsilon,
                            method="subdivision"):
@@ -228,10 +163,16 @@ class PointCloud(object):
         '''
         The 'method' string is separated by spaces. Acceptable values:
 
-        "exact"                     does "exact"
-        "subdivision"               does "subdivision" to infinite depth
-        "subdivision 3"             does "subdivision" to depth 3, then "exact"
-        "subdivision 7 approximate" does "subdivision" to depth 7, then "approximate"
+        "exact"
+                does "exact"
+        "subdivision"
+                does "subdivision" to infinite depth
+        "subdivision 3"
+                does "subdivision" to depth 3, then "exact"
+        "subdivision 7 approximate"
+                does "subdivision" to depth 7, then "approximate"
+
+        returns {point: {adj points:distance}}
 
         '''
         methodarray = method.split(' ')
@@ -261,11 +202,8 @@ class PointCloud(object):
                                                   coordinate=m,
                                                   depth=d)
                         return wGraph(dictionary, epsilon)
-                else:  # most calls end up here
-                      #  also starts the recursion
+                else:
                     self._subdivide_neighbors(epsilon, dictionary, pointarray)
-                    # mystery dictionary assignments..?
-                    # {point: {adj points:distance}}
                     return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
@@ -295,7 +233,8 @@ class PointCloud(object):
 
         else:
             raise TypeError(
-                'Method should be one of subdivision, exact, approximate, randomized, or landmarking.')
+                'Method should be one of subdivision, exact, approximate, ' +
+                'randomized, or landmarking.')
 
     def _selectpoint(self, pointarray, k, n):
         """
@@ -336,15 +275,13 @@ class PointCloud(object):
 
     def _subdivide_neighbors(
             self,
-            e,
+            epsilon,
             dictionary,
             pointarray,
             coordinate=0,
             method='exact',
             depth=-1):
         """
-        @Mason: document 'e' please.
-
         method and depth are accumulators for the recursive calls
         divides the space into two regions about the median point relative to "coordinate"
         glues the two regions, then recursively calls itself on the two regions.
@@ -357,43 +294,43 @@ class PointCloud(object):
             gluesmaller = []
             gluebigger = []
 
-            #split into two regions
-            for i, _ in enumerate(pointarray):
+            for i, _ in enumerate(pointarray):  # split into two regions
                 if pointarray[i]._coords[
                         coordinate] < median._coords[coordinate]:
                     smaller.append(pointarray[i])
                     if pointarray[i]._coords[
-                            coordinate] > median._coords[coordinate] - e:
+                            coordinate] > median._coords[coordinate] - epsilon:
                         gluesmaller.append(pointarray[i])
 
                 if pointarray[i]._coords[
                         coordinate] >= median._coords[coordinate]:
                     bigger.append(pointarray[i])
                     if pointarray[i]._coords[
-                            coordinate] < median._coords[coordinate] + e:
+                            coordinate] < median._coords[coordinate] + epsilon:
                         gluebigger.append(pointarray[i])
 
-            #glue together the two regions
-            for i, _ in enumerate(gluesmaller):
+            for i, _ in enumerate(gluesmaller):  # split into two regions
                 for j, _ in enumerate(gluebigger):
                     dist = np.sqrt(
                         sum(
                             ((gluesmaller[i])._coords - gluebigger[j]._coords) *
                             (gluesmaller[i]._coords - gluebigger[j]._coords)))
-                    if dist < e:
+                    if dist < epsilon:
                         dictionary[gluesmaller[i]].add((gluebigger[j], dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i], dist))
 
             if depth == -1:  # depth -1 means fully recursive. all edges are formed by "gluing"
                 coordinate = (coordinate + 1) % self.dimension()
                 self._subdivide_neighbors(
-                    e, dictionary, smaller, coordinate, method, depth=-1)
+                    epsilon, dictionary, smaller, coordinate, method, depth=-1)
                 self._subdivide_neighbors(
-                    e, dictionary, bigger, coordinate, method, depth=-1)
+                    epsilon, dictionary, bigger, coordinate, method, depth=-1)
             if depth > 0:
                 coordinate = (coordinate + 1) % self.dimension()
-                self._subdivide_neighbors(e, depth - 1, coordinate, smaller)
-                self._subdivide_neighbors(e, depth - 1, coordinate, bigger)
+                self._subdivide_neighbors(
+                    epsilon, depth - 1, coordinate, smaller)
+                self._subdivide_neighbors(
+                    epsilon, depth - 1, coordinate, bigger)
             if depth == 0:
-                self._neighborhood_graph(e, method, smaller, dictionary)
-                self._neighborhood_graph(e, method, bigger, dictionary)
+                self._neighborhood_graph(epsilon, method, smaller, dictionary)
+                self._neighborhood_graph(epsilon, method, bigger, dictionary)

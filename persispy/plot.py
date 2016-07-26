@@ -11,9 +11,9 @@ matplotlib.use('TKAgg')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-try: # python3
+try:  # python3
     import tkinter as tk
-except: # python2
+except:  # python2
     import Tkinter as tk
 import mpl_toolkits.mplot3d as a3
 from matplotlib.figure import Figure
@@ -33,6 +33,7 @@ def create_fig():
     We make calls to the backend so we can handle displaying the figures
     themselves.
     """
+
     def destroy():
         """
         We take care of all the closing methods.
@@ -46,6 +47,7 @@ def create_fig():
         Any resizing is handled properly.
         """
         root.winfo_width(), root.winfo_height()
+
 # only time to call pyplot
     fig = plt.figure()
 #     fig.set_size_inches(8, 8)
@@ -178,12 +180,12 @@ def pick_ax(coords, axes):
         point.append(coords[ax])
     return tuple(point)
 
+
 def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
     """
     We color the graph by applying a gradient to an axis.
     """
     points = wGraph.get_points()
-
 
     # For the two plotting directions
     minx = min(p[0] for p in points)
@@ -195,7 +197,6 @@ def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
 
     minz = min(p[shading_axis] for p in points)
     maxz = max(p[shading_axis] for p in points)
-
 
     adjacency = wGraph.get_adjacency()
     edges = []
@@ -272,6 +273,7 @@ def pick_ax_edge(component, axes):
         selected_axes.append((endpoint1, endpoint2))
     return selected_axes
 
+
 def color_by_component(wGraph, axes, cmap, method, title, gui):
 
     plt.rc('text', usetex=True)
@@ -290,7 +292,6 @@ def color_by_component(wGraph, axes, cmap, method, title, gui):
     cmap = cmaps[cmap]  # color mappings
     line_colors = cmap(np.linspace(0, 1, len(cp)))
     line_colors = line_colors[::-1]
-
 
     # [0, 0.1, 0.2 ... 1 ]
 
@@ -345,7 +346,6 @@ def color_by_component(wGraph, axes, cmap, method, title, gui):
 
     ax.set_aspect('equal')
 
-
     ax.plot([0], [0], color='white', label=textstr)
 
 # # Shrink current axis by 20%
@@ -361,16 +361,17 @@ def color_by_component(wGraph, axes, cmap, method, title, gui):
 # Shrink current axis's height by 10% on the bottom
     box = ax.get_position()
     ax.set_position([box.x0, box.y0 + box.height * 0.1,
-                    box.width, box.height * 0.9])
+                     box.width, box.height * 0.9])
 
 # Put a legend below current axis
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
-            fancybox=True, shadow=True, ncol=5)
+              fancybox=True, shadow=True, ncol=5)
 
     if gui:
         return fig
     else:
         show(window)
+
 
 def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
     """
@@ -420,7 +421,7 @@ def plot3d_pc(pointCloud, axes=(0, 1, 2), gui=False, title=False):
 
 
 def plot3d_ng(wGraph,
-              axes=(0,1,2),
+              axes=(0, 1, 2),
               cmap=3,
               method='subdivision',
               save=False,
@@ -459,7 +460,6 @@ def plot3d_ng(wGraph,
     cmap = cmaps[cmap]  # color mappings
     line_colors = cmap(np.linspace(0, 1, len(cp)))
 
-
     # [0, 0.1, 0.2 ... 1 ]
 
     ce = wGraph.connected_edges(padding=3)
@@ -485,7 +485,7 @@ def plot3d_ng(wGraph,
     componentIndex += 1
 
     if wGraph.singletons():
-        x, y, z = zip(*[pick_ax(point, axes) for point in \
+        x, y, z = zip(*[pick_ax(point, axes) for point in
                         wGraph.singletons(padding=3)])
         ax.scatter(x, y, z,
                    marker='.',

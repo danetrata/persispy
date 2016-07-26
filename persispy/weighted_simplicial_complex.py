@@ -329,7 +329,8 @@ class wGraph(object):
     def neighborhood_graph(self, epsilon):
         '''
         INPUT: epsilon.
-        OUTPUT: the subgraph consisting of those edges with weight less than epsilon.
+        OUTPUT: the subgraph consisting of those edges with weight less
+        than epsilon.
         '''
         keys = self._adj.keys()
         adj = {v: [] for v in keys}
@@ -387,7 +388,6 @@ class wGraph(object):
         Output: a scipy.sparse.csr_matrix.
         '''
         keys = list(self._adj.keys())
-        N = len(keys)
         ctr = 0
         indptr = [ctr]
         indices = []
@@ -413,8 +413,9 @@ class wGraph(object):
 
 def wRandomGraph(n, p, epsilon):
     '''
-    Returns the Gilbert (Erdos-Renyi) random graph G(n,p), which includes each edge independently with
-    probability 0<p<1. A random weight in the range [0,epsilon) is assigned to each edge.
+    Returns the Gilbert (Erdos-Renyi) random graph G(n,p), which
+    includes each edge independently with probability 0<p<1. A random
+    weight in the range [0,epsilon) is assigned to each edge.
     '''
     dictionary = {v: [] for v in range(n)}
     for i in range(n):
@@ -435,9 +436,10 @@ class wSimplicialComplex:
     @classmethod
     def from_clique_list(cls, wgraph, cliques, verify=False):
         '''
-        Input: a wGraph together with a list of simplices on the vertex set of the graph. It
-        is assumed (and not checked unless verify==True) that the 1-skeleton of every simplex is contained in
-        the graph.
+        Input: a wGraph together with a list of simplices on the vertex
+        set of the graph. It is assumed (and not checked unless
+        verify==True) that the 1-skeleton of every simplex is contained
+        in the graph.
         '''
 
         simplices = {0: [wSimplex([k], 0) for k in wgraph._adj.keys()]}
@@ -574,7 +576,7 @@ class sorted_clique_list:
             for v in set(p):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerbosch(
-                    r | {v}, p & nbh, x & nbh, adj, c,dim)
+                    r | {v}, p & nbh, x & nbh, adj, c, dim)
                 p.remove(v)
                 x.add(v)
 
@@ -589,7 +591,7 @@ class sorted_clique_list:
             for v in iter(set(p) - adj[u]):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerboschPivot(
-                    r | {v}, p & nbh, x & nbh, adj, c,dim)
+                    r | {v}, p & nbh, x & nbh, adj, c, dim)
                 p.remove(v)
                 x.add(v)
 

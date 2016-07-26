@@ -12,6 +12,7 @@ AUTHORS:
 import hashlib as hashlib
 import numpy as np
 
+
 class HashPoint:
     '''
     A wrapped numpy array to allow hashing.
@@ -22,6 +23,7 @@ class HashPoint:
     >>> HashPoint([1,2,3])
     point 0: [1, 2, 3]
     '''
+
     def __init__(self, coords, index=0):
         self._coords = np.array(coords)
         self._index = index
@@ -41,7 +43,8 @@ class HashPoint:
             return self._hash
 
     def __repr__(self):
-        return "point "+str(self._index)+": "+str(self._coords.__repr__())[6:-1]
+        return "point " + str(self._index) + ": " + \
+            str(self._coords.__repr__())[6:-1]
 
     def keys(self):
         '''
@@ -121,12 +124,14 @@ Takes a single pair of points which defines an edge.
 Points can either be a np.array, a tuple or a list.
 '''
 
+
 class HashEdge:
     '''
     EXAMPLES:
     >>> HashEdge(np.array(([0,0,0],[1,1,1])), index = 99)
     edge 99: [[0 0 0] [1 1 1]]
     '''
+
     def __init__(self, edge, index=0, DEBUG=False):
 
         self.index = index
@@ -160,7 +165,7 @@ class HashEdge:
             return self._hash
 
     def __repr__(self):
-        return "edge "+str(self.index) +": %s" % str(self.edge).replace('\n', '')
+        return "edge " + str(self.index) + ": %s" % str(self.edge).replace('\n', '')
 
     def keys(self):
         '''
