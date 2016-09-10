@@ -10,12 +10,13 @@
 *.synctex.gz
 *.pdf
 
-# testing
+# misc
 .csv
 .png
 
 # prefixes to ignore
 private*
+personal*
 
 # nonessential project files
 .vim
@@ -23,7 +24,7 @@ private*
 
 # Various swap files to ignore
 *.py[cod]
-*.sw[nop]
+*.sw[klmnop]
 *.ipynb
 
 # C extensions
