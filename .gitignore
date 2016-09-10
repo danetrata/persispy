@@ -21,6 +21,7 @@ personal*
 # nonessential project files
 .vim
 .ropeproject
+.travis.yml
 
 # Various swap files to ignore
 *.py[cod]
