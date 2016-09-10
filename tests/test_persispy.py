@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import unittest
+import persispy
+from persispy.points import box
+import timeit as t
+import doctest
 
 """
 test_persispy
 ----------------------------------
 
 Tests for `persispy` module.
-"""
 
-import unittest
-
-"""
 from persispy import persispy
 
 
@@ -27,50 +28,26 @@ class TestPersispy(unittest.TestCase):
 """
 
 
-from persispy.phc import Intersect
-from persispy.points import sphere
-
-class TestPHCPack(unittest.TestCase):
-
-    def setUp(self):
-        self.points = 500
-
-
-    def test_sampling_points_2sphere(self):
-
-        selection = "x^2 + y^2 + z^2 - 1"
-        pc = Intersect(eqn = selection, num_points = self.points, bounds = 30)
-
-    def test_time_sampling_points(self):
-
-        def wrapper():
-            pc = sphere(self.points)
-
-        def wrapper1():
-            selection = "x^2 + y^2 + z^2 - 1"
-            pc = Intersect(eqn = selection, num_points = self.points)
-
-        print("")
-        print("sphere(): %f" % t.timeit(wrapper, number = 3))
-        print("phc():    %f" % t.timeit(wrapper1, number = 3))
-
-    def test_time_sampling_points_complex(self):
-
-
-        def wrapper1():
-            selection = "x^2 + y^2 + z^2 - 1"
-            pc = Intersect(eqn = selection,
-                    num_points = self.points,
-                    return_complex = True)
-
-        print("")
-#         print "sphere(): %f" % t.timeit(wrapper, number = 10)
-        print("phc():    %f" % t.timeit(wrapper1, number = 3))
-
+import persispy.points as pp
+import persispy.weighted_simplicial_complex as wsc
+import persispy.persistent_homology as pph
 import numpy.random as npr
-from persispy.points import box
-import timeit as t
-from time import sleep
+from persispy.hashing import HashPoint
+from persispy.point_cloud import PointCloud
+
+class TestPersistence(unittest.TestCase):
+
+    def test_barcode(self):
+
+        points = pp.sphere(200,1)
+        weighted_graph = points.neighborhood_graph(.1,'subdivision')
+        scl = wsc.sorted_clique_list(weighted_graph)
+        wscomplex = wsc.wSimplicialComplex.from_clique_list(weighted_graph,
+                                                            scl._cliques)
+
+        ph = pph.PersistentHomology(wscomplex,4)
+
+        ph.plot_bar_code(.1, gui=True)
 
 class TestConnectedComponents(unittest.TestCase):
 
@@ -83,12 +60,8 @@ class TestConnectedComponents(unittest.TestCase):
         def wrapper():
             self.ng.connected_components()
 
-        def wrapper1():
-            self.ng.connected_components_1()
-
         print("")
-        print(".connected_components():   %f" % t.timeit(wrapper, number = 10))
-        print(".connected_components_1(): %f" % t.timeit(wrapper1, number = 10))
+        print(".connected_components():   %f" % t.timeit(wrapper, number=10))
 
     def test_connected_components_equal_to(self):
         x = 5
@@ -96,5 +69,14 @@ class TestConnectedComponents(unittest.TestCase):
         self.assertEqual(len(self.ng.connected_components()), x)
 
 
+def load_tests(loader, tests, ignore):
+    tests.addTests(doctest.DocTestSuite(persispy))
+    return tests
+
+
 if __name__ == '__main__':
-    unittest.main(verbosity=9)
+    testSuite = unittest.TestSuite()
+    persispyDocTest = doctest.DocTestSuite(persispy.hashing)
+
+    testSuite.addTest(persispyDocTest)
+    unittest.TextTestRunner(verbosity=9).run(testSuite)

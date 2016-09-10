@@ -2,28 +2,15 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
+from setuptools.command.build_ext import build_ext as _build_ext
 
-def is_package(path): # find packages helper function
-    return (
-        os.path.isdir(path) and
-        os.path.isfile(os.path.join(path, '__init__.py'))
-    )
-
-def find_packages(path, base=""):
-                                  #| given a path,
-                                  #| recursively walks the directory to find
-                                  #| submodules
-    packages = {}
-    for item in os.listdir(path):
-        dir = os.path.join(path, item)
-        if is_package(dir):
-            if base:
-                module_name = "%(base)s.%(item)s" % vars()
-            else:
-                module_name = item
-            packages[module_name] = dir
-            packages.update(find_packages(dir, module_name))
-    return packages
+class build_ext(_build_ext):
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -33,11 +20,14 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'numpy',
-    'scipy'
+    'matplotlib',
+    'sortedcontainers',
+    'cffi',
+    'cairocffi'
 ]
 
 test_requirements = [
-    # TODO: put package test requirements here
+    'pylint'
 ]
 
 setup(
@@ -50,6 +40,8 @@ setup(
     author_email='benjamin.antieau@gmail.com',
     url='https://github.com/benjaminantieau/persispy',
     platforms='any',
+    cmdclass={'build_ext':build_ext},
+    setup_requires=["numpy"],  # numpy install requires this
     install_requires=requirements,
     license="BSD",
     zip_safe=False,
