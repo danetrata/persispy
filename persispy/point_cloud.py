@@ -5,13 +5,9 @@ The PointCloud data structure and related functions.
 
 AUTHORS:
 
-    - Daniel Etrata (2015-11)
     - Benjamin Antieau (2015-04)
-
-TODO: We should look to seperate the methods that generate points
-and the methods that act on those points.
-Left alone for now because many modules rely on this.
-
+    - Mason Boeman (2015-04)
+    - Daniel Etrata (2015-11)
 '''
 
 import math
@@ -50,10 +46,8 @@ class PointCloud(object):
         except TypeError:
             print("Detected points are not hashable." +
                   "Attempting to convert to HashPoints.")
-            self._points = [
-                HashPoint(points[n],
-                          index=n) for n in range(
-                    len(points))]
+            self._points = [HashPoint(points[n],
+                                      index=n) for n in range(len(points))]
 #             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to' +
@@ -89,19 +83,29 @@ class PointCloud(object):
         return len(self._points)
 
     def size(self):
+        """
+        Returns the number of points in the point cloud.
+        """
         return len(self._points)
 
     def __getitem__(self, key):
-        return tuple(self._points[key]._coords)
+        return tuple(self._points[key].coordinate())
 
     def num_points(self):
-        return len(self._points)
+        """
+        Legacy function.
+        Returns the number of points in the point cloud.
+        """
+        return self.size()
 
     def dimension(self):
+        """
+        Returns the dimension of the point cloud.
+        """
         if self._space == 'affine':
-            return len(self._points[0]._coords)
+            return len(self._points[0].coordinate())
         elif self._space == 'projective':
-            return len(self._points[0]._coords) - 1
+            return len(self._points[0].coordinate()) - 1
 
     def plot2d(self, *args, **kwargs):
         """
@@ -149,13 +153,13 @@ class PointCloud(object):
         """
         calls the recursive function ._neighborhood_graph(...)
         """
-        return self._neighborhood_graph(
-            epsilon,
-            method,
-            self._points,
-            {v: set() for v in self._points})
+        return self._neighborhood_graph(epsilon,
+                                        method,
+                                        self._points,
+                                        {v: set() for v in self._points})
 
-    def _neighborhood_graph(self,
+    def _neighborhood_graph(self,  # pylint: disable = R0911, R0912
+                            # too many branches and too many return values
                             epsilon,
                             method,
                             pointarray,
@@ -207,14 +211,15 @@ class PointCloud(object):
                     return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
-            '''
-            Issue: this doesn't work because lists and numpy arrays are not hashable.
-            '''
+            # Issue: this doesn't work because lists and numpy arrays are
+            # not hashable.
+            # Has this issue been fixed? Daniel
             for i in range(len(self._points)):
                 for j in range(i + 1, len(self._points)):
                     if self._space == 'affine':
                         dist = np.sqrt(
-                            sum((self._points[i]._coords - self._points[j]._coords)**2))
+                            sum((self._points[i].coordinate() -
+                                 self._points[j].coordinate())**2))
                         if dist < epsilon:
                             dictionary[self._points[i]].add(
                                 (self._points[j], dist))
@@ -238,9 +243,10 @@ class PointCloud(object):
 
     def _selectpoint(self, pointarray, k, n):
         """
-        gives the kth smallest point of "self._points", according to the nth coordinate
-        we use this to give the median, but a general solution for k is needed for the recursive algorithm
-        this algorithm is O(n) for best and worst cases
+        gives the kth smallest point of "self._points", according to the
+        nth coordinate we use this to give the median, but a general
+        solution for k is needed for the recursive algorithm this
+        algorithm is O(n) for best and worst cases
         """
 
         a = pointarray[:]
@@ -248,7 +254,7 @@ class PointCloud(object):
         while(len(a) > 5):
             for x in range(int(math.floor(len(a) / 5))):
                 b = pointarray[5 * x:5 * x + 5]
-                b.sort(key=lambda x: x._coords[n])
+                b.sort(key=lambda x: x.coordinate()[n])
                 c.append(b[int(math.floor(len(b) / 2))])
             a = c
             c = []
@@ -256,35 +262,35 @@ class PointCloud(object):
 
         lesser = [
             point for point in pointarray
-            if point._coords[n] < pivot._coords[n]]
+            if point.coordinate()[n] < pivot.coordinate()[n]]
         if len(lesser) > k:
             return self._selectpoint(lesser, k, n)  # recursive
         k -= len(lesser)
 
         equal = [
             point for point in pointarray
-            if point._coords[n] == pivot._coords[n]]
+            if point.coordinate()[n] == pivot.coordinate()[n]]
         if len(equal) > k:
             return pivot  # basecase
         k -= len(equal)
 
         greater = [
             point for point in pointarray
-            if point._coords[n] > pivot._coords[n]]
+            if point.coordinate()[n] > pivot.coordinate()[n]]
         return self._selectpoint(greater, k, n)  # recursive
 
-    def _subdivide_neighbors(
-            self,
-            epsilon,
-            dictionary,
-            pointarray,
-            coordinate=0,
-            method='exact',
-            depth=-1):
+    def _subdivide_neighbors(self,  # pylint: disable = R0914
+                             epsilon,  # too many local variables
+                             dictionary,
+                             pointarray,
+                             coordinate=0,
+                             method='exact',
+                             depth=-1):
         """
         method and depth are accumulators for the recursive calls
-        divides the space into two regions about the median point relative to "coordinate"
-        glues the two regions, then recursively calls itself on the two regions.
+        divides the space into two regions about the median point
+        relative to "coordinate" glues the two regions, then recursively
+        calls itself on the two regions.
         """
         if len(pointarray) > 1:
             median = self._selectpoint(
@@ -295,31 +301,32 @@ class PointCloud(object):
             gluebigger = []
 
             for i, _ in enumerate(pointarray):  # split into two regions
-                if pointarray[i]._coords[
-                        coordinate] < median._coords[coordinate]:
+                if pointarray[i].coordinate()[
+                        coordinate] < median.coordinate()[coordinate]:
                     smaller.append(pointarray[i])
-                    if pointarray[i]._coords[
-                            coordinate] > median._coords[coordinate] - epsilon:
+                    if (pointarray[i].coordinate()[coordinate] >
+                            median.coordinate()[coordinate] - epsilon):
                         gluesmaller.append(pointarray[i])
 
-                if pointarray[i]._coords[
-                        coordinate] >= median._coords[coordinate]:
+                if pointarray[i].coordinate()[
+                        coordinate] >= median.coordinate()[coordinate]:
                     bigger.append(pointarray[i])
-                    if pointarray[i]._coords[
-                            coordinate] < median._coords[coordinate] + epsilon:
+                    if (pointarray[i].coordinate()[coordinate] <
+                            median.coordinate()[coordinate] + epsilon):
                         gluebigger.append(pointarray[i])
 
             for i, _ in enumerate(gluesmaller):  # split into two regions
                 for j, _ in enumerate(gluebigger):
                     dist = np.sqrt(
-                        sum(
-                            ((gluesmaller[i])._coords - gluebigger[j]._coords) *
-                            (gluesmaller[i]._coords - gluebigger[j]._coords)))
+                        sum(((gluesmaller[i]).coordinate() -
+                             gluebigger[j].coordinate()) *
+                            (gluesmaller[i].coordinate() -
+                             gluebigger[j].coordinate())))
                     if dist < epsilon:
                         dictionary[gluesmaller[i]].add((gluebigger[j], dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i], dist))
 
-            if depth == -1:  # depth -1 means fully recursive. all edges are formed by "gluing"
+            if depth == -1:  # full recursive. all edges are formed by "gluing"
                 coordinate = (coordinate + 1) % self.dimension()
                 self._subdivide_neighbors(
                     epsilon, dictionary, smaller, coordinate, method, depth=-1)

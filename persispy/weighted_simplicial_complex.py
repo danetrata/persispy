@@ -1,11 +1,17 @@
+"""
+
+AUTHORS:
+
+    - Benjamin Antieau (2015-04)
+    - Mason Boeman (2015-04)
+    - Daniel Etrata (2015-11)
+We create a undirected weighted graph from a point cloud.
+"""
 import itertools
 import sys
-import numpy as np
 import numpy.random as npr
 from numpy import array
-import scipy.sparse.csgraph as csgraph
-import scipy.sparse as sparse
-from persispy.utils import tuples
+from itertools import combinations
 from persispy.hashing import HashEdge
 
 DEBUG = False
@@ -24,19 +30,29 @@ class wSimplex(object):
             _vertices: a list of points.
             _weight: the weight. The maximum edge of a simplex.
 
+        >>> from persispy.hashing import HashPoint
         >>> wSimplex(vertices = [HashPoint(coords = (0,0,0), index = 0), \
                             HashPoint((1,0,0), index = 1)], \
                     weight = 1)
         Weighted simplex (point 0: [0, 0, 0], point 1: [1, 0, 0]) with weight 1
         '''
 
-        self._vertices = tuple(sorted(list(vertices), key=lambda v: v._index))
+        self._vertices = tuple(sorted(list(vertices), key=lambda v: v.index()))
         self._size = len(vertices)
         self._weight = weight
-        self._index = -1  # the index of this simplex in the compatible total ordering
+        self._index = -1  # the compatible total ordering
 
     def weight(self):
+        """
+        Returns the weight of the simplex.
+        """
         return self._weight
+
+    def vertices(self):
+        """
+        Returns the set of vertices in a simplex as a tuple.
+        """
+        return self._vertices
 
     def __repr__(self):
         return 'Weighted simplex ' + str(
@@ -62,23 +78,26 @@ class wSimplex(object):
 
     # DEPRECIATED in python3
     def compare(self, other):
+        """
+        Legacy comparison method for hashing.
+        """
         value = 0.0
         # This is extremely dangerous as set is a standard library class in
         # Python. In any case, __cmp__ is depreciated in python3.
         finished = False
-        if (self._weight != other._weight) and not finished:
-            value = self._weight - other._weight
+        if (self._weight != other.weight()) and not finished:
+            value = self._weight - other.weight()
             finished = True
-        if (len(self._vertices) != len(other._vertices)) and not finished:
-            value = len(self._vertices) - len(other._vertices)
+        if (len(self._vertices) != len(other.vertices())) and not finished:
+            value = len(self._vertices) - len(other.vertices())
             finished = True
         if not finished:
-            if self._vertices != other._vertices:
+            if self._vertices != other.vertices():
                 for i in range(len(self._vertices)):
-                    if self._vertices[i] != other._vertices[i]:
-                        if self._vertices[i] < other._vertices[i]:
+                    if self._vertices[i] != other.vertices()[i]:
+                        if self._vertices[i] < other.vertices()[i]:
                             return -1
-                        if self._vertices[i] > other._vertices[i]:
+                        if self._vertices[i] > other.vertices()[i]:
                             return 1
         if value < 0:
             return -1
@@ -88,23 +107,25 @@ class wSimplex(object):
 
 
 class wGraph(object):
+    '''
+    Input: a dictionary of edges indexed by vertices.
+    Output: a wGraph object.
+
+    Variables:
+        ._adj: the adjacency dictionary.
+        ._epsilon: the distance between points
+        ._connected_components - Depth first search tree of components
+            created after .connected_components()
+        ._edges: List of a edges of type HashEdge with the form
+            set(vertex, endPoint),
+            created after .connected_edges() . Because we assume an
+            unordered graph, the edges are unordered through the use
+            of hash_edge.HashEdge() .
+    '''
 
     def __init__(self, adjacencies, epsilon):
-        '''
-        Input: a dictionary of edges indexed by vertices.
-        Output: a wGraph object.
-
-        Variables:
-            ._adj: the adjacency dictionary.
-            ._epsilon: the distance between points
-            ._connected_components - Depth first search tree of components
-                created after .connected_components()
-            ._edges: List of a edges of type HashEdge with the form
-                set(vertex, endPoint),
-                created after .connected_edges() . Because we assume an
-                unordered graph, the edges are unordered through the use
-                of hash_edge.HashEdge() .
-        '''
+        if epsilon is None:
+            raise NotImplementedError()
         self._adj = adjacencies
         self._epsilon = epsilon
         self._connected_components = None
@@ -133,11 +154,7 @@ class wGraph(object):
         for e in edges:
             adj[e[0]].add((e[1], e[2]))
             adj[e[1]].add((e[0], e[2]))
-        return cls(adj)
-
-    """
-    start magic methods
-    """
+        return cls(adj, None)
 
     def __repr__(self):
         """
@@ -153,17 +170,13 @@ class wGraph(object):
         """
         return self.num_edges()
 
-    """
-    end magic methods
-    """
-
-    def get_epsilon(self):
+    def epsilon(self):
         """
         We return the epsilon of the wGraph.
         """
         return self._epsilon
 
-    def get_adjacency(self):
+    def adjacencies(self):
         """
         We return the adjacency dictionary.
         """
@@ -173,18 +186,30 @@ class wGraph(object):
         """
         We return the points of the wGraph.
         """
-        return self._adj.keys()
+        return self.vertices()
 
     def vertices(self):
+        """
+        We return the points of the wGraph.
+        """
         return self._adj.keys()
 
     def num_points(self):
-        return len(self._adj.keys())
+        """
+        We return the number of points in the wGraph.
+        """
+        return len(self._adj.index())
 
     def order(self):
+        """
+        We return the number of edges of the wGraph.
+        """
         return self.num_edges()
 
     def num_edges(self):
+        """
+        We return the number of edges of the wGraph.
+        """
         count = 0
         for v in self._adj.keys():
             count = count + len(self._adj[v])
@@ -197,6 +222,9 @@ class wGraph(object):
         return len(self._adj[p])
 
     def metric(self, p, q):
+        """
+        Returns the distance between two points.
+        """
         if p not in self._adj.keys() or q not in self._adj.keys():
             raise ValueError('The points must be vertices.')
         else:
@@ -282,7 +310,6 @@ class wGraph(object):
             self.connected_components()
         cp = self._connected_components
 
-        componentIndex = 0
         components = []
         for component in cp:
             edges = {}
@@ -302,7 +329,6 @@ class wGraph(object):
                         )
                         edgeIndex += 1
             if edges:
-                componentIndex += 1
                 edges = edges.values()
                 edges = set(edges)
                 components.append(edges)
@@ -318,7 +344,7 @@ class wGraph(object):
         dist = 0
         if len(pointlist) == 1:
             return dist
-        for t in tuples(2, pointlist):
+        for t in combinations(pointlist, 2):
             d = self.metric(t[0], t[1])
             if d >= 0:
                 dist = max(dist, d)
@@ -332,83 +358,13 @@ class wGraph(object):
         OUTPUT: the subgraph consisting of those edges with weight less
         than epsilon.
         '''
-        keys = self._adj.keys()
+        keys = self._adj.index()
         adj = {v: [] for v in keys}
         for k in keys:
             for v in self._adj[k]:
                 if v[1] < epsilon:
                     adj[k].append(v)
-        return wGraph(adj)
-
-    def VRComplex(self, epsilon, dimension, method='incremental'):
-        # Do we even need this any more?
-        def lowerNBRS(vtx):
-            vtxs = []
-            for i in range(vtx + 1, len(self._adj.keys())):
-                if i in self._adj[vtx]:
-                    vtxs.append(i)
-            return vtxs
-
-        def intersect(a, b):
-            inter = []
-            for i in range(0, len(a)):
-                if (a[i] in b):
-                    inter.append(a[i])
-            return inter
-
-        def addCoface(dimension, simplex, vtxSet, complex):
-            complex[
-                len(simplex)].append(
-                wSimplex(
-                    simplex,
-                    self.cloud_dist(simplex)))
-            if len(simplex) > dimension - 1:
-                return complex
-            else:
-                for v in vtxSet:
-                    simp = simplex.append(v)
-                    vtxSet2 = intersect(lowerNBRS(v), vtxSet)
-                    addCoface(dimension, simp, vtxSet2, complex)
-                return complex
-
-        if method == 'inductive':
-            return None
-
-        elif method == 'incremental':
-            complex = {n: [] for n in range(dimension + 1)}
-            for u in self._adj.keys():
-                vtxSet = lowerNBRS(u)
-                addCoface(dimension, [u], vtxSet, complex)
-            return wSimplicialComplex(self, complex)
-        else:
-            return None
-
-    def adjacency_matrix(self):
-        '''
-        Output: a scipy.sparse.csr_matrix.
-        '''
-        keys = list(self._adj.keys())
-        ctr = 0
-        indptr = [ctr]
-        indices = []
-        for k in keys:
-            for e in self._adj[k]:
-                ctr = ctr + 1
-                indices.append(keys.index(e[0]))
-            indptr.append(ctr)
-        data = np.array([1.0 for x in range(len(indices))])
-        return sparse.csr_matrix(
-            (data, indices, indptr), shape=(
-                (len(keys), len(keys))))
-
-    def connected_components_1(self, return_labels=False):
-        '''
-        Output: a positive integer.
-        construction of adjacency_matrix().
-        '''
-        return csgraph.connected_components(
-            self.adjacency_matrix(),
-            directed=False, return_labels=return_labels)
+        return wGraph(adj, None)
 
 
 def wRandomGraph(n, p, epsilon):
@@ -427,7 +383,11 @@ def wRandomGraph(n, p, epsilon):
     return wGraph(dictionary, epsilon)
 
 
-class wSimplicialComplex:
+class wSimplicialComplex(object):
+    """
+    From a wgraph and it's simplicies, we setup the weighted simplicial
+    complex.
+    """
 
     def __init__(self, wgraph, simplices):
         self._wgraph = wgraph
@@ -442,37 +402,35 @@ class wSimplicialComplex:
         in the graph.
         '''
 
-        simplices = {0: [wSimplex([k], 0) for k in wgraph._adj.keys()]}
+        simplices = {0: [wSimplex([k], 0)
+                         for k in wgraph.adjacencies().keys()]}
         simplices[1] = []
 
-        for t in tuples(2, wgraph._adj.keys()):
+        for t in combinations(wgraph.adjacencies().keys(), 2):
             if wgraph.metric(t[0], t[1]) > 0:
                 simplices[1].append(wSimplex(t, wgraph.metric(t[0], t[1])))
 
         for v in cliques:
-            if verify:
-                '''
-                Check that the 1-skeleton of v is indeed contained in the wgraph.
-                '''
-                for vlist in tuples(2, v):
+            if verify:  # 1-skeleton of v is included in wGraph
+                for vlist in combinations(v, 2):
                     if wgraph.metric(vlist[0], vlist[1]) == -1:
-                        raise ValueError(
-                            'All cliques must have 1-skeleton included in wgraph.')
+                        raise ValueError('All cliques must have 1-skeleton' +
+                                         'included in wgraph.')
             for d in range(3, len(v) + 1):
-                for vlist in tuples(d, v):
+                for vlist in combinations(v, d):
                     # The next crudge is to make this bit backwards compatible
                     # with python2. Note that has_key() is no longer an
                     # attribute of dictionaries in python3.
                     # TEST: I have not tested it on python2 as of 19 March 2016.
                     try:
-                        if not simplices.has_key(d - 1):
+                        if not d - 1 in simplices:
                             simplices[d - 1] = []
                     except AttributeError:
                         if not d - 1 in simplices:
                             simplices[d - 1] = []
                     weight = 0
                     for i in range(d - 1):
-                        inbrs = wgraph._adj[vlist[i]]
+                        inbrs = wgraph.adjacencies()[vlist[i]]
                         for j in inbrs:
                             if j[0] in vlist:
                                 weight = max(weight, j[1])
@@ -482,62 +440,84 @@ class wSimplicialComplex:
         return wSimplicialComplex(wgraph, simplices)
 
     def __repr__(self):
-        return repr(self.dimension()) + '-dimensional weighted simplicial complex with ' + repr(len(self._simplices[
-            0])) + ' vertices and ' + repr(self.simplices_positive()) + ' positive-dimensional simplices'
+        return(repr(self.dimension()) + '-dimensional weighted' +
+               'simplicial complex with ' + repr(len(self._simplices[0])) +
+               ' vertices and ' + repr(self.simplices_positive()) +
+               ' positive-dimensional simplices')
 
     def simplices_positive(self):
+        """
+        ?
+        """
         return sum([len(self._simplices[k])
                     for k in range(1, self.dimension() + 1)])
 
+    def simplices(self):
+        """
+        Return the simplices.
+        """
+        return self._simplices
+
     def dimension(self):
+        """
+        Returns the dimension of the complex.
+        """
         dim = 0
-        for k in self._simplices.keys():
+        for k in self._simplices.index():
             if len(self._simplices[k]) > 0:
                 dim = max(k, dim)
         return dim
 
     def simplex_sort(self):
         '''
-        Sorts the simplices with respect to the lexographic ordering dictated by the
-        ordering of the vertices implicit in the list self._simplices[0].
+        Sorts the simplices with respect to the lexographic ordering
+        dictated by the ordering of the vertices implicit in the list
+        self._simplices[0].
         '''
-        dictionary = [x._vertices[0] for x in self._simplices[0]]
+        dictionary = [x.vertices()[0] for x in self._simplices[0]]
 
         def simplex_cmp_lex(s, t):
-            sindices = tuple([dictionary.index(x) for x in s._vertices])
-            tindices = tuple([dictionary.index(x) for x in t._vertices])
+            """
+            Helper function.
+            """
+            sindices = tuple([dictionary.index(x) for x in s.vertices()])
+            tindices = tuple([dictionary.index(x) for x in t.vertices()])
             return cmp(sindices, tindices)
         for d in range(1, self.dimension() + 1):
             self._simplices[d].sort(simplex_cmp_lex)
 
         return None
 
-    def VRComplex(self, epsilon):
-        vertices = self._wgraph._adj.keys()
-        edges = dict()
-        for v in vertices:
-            new_edges = []
-            for e in self._wgraph._adj[v]:
-                if e[1] < epsilon:
-                    new_edges.append(e)
-            edges[v] = new_edges
-        wg = wgraph.wGraph(edges)
-        simplices = dict()
-        for d in self._simplices.keys():
-            simplices[d] = []
-            for s in self._simplices[d]:
-                if s.weight() < epsilon:
-                    simplices[d].append(s)
-        return wSimplicialComplex(wg, simplices)
+#     def VRComplex(self, epsilon):
+#         vertices = self._wgraph.adjacencies().index()
+#         edges = dict()
+#         for v in vertices:
+#             new_edges = []
+#             for e in self._wgraph.adjacencies()[v]:
+#                 if e[1] < epsilon:
+#                     new_edges.append(e)
+#             edges[v] = new_edges
+#         wg = wgraph.wGraph(edges)
+#         simplices = dict()
+#         for d in self._simplices.index():
+#             simplices[d] = []
+#             for s in self._simplices[d]:
+#                 if s.weight() < epsilon:
+#                     simplices[d].append(s)
+#         return wSimplicialComplex(wg, simplices)
 
 
-class sorted_clique_list:
+class sorted_clique_list(object):
 
     def __init__(self, wg, dimension=-1):
         '''wg is a weighted graph'''
         self._cliques = []
-        sorted_clique_list._BronKerboschPivot(set(), set(
-            wg._adj.keys()), set(), wg._adj, self._cliques, dimension)
+        sorted_clique_list._BronKerboschPivot(
+            set(),
+            set(wg.adjacencies().keys()),
+            set(),
+            wg.adjacencies(),
+            self._cliques, dimension)
         self._cliques.sort()
 
     def get_simplex_iterator(self, n):
@@ -596,7 +576,7 @@ class sorted_clique_list:
                 x.add(v)
 
 
-class _clique_iterator:
+class _clique_iterator(object):
 
     def __init__(self, i):
         self.iterator = i
@@ -606,12 +586,3 @@ class _clique_iterator:
 
     def next(self):
         return tuple(self.iterator.next())
-
-
-def test():
-    import doctest
-    doctest.testmod()
-
-
-if __name__ == "__main__":
-    test()

@@ -1,4 +1,8 @@
 """
+AUTHORS:
+
+    - Daniel Etrata (2016-01)
+
 Takes a variety of type string and, after solving intersections with phcpy,
 returns a persispy point cloud. We must reject equations with with variables t,
 e, E, i, I because their meanings are reserved.
@@ -216,9 +220,9 @@ class Intersect(object):
             raise
 
 
-def parse(eqn):
+def parse(eqn): #noqa - too many branches
     """
-    We parse the string into phcpy input to generate the intersects.
+    We parse the equation string into phcpy input.
     """
 
     terms = eqn

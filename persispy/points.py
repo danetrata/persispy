@@ -10,6 +10,7 @@ Several functions that produce instances of the PointCloud class.
 AUTHORS:
 
     - Benjamin Antieau (2015-04)
+    - Daniel Etrata (2016-09)
 
 This module contains several functions that produce PointClouds, and it
 contains the definition of the hashing.HashPoint class. This provides
@@ -20,13 +21,12 @@ especially the neighborhood_graph function.
 
 import numpy as np
 import numpy.random as npr
-import scipy.constants as scic
 
 
 from persispy.hashing import HashPoint
 try:
     from persispy.phc import Intersect
-except:
+except ImportError:
     print("PHCpy is not currently installed. PHC functions are unavailable.")
 from persispy.point_cloud import PointCloud
 
@@ -41,22 +41,37 @@ equations = {
 
 
 def intersect_hyperbolid(number_of_points):
+    """
+    Returns points on the hyperbolid.
+    """
     return Intersect(equations["hyperbolid"], number_of_points)
 
 
 def intersect_eightsurface(number_of_points):
+    """
+    Returns points on an eightsurface.
+    """
     return Intersect(equations["eightsurface"], number_of_points)
 
 
 def intersect_torus(number_of_points):
+    """
+    Returns points on a torus.
+    """
     return Intersect(equations["torus"], number_of_points)
 
 
 def intersect_circle(number_of_points):
+    """
+    Returns points on a circle.
+    """
     return Intersect(equations["circle"], number_of_points)
 
 
 def intersect_sphere(number_of_points):
+    """
+    Returns points on a sphere.
+    """
     return Intersect(equations['sphere'], number_of_points)
 
 
@@ -65,11 +80,10 @@ def circle(num_points, radius=1):
     Returns a PointCloud with num_points random points on the circle
     (1-sphere) of given radius centered at the origin in R^2.
 
-    EXAMPLES:
     >>> circle(1000,radius=4)
     Point cloud with 1000 points in real affine space of dimension 2
     '''
-    angles = np.array([(2 * scic.pi) * npr.random() for _ in range(num_points)])
+    angles = np.array([(2 * np.pi) * npr.random() for _ in range(num_points)])
     return PointCloud([HashPoint([np.cos(theta), np.sin(theta)], index)
                        for index, theta in enumerate(angles)])
 
@@ -87,20 +101,20 @@ def sphere(num_points, radius=1, method='rejection'):
     actually equidistributed points on the 2-sphere with its usual
     measure.
 
-    EXAMPLES:
     >>> sphere(1000,radius=4)
     Point cloud with 1000 points in real affine space of dimension 3
     '''
     def normalize(x):
+        """
+        Helper func to normalize set of points to the radius.
+        """
         return (radius / np.sqrt(sum(x * x))) * x
     if method == 'normalized':
         return PointCloud([
-            HashPoint(
-                normalize(2 * npr.random(3) - 1),
-                index=n) for n in range(num_points)],
-            space='affine')
+            HashPoint(normalize(2 * npr.random(3) - 1),
+                      index=n) for n in range(num_points)], space='affine')
     elif method == 'rectangular':
-        angles = np.array([2 * scic.pi * npr.random(2)
+        angles = np.array([2 * np.pi * npr.random(2)
                            for n in range(num_points)])
         return PointCloud(
             [
@@ -136,11 +150,10 @@ def sphere(num_points, radius=1, method='rejection'):
 
 def torus(num_points, gui=False):
     '''
-    EXAMPLES:
     >>> torus(1000)
     Point cloud with 1000 points in real affine space of dimension 3
     '''
-    angles = np.array([2 * scic.pi * npr.random(2) for n in range(num_points)])
+    angles = np.array([2 * np.pi * npr.random(2) for n in range(num_points)])
     hp = [
         HashPoint(
             np.array(
@@ -153,11 +166,10 @@ def torus(num_points, gui=False):
 
 def flat_torus(num_points):
     '''
-    EXAMPES:
     >>> flat_torus(1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
-    angles = np.array([2 * scic.pi * npr.random(2) for n in range(num_points)])
+    angles = np.array([2 * np.pi * npr.random(2) for n in range(num_points)])
     return PointCloud([
         HashPoint(
             np.array(
@@ -165,13 +177,11 @@ def flat_torus(num_points):
                  np.sin(angles[n][0]),
                  np.cos(angles[n][1]),
                  np.sin(angles[n][1])]),
-            index=n) for n in range(num_points)],
-        space='affine')
+            index=n) for n in range(num_points)], space='affine')
 
 
 def cube(dim, num_points):
     '''
-    EXAMPLES:
     >>> cube(4,1000)
     Point cloud with 1000 points in real affine space of dimension 4
     '''
@@ -190,7 +200,6 @@ def box(number_of_points,
     We can also ask to return the seed used to generate a run. Note, the
     returned seed is a ndarray of 624 units and is returned as a tuple.
 
-    EXAMPLES:
     >>> box(1000, 2)
     Point cloud with 1000 points in real affine space of dimension 2
 

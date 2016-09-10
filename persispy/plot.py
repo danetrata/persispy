@@ -1,4 +1,9 @@
 """
+AUTHORS:
+
+    - Benjamin Antieau (2015-04)
+    - Daniel Etrata (2016-01)
+
 input: pointCloud OR
     wGraph
 """
@@ -6,26 +11,23 @@ input: pointCloud OR
 import numpy as np
 # import time
 
-import matplotlib
-matplotlib.use('TKAgg')
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg \
     import FigureCanvasTkAgg, NavigationToolbar2TkAgg
-try:  # python3
-    import tkinter as tk
-except:  # python2
-    import Tkinter as tk
 import mpl_toolkits.mplot3d as a3
-from matplotlib.figure import Figure
-from matplotlib.axes import Axes
 from mpl_toolkits.mplot3d import Axes3D
 from persispy.point_cloud import PointCloud
 from persispy.weighted_simplicial_complex import wGraph
+try:  # python3
+    import tkinter as tk
+except ImportError:  # python2
+    import Tkinter as tk
 try:
     from persispy.phc import Intersect
-except:
+except ImportError:
     Intersect = type("None", (object,), {"None": None})
     print("PHCpy is not currently installed. PHC functions are unavailable.")
+import matplotlib.pyplot as plt  #noqa - ignore module import level
+import matplotlib as mpl  #noqa - ignore module import level
 
 
 def create_fig():
@@ -46,11 +48,10 @@ def create_fig():
         """
         Any resizing is handled properly.
         """
-        root.winfo_width(), root.winfo_height()
+        root.winfo_width(), root.winfo_height()  #noqa - tkinter specific
 
 # only time to call pyplot
     fig = plt.figure()
-#     fig.set_size_inches(8, 8)
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", destroy)
     root.bind("<Configure>", onsize)
@@ -58,8 +59,7 @@ def create_fig():
     frame.pack(side='top', fill='both', expand=1)
     canvas = FigureCanvasTkAgg(fig, master=frame)
     canvas.get_tk_widget().pack(side='top', fill='both', expand=1)
-#     canvas.get_tk_widget().pack()
-    canvas._tkcanvas.pack(side='top', fill='both', expand=1)
+    canvas._tkcanvas.pack(side='top', fill='both', expand=1)  #noqa - tkinter
     toolbar = NavigationToolbar2TkAgg(canvas, root)
     toolbar.update()
     toolbar.pack()
@@ -149,8 +149,6 @@ def plot2d_pc(pointCloud, gui=False):
     else:
         plt.show(fig)
 
-import matplotlib as mpl
-
 
 def plot2d_ng(wGraph,
               shading_style='axes',
@@ -198,7 +196,7 @@ def color_by_ax(wGraph, axes, shading_axis, method, title, gui):
     minz = min(p[shading_axis] for p in points)
     maxz = max(p[shading_axis] for p in points)
 
-    adjacency = wGraph.get_adjacency()
+    adjacency = wGraph.adjacencies()
     edges = []
     colors = []
     x, y, pointcolors = [], [], []
@@ -284,8 +282,8 @@ def color_by_component(wGraph, axes, cmap, method, title, gui):
     fig, window = create_fig()
     window.wm_title(title)
     ax = fig.add_subplot(1, 1, 1)
-    epsilon = wGraph.get_epsilon()
-    adj = wGraph.get_adjacency()
+    epsilon = wGraph.epsilon()
+    adj = wGraph.adjacencies()
     cp = wGraph.connected_components()
     cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
              plt.cm.rainbow, plt.cm.winter]
@@ -452,8 +450,8 @@ def plot3d_ng(wGraph,
         ax.grid(False)
         ax.set_axis_off()
 
-    epsilon = wGraph.get_epsilon()
-    adj = wGraph.get_adjacency()
+    epsilon = wGraph.epsilon()
+    adj = wGraph.adjacencies()
     cp = wGraph.connected_components()
     cmaps = [plt.cm.Dark2, plt.cm.Accent, plt.cm.Paired,
              plt.cm.rainbow, plt.cm.winter]
@@ -468,18 +466,11 @@ def plot3d_ng(wGraph,
     componentIndex = -1
     for componentIndex, component in enumerate(ce):
 
-        #         scalar = float(len(component)) / numberEdges + 1
-        #         tempcomponent = []
-        #         for i, edge in enumerate(component):
-        #             tempcomponent.append(edge*scalar)
-        #         component = set(tempcomponent)
+        vert = pick_ax_edge(component, axes)
+        lines = a3.art3d.Poly3DCollection(vert, linewidths=1)
 
-        lines = a3.art3d.Poly3DCollection(pick_ax_edge(component, axes))
-
-        if componentIndex % 2 == 1:
-
-            componentIndex = -1 * componentIndex
         lines.set_edgecolor(line_colors[componentIndex])
+
         ax.add_collection(lines)
 
     componentIndex += 1
