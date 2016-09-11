@@ -198,7 +198,7 @@ class wGraph(object):
         """
         We return the number of points in the wGraph.
         """
-        return len(self._adj.index())
+        return len(self._adj.keys())
 
     def order(self):
         """
