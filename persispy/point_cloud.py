@@ -21,34 +21,37 @@ import numpy as np
 
 from persispy.weighted_simplicial_complex import wGraph
 from persispy.hashing import HashPoint
+from random import randint
 # from persispy.hashing import HashEdge
 
 
 class PointCloud(object):
 
     '''
-    Points should be a list of hashable objects.
-    Variables   :
-        _points : a array of hashable points.
-        _space  : either 'affine' or 'projective'.
+    The :class:`PointCloud` class returns a point cloud with the
+    properties of being hashable, which is necessary for indexing
+    a dictionary.
+
+    :param list points: A list of points
+    :param str space: [affine|projective] The space the points live in.
+    :param bool gui: Used by :mod:`persispy.plot` to either display or return the plot
+
     '''
 
     def __init__(self, points, space='affine', gui=False):
+        if type(points) is not np.ndarray:
+            points = np.array(points)
         try:
             self._points = list(points)
-            import sys
-            if len(self._points) > 1000:
-                sys.setrecursionlimit(len(self._points)**2)
         except TypeError:
             raise TypeError('Input points should be a list of points.')
         try:
             hash(self._points[0])
         except TypeError:
-            print("Detected points are not hashable." +
-                  "Attempting to convert to HashPoints.")
+#             print("Detected points are not hashable." +
+#                   "Attempting to convert to HashPoints.")
             self._points = [HashPoint(points[n],
                                       index=n) for n in range(len(points))]
-#             raise TypeError('Input points should be of hashable points.')
         if space != 'affine' and space != 'projective':
             raise TypeError('The argument "space" should be set to' +
                             'either "affine" or "projective".')
@@ -151,7 +154,12 @@ class PointCloud(object):
                            epsilon,
                            method="subdivision"):
         """
-        calls the recursive function ._neighborhood_graph(...)
+        calls its recursive function
+
+        :param float epsilon: maximum distance between points
+        :param str method: [exact|subdivision|subdivision 3|subdivision 7 approximate]
+        :return: a :class:`wGraph` of the form ``{point: {adj_points:distance}}``
+        .. automethod:: _neighborhood_graph
         """
         return self._neighborhood_graph(epsilon,
                                         method,
@@ -176,7 +184,7 @@ class PointCloud(object):
         "subdivision 7 approximate"
                 does "subdivision" to depth 7, then "approximate"
 
-        returns {point: {adj points:distance}}
+        returns {point: {adj_points:distance}}
 
         '''
         methodarray = method.split(' ')
@@ -211,9 +219,6 @@ class PointCloud(object):
                     return wGraph(dictionary, epsilon)
 
         elif methodarray[0] == 'exact':
-            # Issue: this doesn't work because lists and numpy arrays are
-            # not hashable.
-            # Has this issue been fixed? Daniel
             for i in range(len(self._points)):
                 for j in range(i + 1, len(self._points)):
                     if self._space == 'affine':
@@ -241,19 +246,25 @@ class PointCloud(object):
                 'Method should be one of subdivision, exact, approximate, ' +
                 'randomized, or landmarking.')
 
+
+
     def _selectpoint(self, pointarray, k, n):
         """
-        gives the kth smallest point of "self._points", according to the
-        nth coordinate we use this to give the median, but a general
-        solution for k is needed for the recursive algorithm this
-        algorithm is O(n) for best and worst cases
+        We return the kth smallest point of :data:pointarray, according to the
+        nth coordinate. We use this to give the median, but a general
+        solution for k is needed for the recursive algorithm. This
+        algorithm is O(n) for best and worst cases.
         """
 
         a = pointarray[:]
         c = []
+
+        if len(pointarray) == 1:
+            return a[0]
+
         while(len(a) > 5):
             for x in range(int(math.floor(len(a) / 5))):
-                b = pointarray[5 * x:5 * x + 5]
+                b = pointarray[5 * x: 5 * x + 5]
                 b.sort(key=lambda x: x.coordinate()[n])
                 c.append(b[int(math.floor(len(b) / 2))])
             a = c
@@ -294,28 +305,46 @@ class PointCloud(object):
         """
         if len(pointarray) > 1:
             median = self._selectpoint(
-                pointarray, len(pointarray) / 2, coordinate)
+                pointarray, math.floor(len(pointarray) / 2), coordinate)
             smaller = []
             bigger = []
             gluesmaller = []
             gluebigger = []
 
             for i, _ in enumerate(pointarray):  # split into two regions
-                if pointarray[i].coordinate()[
-                        coordinate] < median.coordinate()[coordinate]:
-                    smaller.append(pointarray[i])
-                    if (pointarray[i].coordinate()[coordinate] >
-                            median.coordinate()[coordinate] - epsilon):
-                        gluesmaller.append(pointarray[i])
 
-                if pointarray[i].coordinate()[
-                        coordinate] >= median.coordinate()[coordinate]:
-                    bigger.append(pointarray[i])
-                    if (pointarray[i].coordinate()[coordinate] <
-                            median.coordinate()[coordinate] + epsilon):
-                        gluebigger.append(pointarray[i])
 
-            for i, _ in enumerate(gluesmaller):  # split into two regions
+                if randint(0,1):
+                    if pointarray[i].coordinate()[coordinate] <= \
+                            median.coordinate()[coordinate]:
+                        smaller.append(pointarray[i])
+                        if (pointarray[i].coordinate()[coordinate] >
+                                median.coordinate()[coordinate] - epsilon):
+                            gluesmaller.append(pointarray[i])
+
+                    if pointarray[i].coordinate()[coordinate] > \
+                            median.coordinate()[coordinate]:
+                        bigger.append(pointarray[i])
+                        if (pointarray[i].coordinate()[coordinate] < \
+                                median.coordinate()[coordinate] + epsilon):
+                            gluebigger.append(pointarray[i])
+
+                else:
+                    if pointarray[i].coordinate()[coordinate] < \
+                            median.coordinate()[coordinate]:
+                        smaller.append(pointarray[i])
+                        if (pointarray[i].coordinate()[coordinate] >
+                                median.coordinate()[coordinate] - epsilon):
+                            gluesmaller.append(pointarray[i])
+
+                    if pointarray[i].coordinate()[coordinate] >= \
+                            median.coordinate()[coordinate]:
+                        bigger.append(pointarray[i])
+                        if (pointarray[i].coordinate()[coordinate] < \
+                                median.coordinate()[coordinate] + epsilon):
+                            gluebigger.append(pointarray[i])
+
+            for i, _ in enumerate(gluesmaller):  # glue together two regions
                 for j, _ in enumerate(gluebigger):
                     dist = np.sqrt(
                         sum(((gluesmaller[i]).coordinate() -
@@ -326,18 +355,20 @@ class PointCloud(object):
                         dictionary[gluesmaller[i]].add((gluebigger[j], dist))
                         dictionary[gluebigger[j]].add((gluesmaller[i], dist))
 
+            coordinate = (coordinate + 1) % self.dimension()
             if depth == -1:  # full recursive. all edges are formed by "gluing"
-                coordinate = (coordinate + 1) % self.dimension()
                 self._subdivide_neighbors(
                     epsilon, dictionary, smaller, coordinate, method, depth=-1)
                 self._subdivide_neighbors(
                     epsilon, dictionary, bigger, coordinate, method, depth=-1)
-            if depth > 0:
-                coordinate = (coordinate + 1) % self.dimension()
-                self._subdivide_neighbors(
-                    epsilon, depth - 1, coordinate, smaller)
-                self._subdivide_neighbors(
-                    epsilon, depth - 1, coordinate, bigger)
-            if depth == 0:
+            elif depth == 0:
                 self._neighborhood_graph(epsilon, method, smaller, dictionary)
                 self._neighborhood_graph(epsilon, method, bigger, dictionary)
+            elif depth > 0:
+                self._subdivide_neighbors(
+                    epsilon, dictionary, smaller, coordinate, method, depth-1)
+                self._subdivide_neighbors(
+                    epsilon, dictionary, bigger, coordinate, method, depth-1)
+
+
+

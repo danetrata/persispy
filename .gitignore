@@ -68,5 +68,4 @@ output/*.html
 output/*/index.html
 
 # Sphinx
-docs/_build
-reports/~$bigdata.xlsx
+docs/build

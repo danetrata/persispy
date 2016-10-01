@@ -62,7 +62,7 @@ class PersistentHomology(object):
         current_dimension = 1
         more_elements = True
 
-#         fig, ax = plt.subplots(1)
+        fig, ax = plt.subplots(1)
 
         while more_elements:
             more_elements = False
@@ -74,31 +74,32 @@ class PersistentHomology(object):
                         if (container.simplex.weight() !=
                                 self.persistence_pairs[container].simplex.weight()):  # noqa
                             y_coordinate = current_height
-                            alpha = (1 -
-                                     (self.persistence_pairs[container].simplex.weight() -  # noqa
-                                      container.simplex.weight()) / epsilon)
+                            alpha = 1 - (self.persistence_pairs[container].simplex.weight() - container.simplex.weight()) / epsilon
                             rgb_values = colorsys.hls_to_rgb(
                                 (hue + len(container.simplex.vertices()) *
-                                 (3 - 5 ** .5) * .5) % 1.0, saturation, lightness)  # noqa
+                                 (3 - 5 ** .5) * .5) % 1.0,
+                                saturation,
+                                lightness)  # noqa
+                            print(rgb_values, alpha)
                             current_height = current_height + 1
-#                             ax.plot(
-                            plt.plot(
-                                [container.simplex.weight(),
-                                 self.persistence_pairs[container].simplex.weight()],  # noqa
+                            ax.plot(
+#                             plt.plot(
+                                [container.simplex.weight(), self.persistence_pairs[container].simplex.weight()],  # noqa
                                 [y_coordinate, y_coordinate],
                                 color=(rgb_values[0], rgb_values[1], rgb_values[2], 1 - alpha),  # noqa
-                                linestyle='-', linewidth=1)
+                                linestyle='-',
+                                linewidth=1)
             current_dimension = current_dimension + 1
             current_height = current_height + 30
 
-#         ax.axis([0, epsilon, 0, current_height])
-        plt.axis([0, epsilon, 0, current_height])
+        ax.axis([0, epsilon, 0, current_height])
+#         plt.axis([0, epsilon, 0, current_height])
         if gui:
 #             return fig
             return
         else:
-#             plt.show(fig)
-            plt.show()
+            plt.show(fig)
+#             plt.show()
 
 
 class SimplexContainer(object):

@@ -13,6 +13,7 @@ import numpy.random as npr
 from numpy import array
 from itertools import combinations
 from persispy.hashing import HashEdge
+from pprint import PrettyPrinter
 
 DEBUG = False
 
@@ -76,14 +77,11 @@ class wSimplex(object):
     def __ne__(self, other):
         return not self == other
 
-    # DEPRECIATED in python3
     def compare(self, other):
         """
         Legacy comparison method for hashing.
         """
         value = 0.0
-        # This is extremely dangerous as set is a standard library class in
-        # Python. In any case, __cmp__ is depreciated in python3.
         finished = False
         if (self._weight != other.weight()) and not finished:
             value = self._weight - other.weight()
@@ -108,19 +106,10 @@ class wSimplex(object):
 
 class wGraph(object):
     '''
-    Input: a dictionary of edges indexed by vertices.
-    Output: a wGraph object.
+    :param dict adjacencies: The adjacency dictionary is the set of edges indexed by vertices.
+    :param float epsilon: The maximum distance between neighbors
+    :return: a :class:`wGraph`
 
-    Variables:
-        ._adj: the adjacency dictionary.
-        ._epsilon: the distance between points
-        ._connected_components - Depth first search tree of components
-            created after .connected_components()
-        ._edges: List of a edges of type HashEdge with the form
-            set(vertex, endPoint),
-            created after .connected_edges() . Because we assume an
-            unordered graph, the edges are unordered through the use
-            of hash_edge.HashEdge() .
     '''
 
     def __init__(self, adjacencies, epsilon):
@@ -176,11 +165,16 @@ class wGraph(object):
         """
         return self._epsilon
 
-    def adjacencies(self):
+    def adjacencies(self, pretty=False):
         """
         We return the adjacency dictionary.
         """
-        return self._adj
+        if pretty:
+            pp = PrettyPrinter()
+            return pp.pformat(self._adj)
+        elif not pretty:
+            return self._adj
+
 
     def get_points(self):
         """
@@ -198,7 +192,7 @@ class wGraph(object):
         """
         We return the number of points in the wGraph.
         """
-        return len(self._adj.index())
+        return len(self._adj.keys())
 
     def order(self):
         """
@@ -213,7 +207,7 @@ class wGraph(object):
         count = 0
         for v in self._adj.keys():
             count = count + len(self._adj[v])
-        return count / 2
+        return int(count / 2)
 
     def degree(self, p):
         """
@@ -463,7 +457,7 @@ class wSimplicialComplex(object):
         Returns the dimension of the complex.
         """
         dim = 0
-        for k in self._simplices.index():
+        for k in self._simplices.keys():
             if len(self._simplices[k]) > 0:
                 dim = max(k, dim)
         return dim
