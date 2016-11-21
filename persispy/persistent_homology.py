@@ -49,7 +49,15 @@ class PersistentHomology(object):
                 if not rowiszero:
                     self.persistence_pairs[container.entries[0]] = container
 
-    def plot_bar_code(self, epsilon, hue=0, saturation=.5, lightness=.5, gui=False):
+    def plot_bar_code(self,
+                      epsilon,
+                      hue=0,
+                      saturation=.5,
+                      lightness=.5,
+                      thickness=2,
+                      background='none',
+                      weight=True,
+                      gui=False):
         '''
         persistent_homology.plot_bar_code(epsilon)
 
@@ -63,6 +71,7 @@ class PersistentHomology(object):
         more_elements = True
 
         fig, ax = plt.subplots(1)
+        ax.set_axis_bgcolor(background)
 
         while more_elements:
             more_elements = False
@@ -74,28 +83,32 @@ class PersistentHomology(object):
                         if (container.simplex.weight() !=
                                 self.persistence_pairs[container].simplex.weight()):  # noqa
                             y_coordinate = current_height
-                            alpha = 1 - (self.persistence_pairs[container].simplex.weight() - container.simplex.weight()) / epsilon
+                            if weight:
+                                alpha = 1 - (
+                                    self.persistence_pairs[container].simplex.weight() -  # noqa
+                                    container.simplex.weight()) / epsilon
+                            else:
+                                alpha = 0
                             rgb_values = colorsys.hls_to_rgb(
                                 (hue + len(container.simplex.vertices()) *
                                  (3 - 5 ** .5) * .5) % 1.0,
                                 saturation,
                                 lightness)  # noqa
-                            print(rgb_values, alpha)
                             current_height = current_height + 1
-                            ax.plot(
 #                             plt.plot(
+                            ax.plot(
                                 [container.simplex.weight(), self.persistence_pairs[container].simplex.weight()],  # noqa
                                 [y_coordinate, y_coordinate],
                                 color=(rgb_values[0], rgb_values[1], rgb_values[2], 1 - alpha),  # noqa
                                 linestyle='-',
-                                linewidth=1)
+                                linewidth=thickness)
             current_dimension = current_dimension + 1
             current_height = current_height + 30
 
         ax.axis([0, epsilon, 0, current_height])
 #         plt.axis([0, epsilon, 0, current_height])
         if gui:
-#             return fig
+            #             return fig
             return
         else:
             plt.show(fig)
@@ -137,8 +150,8 @@ class SimplexContainer(object):
             self.entries.add(
                 parent.vertex_dict[
                     tuple(
-                        self.simplex.vertices()[ :index] +
-                        self.simplex.vertices()[ index + 1:])])
+                        self.simplex.vertices()[:index] +
+                        self.simplex.vertices()[index + 1:])])
 
     def __hash__(self):
         return hash(tuple(self.simplex.vertices()))

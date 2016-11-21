@@ -1,4 +1,4 @@
-# Summary of changes.
+ # Summary of changes.
 # hash_point.HashPoint moved to ../hash_point.py
 # "points_*" in definition removed.
 

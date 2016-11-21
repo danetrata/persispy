@@ -396,13 +396,13 @@ class wSimplicialComplex(object):
         in the graph.
         '''
 
-        simplices = {0: [wSimplex([k], 0)
+        full_simplex = {0: [wSimplex([k], 0)
                          for k in wgraph.adjacencies().keys()]}
-        simplices[1] = []
+        full_simplex[1] = []
 
         for t in combinations(wgraph.adjacencies().keys(), 2):
             if wgraph.metric(t[0], t[1]) > 0:
-                simplices[1].append(wSimplex(t, wgraph.metric(t[0], t[1])))
+                full_simplex[1].append(wSimplex(t, wgraph.metric(t[0], t[1])))
 
         for v in cliques:
             if verify:  # 1-skeleton of v is included in wGraph
@@ -416,12 +416,12 @@ class wSimplicialComplex(object):
                     # with python2. Note that has_key() is no longer an
                     # attribute of dictionaries in python3.
                     # TEST: I have not tested it on python2 as of 19 March 2016.
-                    try:
-                        if not d - 1 in simplices:
-                            simplices[d - 1] = []
+                    try:  # Python2
+                        if not full_simplex.has_key(d-1):
+                            full_simplex[d - 1] = []
                     except AttributeError:
-                        if not d - 1 in simplices:
-                            simplices[d - 1] = []
+                        if not d - 1 in full_simplex:
+                            full_simplex[d - 1] = []
                     weight = 0
                     for i in range(d - 1):
                         inbrs = wgraph.adjacencies()[vlist[i]]
@@ -429,9 +429,9 @@ class wSimplicialComplex(object):
                             if j[0] in vlist:
                                 weight = max(weight, j[1])
                     new_simplex = wSimplex(vlist, weight)
-                    if new_simplex not in simplices[d - 1]:
-                        simplices[d - 1].append(new_simplex)
-        return wSimplicialComplex(wgraph, simplices)
+                    if new_simplex not in full_simplex[d - 1]:
+                        full_simplex[d - 1].append(new_simplex)
+        return wSimplicialComplex(wgraph, full_simplex)
 
     def __repr__(self):
         return(repr(self.dimension()) + '-dimensional weighted' +
@@ -446,10 +446,15 @@ class wSimplicialComplex(object):
         return sum([len(self._simplices[k])
                     for k in range(1, self.dimension() + 1)])
 
-    def simplices(self):
+    def simplices(self, pretty=False):
         """
         Return the simplices.
         """
+        if pretty:
+            pp = PrettyPrinter()
+            return pp.pformat(self._simplices)
+        elif not pretty:
+            return self._simplices
         return self._simplices
 
     def dimension(self):
@@ -503,7 +508,7 @@ class wSimplicialComplex(object):
 
 class sorted_clique_list(object):
 
-    def __init__(self, wg, dimension=-1):
+    def __init__(self, wg):
         '''wg is a weighted graph'''
         self._cliques = []
         sorted_clique_list._BronKerboschPivot(
@@ -511,7 +516,7 @@ class sorted_clique_list(object):
             set(wg.adjacencies().keys()),
             set(),
             wg.adjacencies(),
-            self._cliques, dimension)
+            self._cliques)
         self._cliques.sort()
 
     def get_simplex_iterator(self, n):
@@ -543,20 +548,20 @@ class sorted_clique_list(object):
         return _clique_iterator(itertools.chain(iter(j), i))
 
     @staticmethod
-    def _BronKerbosch(r, p, x, adj, c, dim=-1):
-        if (len(p) == 0 and len(x) == 0) or (len(r) == dim):
+    def _BronKerbosch(r, p, x, adj, c):
+        if (len(p) == 0 and len(x) == 0):
             c.append(sorted(tuple(r)))
         else:
             for v in set(p):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerbosch(
-                    r | {v}, p & nbh, x & nbh, adj, c, dim)
+                    r | {v}, p & nbh, x & nbh, adj, c)
                 p.remove(v)
                 x.add(v)
 
     @staticmethod
-    def _BronKerboschPivot(r, p, x, adj, c, dim=-1):
-        if (len(p) == 0 and len(x) == 0) or (len(r) == dim):
+    def _BronKerboschPivot(r, p, x, adj, c):
+        if (len(p) == 0 and len(x) == 0):
             c.append(sorted(tuple(r)))
         else:
             for u in p | x:
@@ -565,7 +570,7 @@ class sorted_clique_list(object):
             for v in iter(set(p) - adj[u]):
                 nbh = {x[0] for x in adj[v]}
                 sorted_clique_list._BronKerboschPivot(
-                    r | {v}, p & nbh, x & nbh, adj, c, dim)
+                    r | {v}, p & nbh, x & nbh, adj, c)
                 p.remove(v)
                 x.add(v)
 
