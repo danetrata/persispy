@@ -24,6 +24,9 @@ From here we can construct our weighted neighborhood graph, the :class:`~persisp
     >>> plot2d(tri_ng, shading_style="component")
 .. figure:: images/triangle.png
    :align: center
+   
+
+::
 
     [point 0: [0, 0], point 1: [0, 1], point 2: [1, 0]]
     Weighted graph with 3 points and 3.0 edges
